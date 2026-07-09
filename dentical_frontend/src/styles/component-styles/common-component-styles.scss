@@ -1,0 +1,47 @@
+// director styles common
+@import url('./derector/common-derector-styles.scss');
+
+// admin styles common
+@import url('./admin/common-admin-styles.scss');
+
+// doctor styles common
+@import url('./doctor/common-doctor-styles.scss');
+
+// nurse styles common
+@import url('./nurse/common-nurse-styles.scss');
+
+// common news 
+@import url('./_notifications.scss');
+
+// common tasks
+@import url('./Tasks/common-tasks-styles.scss');
+
+// patientDetails 
+@import url('./_patientDetails.scss');
+
+// AppointmentDetails
+@import url('./_appointmentDetails.scss');
+
+// AppointmentDetailsResult
+@import url('./_appointmentDetailsResult.scss');
+
+// pagenation 
+@import url('./_pagination.scss');
+
+// modals
+@import url('./modal/confirmModal.scss');
+@import url('./modal/successModal.scss');
+
+// common _servicePrices.scss
+@import url('./common/_servicePrices.scss');
+
+// 
+@import url('./_header.scss');
+@import url('./_siderbar.scss');
+@import url('./profile.scss');
+
+//
+@import url("./_acceptanceCheck.scss");
+
+//
+@import url("./_medicineManagement.scss");

@@ -1,0 +1,581 @@
+.nurse-patient-care {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f8f9fa;
+
+    .care-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid #e9ecef;
+
+        .care-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #2c3e50;
+
+            svg {
+                font-size: 1.5rem;
+                color: #3498db;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin: 0;
+            }
+        }
+
+        .care-search {
+            display: flex;
+            align-items: center;
+            background-color: #f1f3f5;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            width: 350px;
+
+            svg {
+                color: #6c757d;
+                margin-right: 0.5rem;
+            }
+
+            input {
+                border: none;
+                background: transparent;
+                width: 100%;
+                outline: none;
+                color: #495057;
+
+                &::placeholder {
+                    color: #adb5bd;
+                }
+            }
+        }
+    }
+
+    .care-content {
+        flex: 1;
+        padding: 1.5rem;
+        overflow-y: auto;
+
+        .patients-list-full {
+            h2 {
+                font-size: 1.25rem;
+                color: #343a40;
+                margin-bottom: 1rem;
+            }
+
+            .loading-spinner {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+
+                .spinner {
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid rgba(0, 0, 0, 0.1);
+                    border-radius: 50%;
+                    border-top-color: #3498db;
+                    animation: spin 1s ease-in-out infinite;
+                    margin-bottom: 1rem;
+                }
+
+                @keyframes spin {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+            }
+
+            .no-patients {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 2rem;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+                p {
+                    color: #6c757d;
+                    font-size: 1rem;
+                }
+            }
+
+            .patients-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 1.5rem;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+
+                .patient-card {
+                    background-color: #fff;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                    padding: 1.25rem;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+
+                    &:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+                    }
+
+                    .patient-card-info {
+                        h3 {
+                            font-size: 1.1rem;
+                            color: #2c3e50;
+                            margin-top: 0;
+                            margin-bottom: 0.75rem;
+                        }
+
+                        .patient-card-details {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 0.5rem 1rem;
+                            margin-bottom: 1rem;
+
+                            span {
+                                font-size: 0.9rem;
+                                color: #495057;
+
+                                strong {
+                                    color: #343a40;
+                                }
+                            }
+                        }
+                    }
+
+                    .patient-card-action {
+                        margin-top: 0.5rem;
+
+                        .view-details-btn {
+                            width: 100%;
+                            padding: 0.6rem;
+                            background-color: #e9f2fe;
+                            color: #3498db;
+                            border: none;
+                            border-radius: 4px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: background-color 0.2s;
+
+                            &:hover {
+                                background-color: #d0e5fd;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Modal styles
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .patient-care-modal {
+        background-color: #fff;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        animation: modalFadeIn 0.3s ease-out;
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+
+            h2 {
+                margin: 0;
+                font-size: 1.5rem;
+                color: #2c3e50;
+            }
+
+            .close-modal {
+                background: none;
+                border: none;
+                color: #6c757d;
+                font-size: 1.25rem;
+                cursor: pointer;
+                padding: 0.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.2s;
+
+                &:hover {
+                    color: #343a40;
+                }
+            }
+        }
+
+        .modal-content {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+
+            .patient-header {
+                margin-bottom: 1.5rem;
+
+                .patient-header-details {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                    background-color: #f8f9fa;
+                    padding: 1rem;
+                    border-radius: 6px;
+
+                    span {
+                        font-size: 0.95rem;
+                        color: #495057;
+
+                        strong {
+                            color: #343a40;
+                        }
+                    }
+                }
+            }
+
+            .care-tabs {
+                display: flex;
+                border-bottom: 1px solid #dee2e6;
+                margin-bottom: 1.5rem;
+
+                button {
+                    padding: 0.75rem 1.25rem;
+                    background: none;
+                    border: none;
+                    border-bottom: 2px solid transparent;
+                    color: #6c757d;
+                    font-weight: 500;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    transition: all 0.2s;
+
+                    svg {
+                        font-size: 1rem;
+                    }
+
+                    &:hover {
+                        color: #3498db;
+                    }
+
+                    &.active {
+                        color: #3498db;
+                        border-bottom-color: #3498db;
+                    }
+                }
+            }
+
+            .tab-content {
+                .care-tab {
+                    .care-needs {
+                        background-color: #f8f9fa;
+                        padding: 1.25rem;
+                        border-radius: 6px;
+                        margin-bottom: 1.5rem;
+
+                        h3 {
+                            font-size: 1.1rem;
+                            color: #343a40;
+                            margin-top: 0;
+                            margin-bottom: 0.75rem;
+                        }
+
+                        p {
+                            color: #495057;
+                            margin: 0;
+                            line-height: 1.5;
+                        }
+                    }
+
+                    .care-form {
+                        background-color: #fff;
+                        border: 1px solid #e9ecef;
+                        border-radius: 6px;
+                        padding: 1.25rem;
+
+                        h3 {
+                            font-size: 1.1rem;
+                            color: #343a40;
+                            margin-top: 0;
+                            margin-bottom: 1rem;
+                        }
+
+                        form {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 1rem;
+
+                            textarea {
+                                width: 100%;
+                                min-height: 120px;
+                                padding: 0.75rem;
+                                border: 1px solid #ced4da;
+                                border-radius: 4px;
+                                resize: vertical;
+                                font-family: inherit;
+
+                                &:focus {
+                                    outline: none;
+                                    border-color: #3498db;
+                                    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+                                }
+                            }
+
+                            button {
+                                align-self: flex-end;
+                                padding: 0.6rem 1.25rem;
+                                background-color: #3498db;
+                                color: #fff;
+                                border: none;
+                                border-radius: 4px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                transition: background-color 0.2s;
+
+                                &:hover {
+                                    background-color: #2980b9;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .vitals-tab {
+                    h3 {
+                        font-size: 1.1rem;
+                        color: #343a40;
+                        margin-top: 0;
+                        margin-bottom: 1.25rem;
+                    }
+
+                    .vital-signs {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                        gap: 1rem;
+                        margin-bottom: 1.5rem;
+
+                        .vital-sign {
+                            background-color: #fff;
+                            border: 1px solid #e9ecef;
+                            border-radius: 6px;
+                            padding: 1rem;
+                            display: flex;
+                            align-items: center;
+                            gap: 1rem;
+
+                            .icon {
+                                font-size: 1.5rem;
+                                padding: 0.75rem;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+
+                                &.temperature {
+                                    color: #e74c3c;
+                                    background-color: rgba(231, 76, 60, 0.1);
+                                }
+
+                                &.blood-pressure {
+                                    color: #3498db;
+                                    background-color: rgba(52, 152, 219, 0.1);
+                                }
+
+                                &.heart-rate {
+                                    color: #e74c3c;
+                                    background-color: rgba(231, 76, 60, 0.1);
+                                }
+
+                                &.respiratory {
+                                    color: #2ecc71;
+                                    background-color: rgba(46, 204, 113, 0.1);
+                                }
+
+                                &.oxygen {
+                                    color: #9b59b6;
+                                    background-color: rgba(155, 89, 182, 0.1);
+                                }
+                            }
+
+                            .vital-info {
+                                display: flex;
+                                flex-direction: column;
+
+                                .vital-label {
+                                    font-size: 0.85rem;
+                                    color: #6c757d;
+                                    margin-bottom: 0.25rem;
+                                }
+
+                                .vital-value {
+                                    font-size: 1.1rem;
+                                    font-weight: 600;
+                                    color: #343a40;
+                                }
+                            }
+                        }
+                    }
+
+                    .update-vitals {
+                        display: flex;
+                        justify-content: flex-end;
+
+                        button {
+                            padding: 0.6rem 1.25rem;
+                            background-color: #3498db;
+                            color: #fff;
+                            border: none;
+                            border-radius: 4px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            transition: background-color 0.2s;
+
+                            &:hover {
+                                background-color: #2980b9;
+                            }
+                        }
+                    }
+                }
+
+                .history-tab {
+                    h3 {
+                        font-size: 1.1rem;
+                        color: #343a40;
+                        margin-top: 0;
+                        margin-bottom: 1.25rem;
+                    }
+
+                    .care-history {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+
+                        .care-record {
+                            background-color: #fff;
+                            border: 1px solid #e9ecef;
+                            border-radius: 6px;
+                            padding: 1rem;
+
+                            .care-record-header {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-bottom: 0.75rem;
+
+                                .care-date {
+                                    font-size: 0.85rem;
+                                    color: #6c757d;
+                                }
+
+                                .care-nurse {
+                                    font-size: 0.85rem;
+                                    color: #3498db;
+                                    font-weight: 500;
+                                }
+                            }
+
+                            .care-record-content {
+                                display: flex;
+                                align-items: flex-start;
+                                gap: 0.75rem;
+
+                                .icon {
+                                    color: #3498db;
+                                    font-size: 1.1rem;
+                                    margin-top: 0.2rem;
+                                }
+
+                                p {
+                                    margin: 0;
+                                    color: #495057;
+                                    line-height: 1.5;
+                                    flex: 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .no-patient-selected {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        text-align: center;
+
+        .big-icon {
+            font-size: 3rem;
+            color: #adb5bd;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #343a40;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            color: #6c757d;
+            max-width: 500px;
+            line-height: 1.5;
+        }
+    }
+}

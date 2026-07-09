@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klinika Bildirishnomalari</title>
+</head>
+<body>
+    <h2>Klinika Bildirishnomalari</h2>
+    <ul id="clinic-notification-list"></ul>
+    <!-- admin -->
+    <!-- eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4Njk5MzUwLCJpYXQiOjE3NDYxMDczNTAsImp0aSI6ImE2NWExZjk2ZDM0ODQ1ZmI5ZTQ1NDY1MDI0MGM5YzA1IiwidXNlcl9pZCI6MX0.JCyIulbWGP1vyeme4C_RFtesWX4dMlYZs_3yjeGpurQ -->
+    <!-- doctor -->
+    <!-- eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4NTMyMzM1LCJpYXQiOjE3NDU5NDAzMzUsImp0aSI6IjA0OTg4YmM2ZGRmODQxN2FiZmJkZGNlNzg3OTQ3ZTlhIiwidXNlcl9pZCI6MTJ9.1okuBAuk9fYQ641XOcUwEgm8YLHRZngko8ZGWXKwXf4 -->
+    <script>
+        let clinicId = 1; // Klinik ID (dinamik ravishda oling)
+        let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4Nzc5NzY3LCJpYXQiOjE3NDYxODc3NjcsImp0aSI6ImE5MTM3MGJjYTBmNjQwYTBiODQwYTE5MjRiODE2YzFkIiwidXNlcl9pZCI6Nn0.fuH84MCii-yVxe7sVX5Vwho2kCk7DvVp-QNGxgyr25c"
+        let clinicSocket = new WebSocket(`ws://127.0.0.1:8000/ws/clinic-notifications/?token=${token}`);
+
+        // WebSocket ulanishi
+        clinicSocket.onopen = () => console.log("✅ Clinic WebSocket ulandi!");
+        clinicSocket.onerror = (error) => console.error("❌ Clinic WebSocket xato:", error);
+        clinicSocket.onclose = () => console.log("🔌 Clinic WebSocket yopildi.");
+
+        // WebSocket orqali xabarlarni qabul qilish
+        clinicSocket.onmessage = function(event) {
+            try {
+                let data = JSON.parse(event.data);
+                let list = document.getElementById("clinic-notification-list");
+                let item = document.createElement("li");
+                item.innerHTML = `<strong>${data.title}</strong> - ${data.message} <small>(${data.timestamp})</small>`;
+                list.prepend(item); // Yangi notificationlarni oldinga qo‘shamiz
+            } catch (error) {
+                console.error("❌ Clinic WebSocket xabarni qayta ishlashda xato:", error);
+            }
+        };
+    </script>
+</body>
+</html>

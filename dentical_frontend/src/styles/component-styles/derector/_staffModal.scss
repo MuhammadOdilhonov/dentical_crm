@@ -1,0 +1,453 @@
+// Variables
+$primary-color: #2563eb;
+$primary-light: #3b82f6;
+$primary-dark: #1e40af;
+$secondary-color: #64748b;
+$success-color: #10b981;
+$danger-color: #ef4444;
+$warning-color: #f59e0b;
+$info-color: #0ea5e9;
+$light-color: #f8fafc;
+$dark-color: #1e293b;
+$text-color: #334155;
+$text-muted: #64748b;
+$border-color: #cbd5e1;
+$border-light: #e2e8f0;
+$background-color: #f1f5f9;
+$card-bg: #ffffff;
+$border-radius: 8px;
+$box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$transition: all 0.3s ease;
+
+// Mixins
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+    flex-wrap: $wrap;
+}
+
+@mixin grid($columns: 1fr, $gap: 1rem) {
+    display: grid;
+    grid-template-columns: $columns;
+    gap: $gap;
+}
+
+@mixin button-variant($bg-color, $text-color: white, $hover-bg: darken($bg-color, 10%)) {
+    background-color: $bg-color;
+    color: $text-color;
+
+    &:hover {
+        background-color: $hover-bg;
+    }
+}
+
+// Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// Staff Modal Overlay
+.staff-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    @include flex(row, center, center);
+    animation: fadeIn 0.3s ease;
+}
+
+// Staff Modal Container
+.staff-modal {
+    background-color: $card-bg;
+    border-radius: $border-radius;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    @include flex(column, flex-start, stretch);
+    animation: fadeIn 0.3s ease;
+    position: relative;
+    z-index: 1101;
+
+    @media (max-width: 576px) {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    // Modal Header
+    .staff-modal-header {
+        @include flex(row, space-between, center);
+        padding: 16px 20px;
+        border-bottom: 1px solid $border-light;
+
+        h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: $dark-color;
+        }
+
+        .staff-close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: $text-muted;
+            transition: $transition;
+
+            &:hover {
+                color: $danger-color;
+            }
+        }
+    }
+
+    // Modal Content
+    .staff-modal-content {
+        padding: 20px;
+        overflow-y: auto;
+        flex: 1;
+        max-height: calc(90vh - 120px);
+    }
+
+    // Staff Details
+    .staff-details {
+        margin-bottom: 30px;
+
+        .staff-details-section {
+            margin-bottom: 24px;
+
+            h3 {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid $border-light;
+                color: $dark-color;
+            }
+        }
+
+        .staff-detail-row {
+            @include flex(row, flex-start, flex-start);
+            margin-bottom: 12px;
+
+            @media (max-width: 576px) {
+                @include flex(column, flex-start, stretch);
+                gap: 4px;
+            }
+        }
+
+        .staff-detail-label {
+            width: 150px;
+            font-weight: 500;
+            color: $dark-color;
+
+            @media (max-width: 576px) {
+                width: 100%;
+            }
+        }
+
+        .staff-detail-value {
+            flex: 1;
+            color: $text-color;
+        }
+    }
+
+    // Schedule Section
+    .staff-schedule-container {
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid $border-light;
+            color: $dark-color;
+        }
+    }
+
+    .staff-schedule-grid {
+        @include grid(repeat(auto-fill, minmax(200px, 1fr)), 16px);
+
+        @media (max-width: 576px) {
+            @include grid(1fr, 16px);
+        }
+    }
+
+    .staff-schedule-card {
+        border: 1px solid $border-light;
+        border-radius: $border-radius;
+        overflow: hidden;
+        transition: $transition;
+
+        &.working {
+            border-color: $success-color;
+            border-width: 2px;
+        }
+
+        &.not-working {
+            border-color: $danger-color;
+            border-width: 2px;
+        }
+
+        &:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .staff-schedule-day-header {
+            @include flex(row, space-between, center);
+            padding: 12px 16px;
+            background-color: $light-color;
+
+            h4 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: $dark-color;
+            }
+        }
+
+        .staff-schedule-time {
+            padding: 16px;
+            text-align: center;
+
+            p {
+                margin: 0 0 12px 0;
+                color: $text-color;
+                font-weight: 500;
+            }
+        }
+
+        .staff-schedule-not-working {
+            color: $danger-color;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .staff-schedule-not-set {
+            color: $text-muted;
+            font-style: italic;
+        }
+    }
+
+    // Toggle Switch
+    .staff-schedule-toggle {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+        z-index: 5;
+
+        input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+
+            &:checked+.staff-schedule-slider {
+                background-color: $success-color;
+
+                &:before {
+                    transform: translateX(20px);
+                }
+            }
+
+            &:focus+.staff-schedule-slider {
+                box-shadow: 0 0 1px $success-color;
+            }
+
+            &:disabled+.staff-schedule-slider {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+
+        .staff-schedule-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 20px;
+
+            &:before {
+                position: absolute;
+                content: "";
+                height: 16px;
+                width: 16px;
+                left: 2px;
+                bottom: 2px;
+                background-color: white;
+                transition: 0.4s;
+                border-radius: 50%;
+            }
+        }
+    }
+
+    // Form Styles
+    .staff-form-group {
+        @include flex(column, flex-start, stretch);
+        gap: 8px;
+        margin-bottom: 16px;
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: $dark-color;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid $border-color;
+            border-radius: $border-radius;
+            font-size: 14px;
+            color: $text-color;
+            transition: $transition;
+
+            &:focus {
+                outline: none;
+                border-color: $primary-color;
+                box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+            }
+
+            &.error {
+                border-color: $danger-color;
+
+                &:focus {
+                    box-shadow: 0 0 0 3px rgba($danger-color, 0.2);
+                }
+            }
+
+            &:disabled {
+                background-color: $light-color;
+                cursor: not-allowed;
+            }
+        }
+
+        .error-message {
+            color: $danger-color;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    }
+
+    // Button Styles
+    .staff-btn {
+        @include flex(row, center, center);
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: $border-radius;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: $transition;
+        border: none;
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        &.staff-btn-primary {
+            @include button-variant($primary-color);
+        }
+
+        &.staff-btn-secondary {
+            @include button-variant($secondary-color);
+        }
+
+        &.staff-btn-danger {
+            @include button-variant($danger-color);
+        }
+
+        &.staff-btn-success {
+            @include button-variant($success-color);
+        }
+
+        &.staff-btn-warning {
+            @include button-variant($warning-color);
+        }
+
+        &.staff-btn-outline {
+            background-color: transparent;
+            border: 1px solid $primary-color;
+            color: $primary-color;
+
+            &:hover {
+                background-color: rgba($primary-color, 0.1);
+            }
+        }
+
+        &.staff-btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    }
+
+    .staff-form-actions {
+        @include flex(row, flex-end, center);
+        gap: 12px;
+        margin-top: 20px;
+
+        @media (max-width: 576px) {
+            @include flex(column, flex-start, stretch);
+
+            .staff-btn {
+                width: 100%;
+            }
+        }
+    }
+
+    // Loading and Error States
+    .staff-loading {
+        @include flex(row, center, center);
+        gap: 10px;
+        padding: 12px 20px;
+        background-color: rgba($info-color, 0.1);
+        color: $info-color;
+        border-radius: $border-radius;
+        display: inline-flex;
+        margin-bottom: 16px;
+    }
+
+    .staff-error {
+        @include flex(row, center, center);
+        gap: 10px;
+        padding: 12px 20px;
+        background-color: rgba($danger-color, 0.1);
+        color: $danger-color;
+        border-radius: $border-radius;
+        display: inline-flex;
+        margin-bottom: 16px;
+    }
+
+    .staff-spinner {
+        animation: spin 1s linear infinite;
+    }
+}

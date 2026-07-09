@@ -1,0 +1,637 @@
+// Variables
+$primary-color: #10B981;
+$secondary-color: #4F46E5;
+$accent-color: #F59E0B;
+$light-color: #F9FAFB;
+$dark-color: #1E293B;
+$text-color: #64748B;
+$border-color: #E2E8F0;
+$card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+$transition: all 0.3s ease;
+
+// Status Colors
+$confirmed-color: #10B981;
+$pending-color: #F59E0B;
+$cancelled-color: #EF4444;
+$critical-color: #EF4444;
+$stable-color: #10B981;
+$improving-color: #4F46E5;
+
+// Priority Colors
+$high-priority: #EF4444;
+$medium-priority: #F59E0B;
+$low-priority: #10B981;
+
+// Doctor Dashboard
+.doctor-dashboard {
+    padding: 24px;
+    background-color: #F1F5F9;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+    // Dashboard Loading
+    .dashboard-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 80vh;
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            border-top-color: $primary-color;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        p {
+            color: $text-color;
+            font-size: 16px;
+        }
+    }
+
+
+
+    // Stats Container
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+
+        .stat-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: $card-shadow;
+            transition: $transition;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+
+            &:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            }
+
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 6px;
+                height: 100%;
+                background-color: $primary-color;
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+
+            &:hover::after {
+                opacity: 1;
+            }
+
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 16px;
+
+                svg {
+                    font-size: 24px;
+                    color: white;
+                }
+
+                &.appointments {
+                    background-color: rgba(16, 185, 129, 0.1);
+
+                    svg {
+                        color: $primary-color;
+                    }
+                }
+
+                &.tasks {
+                    background-color: rgba(79, 70, 229, 0.1);
+
+                    svg {
+                        color: $secondary-color;
+                    }
+                }
+
+                &.patients {
+                    background-color: rgba(245, 158, 11, 0.1);
+
+                    svg {
+                        color: $accent-color;
+                    }
+                }
+
+                &.completed {
+                    background-color: rgba(16, 185, 129, 0.1);
+
+                    svg {
+                        color: $primary-color;
+                    }
+                }
+            }
+
+            .stat-content {
+                flex: 1;
+
+                h3 {
+                    font-size: 24px;
+                    font-weight: 700;
+                    margin: 0 0 4px 0;
+                    color: $dark-color;
+                }
+
+                p {
+                    font-size: 14px;
+                    margin: 0;
+                    color: $text-color;
+                }
+            }
+
+            .stat-trend {
+                font-size: 12px;
+                font-weight: 600;
+                padding: 4px 8px;
+                border-radius: 6px;
+                background-color: $light-color;
+                color: $text-color;
+
+                &.up {
+                    background-color: rgba(16, 185, 129, 0.1);
+                    color: $primary-color;
+                }
+
+                &.down {
+                    background-color: rgba(239, 68, 68, 0.1);
+                    color: $high-priority;
+                }
+            }
+        }
+    }
+
+    // Dashboard Content
+    .dashboard-content {
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+
+            @media (max-width: 768px) {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: $card-shadow;
+            overflow: hidden;
+
+            // Fixed: Removed display: flex and flex-direction: column to prevent stretching
+            // Added specific heights where needed
+            height: auto;
+
+            .card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 16px 20px;
+                border-bottom: 1px solid $border-color;
+
+                h2 {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: $dark-color;
+                    margin: 0;
+                }
+
+                .card-menu-btn {
+                    background: none;
+                    border: none;
+                    color: $text-color;
+                    cursor: pointer;
+                    padding: 4px;
+                    border-radius: 4px;
+                    transition: background-color 0.2s;
+
+                    &:hover {
+                        background-color: $light-color;
+                        color: $dark-color;
+                    }
+                }
+
+                .view-all-btn {
+                    background: none;
+                    border: none;
+                    color: $primary-color;
+                    font-size: 14px;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    transition: $transition;
+
+                    svg {
+                        font-size: 12px;
+                    }
+
+                    &:hover {
+                        color: darken($primary-color, 10%);
+                    }
+                }
+            }
+
+            .chart-container {
+                // Fixed: Set a fixed height instead of using flex grow
+                padding: 20px;
+                height: 300px;
+                position: relative;
+            }
+
+            .appointments-container {
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                // Fixed: Set a max-height instead of auto expanding
+                max-height: 400px;
+                overflow-y: auto;
+
+                .appointment-card {
+                    background-color: $light-color;
+                    border-radius: 8px;
+                    padding: 16px;
+                    display: flex;
+                    gap: 16px;
+                    transition: $transition;
+
+                    &:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                    }
+
+                    .appointment-time {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 80px;
+
+                        span {
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: $dark-color;
+                            margin-bottom: 8px;
+                        }
+
+                        .status-indicator {
+                            width: 10px;
+                            height: 10px;
+                            border-radius: 50%;
+
+                            &.status-confirmed {
+                                background-color: $confirmed-color;
+                            }
+
+                            &.status-pending {
+                                background-color: $pending-color;
+                            }
+
+                            &.status-cancelled {
+                                background-color: $cancelled-color;
+                            }
+                        }
+                    }
+
+                    .appointment-details {
+                        flex: 1;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+
+                        .patient-info {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+
+                            .patient-avatar {
+                                width: 40px;
+                                height: 40px;
+                                border-radius: 50%;
+                                background-color: $secondary-color;
+                                color: white;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: 600;
+                                font-size: 14px;
+                            }
+
+                            .patient-name-type {
+                                h4 {
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    color: $dark-color;
+                                    margin: 0 0 4px 0;
+                                }
+
+                                .appointment-type {
+                                    font-size: 12px;
+                                    color: $text-color;
+                                }
+                            }
+                        }
+
+                        .appointment-actions {
+                            display: flex;
+                            gap: 8px;
+
+                            .appointment-btn {
+                                padding: 6px 12px;
+                                border-radius: 6px;
+                                font-size: 12px;
+                                font-weight: 600;
+                                border: none;
+                                cursor: pointer;
+                                transition: $transition;
+
+                                &.start {
+                                    background-color: $primary-color;
+                                    color: white;
+
+                                    &:hover {
+                                        background-color: darken($primary-color, 10%);
+                                    }
+                                }
+
+                                &.view {
+                                    background-color: white;
+                                    color: $dark-color;
+                                    border: 1px solid $border-color;
+
+                                    &:hover {
+                                        background-color: $light-color;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .tasks-container {
+                padding: 16px;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 16px;
+                // Fixed: Set a max-height instead of auto expanding
+                max-height: 500px;
+                overflow-y: auto;
+
+                @media (max-width: 768px) {
+                    grid-template-columns: 1fr;
+                }
+
+                .task-card {
+                    background-color: $light-color;
+                    border-radius: 8px;
+                    padding: 16px;
+                    position: relative;
+                    transition: $transition;
+
+                    &:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                    }
+
+                    .priority-badge {
+                        position: absolute;
+                        top: 16px;
+                        right: 16px;
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-weight: 600;
+
+                        &.priority-high {
+                            background-color: rgba(239, 68, 68, 0.1);
+                            color: $high-priority;
+                        }
+
+                        &.priority-medium {
+                            background-color: rgba(245, 158, 11, 0.1);
+                            color: $medium-priority;
+                        }
+
+                        &.priority-low {
+                            background-color: rgba(16, 185, 129, 0.1);
+                            color: $low-priority;
+                        }
+                    }
+
+                    h3 {
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: $dark-color;
+                        margin: 0 0 12px 0;
+                        padding-right: 70px;
+                    }
+
+                    .task-meta {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin-bottom: 16px;
+                        font-size: 13px;
+                        color: $text-color;
+
+                        span {
+                            font-weight: 600;
+                            color: $dark-color;
+                        }
+
+                        .task-status {
+                            display: inline-block;
+                            padding: 4px 8px;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+
+                            &.status-pending {
+                                background-color: rgba(245, 158, 11, 0.1);
+                                color: $pending-color;
+                            }
+
+                            &.status-in-progress {
+                                background-color: rgba(79, 70, 229, 0.1);
+                                color: $secondary-color;
+                            }
+
+                            &.status-not-started {
+                                background-color: rgba(100, 116, 139, 0.1);
+                                color: $text-color;
+                            }
+                        }
+                    }
+
+                    .task-actions {
+                        display: flex;
+                        gap: 8px;
+
+                        .task-btn {
+                            flex: 1;
+                            padding: 8px;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            border: none;
+                            cursor: pointer;
+                            transition: $transition;
+
+                            &.complete {
+                                background-color: $primary-color;
+                                color: white;
+
+                                &:hover {
+                                    background-color: darken($primary-color, 10%);
+                                }
+                            }
+
+                            &.view {
+                                background-color: white;
+                                color: $dark-color;
+                                border: 1px solid $border-color;
+
+                                &:hover {
+                                    background-color: $light-color;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .table-container {
+                // Fixed: Set a specific height instead of using flex grow
+                height: 400px;
+                overflow-y: auto;
+                overflow-x: auto;
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+
+                    th,
+                    td {
+                        padding: 12px 16px;
+                        text-align: left;
+                        font-size: 14px;
+                    }
+
+                    th {
+                        color: $text-color;
+                        font-weight: 600;
+                        border-bottom: 1px solid $border-color;
+                        // Fixed: Sticky headers to improve usability with scrolling
+                        position: sticky;
+                        top: 0;
+                        background-color: white;
+                        z-index: 1;
+                    }
+
+                    td {
+                        border-bottom: 1px solid $light-color;
+                    }
+
+                    tbody tr {
+                        transition: background-color 0.2s;
+
+                        &:hover {
+                            background-color: $light-color;
+                        }
+                    }
+
+                    .patient-info {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+
+                        .patient-avatar {
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            background-color: $secondary-color;
+                            color: white;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 600;
+                            font-size: 14px;
+                        }
+                    }
+
+                    .condition {
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-weight: 600;
+
+                        &.condition-stable {
+                            background-color: rgba(16, 185, 129, 0.1);
+                            color: $stable-color;
+                        }
+
+                        &.condition-improving {
+                            background-color: rgba(79, 70, 229, 0.1);
+                            color: $improving-color;
+                        }
+
+                        &.condition-critical {
+                            background-color: rgba(239, 68, 68, 0.1);
+                            color: $critical-color;
+                        }
+                    }
+
+                    .action-button {
+                        background-color: rgba(16, 185, 129, 0.1);
+                        border: none;
+                        color: $primary-color;
+                        font-size: 12px;
+                        font-weight: 600;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        transition: $transition;
+
+                        &:hover {
+                            background-color: rgba(16, 185, 129, 0.2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

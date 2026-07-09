@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bildirishnomalar</title>
+</head>
+<body>
+    <h2>Bildirishnomalar</h2>
+    <ul id="notification-list"></ul>
+
+    <script>
+        let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1Mzk1OTA5LCJpYXQiOjE3NDI4MDM5MDksImp0aSI6IjZkMDYwNDU0ZTMwYzQyYWU4M2ExNzkwYTQ4NTgyZjlhIiwidXNlcl9pZCI6MX0.hhsFZW94wAvQhXh2XsnLs0xENvns0WX3KsNLdDxP1qY"; // 🔹 Bu yerga JWT token qo'ying
+
+        // 📌 API orqali notificationlarni yuklash
+        async function loadNotifications() {
+            try {
+                let response = await fetch("http://127.0.0.1:8000/api/user-notifications/", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("❌ Xatolik: API'dan ma'lumot olish muvaffaqiyatsiz.");
+                }
+
+                let data = await response.json();
+                console.log("API javobi:", data); // API'dan qaytgan ma'lumotni konsolda ko'rish
+
+                // Ma'lumot massiv ekanligini tekshirish
+                if (Array.isArray(data.results)) {
+                    let list = document.getElementById("notification-list");
+                    list.innerHTML = ""; // Ro‘yxatni tozalash
+
+                    data.results.forEach(notification => {
+                        let item = document.createElement("li");
+                        item.innerHTML = `<strong>${notification.title}</strong> - ${notification.message} <small>(${notification.timestamp})</small>`;
+                        list.appendChild(item);
+                    });
+                } else {
+                    console.error("❌ Xatolik: API'dan qaytgan ma'lumot massiv emas.", data);
+                }
+            } catch (error) {
+                console.error("❌ Xatolik:", error);
+            }
+        }
+
+        // 📌 WebSocket ulanishi va real-time notificationlar
+        let socket = new WebSocket(`ws://127.0.0.1:8000/ws/notifications/?token=${token}`);
+
+        socket.onopen = () => console.log("✅ WebSocket ulandi!");
+        socket.onerror = (error) => console.error("❌ WebSocket xato:", error);
+        socket.onclose = () => console.log("🔌 WebSocket yopildi.");
+
+        socket.onmessage = function(event) {
+            try {
+                let data = JSON.parse(event.data);
+                let list = document.getElementById("notification-list");
+                let item = document.createElement("li");
+                item.innerHTML = `<strong>${data.title}</strong> - ${data.message} <small>(${data.timestamp})</small>`;
+                list.prepend(item); // Yangi notificationlarni oldinga qo‘shamiz
+            } catch (error) {
+                console.error("❌ WebSocket xabarni qayta ishlashda xato:", error);
+            }
+        };
+
+        // 📌 Sahifa yuklanganda notificationlarni yuklash
+        document.addEventListener("DOMContentLoaded", loadNotifications);
+    </script>
+</body>
+</html>

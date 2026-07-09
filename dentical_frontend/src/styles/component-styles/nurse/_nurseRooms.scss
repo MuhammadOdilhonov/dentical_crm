@@ -1,0 +1,709 @@
+.nurse-rooms {
+    padding: 1.5rem;
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--color-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            svg {
+                font-size: 1.5rem;
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+
+            .search-box {
+                position: relative;
+                width: 300px;
+
+                svg {
+                    position: absolute;
+                    left: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #7f8c8d;
+                }
+
+                input {
+                    width: 100%;
+                    padding: 0.75rem 1rem 0.75rem 2.5rem;
+                    border: 1px solid #ecf0f1;
+                    border-radius: 4px;
+                    font-size: 0.9rem;
+
+                    &:focus {
+                        outline: none;
+                        border-color: var(--color-primary);
+                    }
+                }
+            }
+
+            .filter-dropdown {
+                position: relative;
+
+                svg {
+                    position: absolute;
+                    left: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #7f8c8d;
+                }
+
+                select {
+                    padding: 0.75rem 1rem 0.75rem 2.5rem;
+                    border: 1px solid #ecf0f1;
+                    border-radius: 4px;
+                    background-color: #fff;
+                    font-size: 0.9rem;
+                    min-width: 180px;
+
+                    &:focus {
+                        outline: none;
+                        border-color: var(--color-primary);
+                    }
+                }
+            }
+        }
+    }
+
+    .content-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background-color: #fff;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            svg {
+                font-size: 1rem;
+            }
+
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+                background-color: #e74c3c;
+                color: #fff;
+                border-radius: 50%;
+                font-size: 0.7rem;
+                font-weight: 700;
+                margin-left: 0.5rem;
+            }
+
+            &:hover {
+                background-color: #f8f9fa;
+                color: #2c3e50;
+            }
+
+            &.active {
+                background-color: var(--color-primary);
+                color: #fff;
+                border-color: var(--color-primary);
+            }
+        }
+    }
+
+    .rooms-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+
+        .room-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border-top: 4px solid #3498db;
+
+            &.critical {
+                border-top-color: #e74c3c;
+            }
+
+            .room-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1.25rem 1.5rem;
+                border-bottom: 1px solid #ecf0f1;
+
+                h3 {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: #2c3e50;
+                    margin: 0;
+                }
+
+                .room-type {
+                    display: inline-block;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 50px;
+                    font-size: 0.8rem;
+                    font-weight: 500;
+                    background-color: rgba(52, 152, 219, 0.1);
+                    color: #3498db;
+                }
+            }
+
+            .patients-list {
+                padding: 1.5rem;
+
+                .patient-card {
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 1.25rem;
+                    margin-bottom: 1rem;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+
+                    .patient-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 1rem;
+
+                        h4 {
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            color: #2c3e50;
+                            margin: 0;
+                        }
+
+                        .patient-status {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            padding: 0.25rem 0.75rem;
+                            border-radius: 50px;
+                            font-size: 0.8rem;
+                            font-weight: 500;
+
+                            svg {
+                                font-size: 0.9rem;
+                            }
+                        }
+                    }
+
+                    .patient-info {
+                        margin-bottom: 1rem;
+
+                        .info-row {
+                            display: flex;
+                            margin-bottom: 0.5rem;
+
+                            .info-label {
+                                font-weight: 500;
+                                color: #7f8c8d;
+                                width: 100px;
+                            }
+                        }
+
+                        .vital-signs {
+                            display: flex;
+                            gap: 1rem;
+                            margin-top: 1rem;
+
+                            .vital-sign {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                padding: 0.5rem 0.75rem;
+                                background-color: #fff;
+                                border-radius: 6px;
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+                                svg {
+                                    color: #e74c3c;
+                                }
+
+                                &:nth-child(2) {
+                                    svg {
+                                        color: #3498db;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    .patient-actions {
+                        display: flex;
+                        gap: 0.75rem;
+
+                        .btn {
+                            flex: 1;
+                        }
+                    }
+                }
+            }
+
+            .empty-room {
+                padding: 2rem;
+                text-align: center;
+                color: #7f8c8d;
+            }
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+            .no-results-icon {
+                font-size: 3rem;
+                color: #bdc3c7;
+                margin-bottom: 1rem;
+            }
+
+            h3 {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 0.5rem;
+            }
+
+            p {
+                color: #7f8c8d;
+            }
+        }
+    }
+
+    .tasks-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+
+        @media (max-width: 1200px) {
+            grid-template-columns: 1fr;
+        }
+
+        .tasks-section {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+
+            h2 {
+                padding: 1.25rem 1.5rem;
+                border-bottom: 1px solid #ecf0f1;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #2c3e50;
+                margin: 0;
+            }
+
+            .tasks-list {
+                padding: 1.5rem;
+
+                &.completed {
+                    .task-card {
+                        opacity: 0.7;
+                    }
+                }
+
+                .task-card {
+                    display: flex;
+                    gap: 1rem;
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 1.25rem;
+                    margin-bottom: 1rem;
+                    border-left: 4px solid #3498db;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+
+                    &.priority-high {
+                        border-left-color: #e74c3c;
+                    }
+
+                    &.priority-medium {
+                        border-left-color: #f39c12;
+                    }
+
+                    &.priority-low {
+                        border-left-color: #2ecc71;
+                    }
+
+                    .task-icon {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 40px;
+                        height: 40px;
+                        background-color: #fff;
+                        border-radius: 8px;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                        color: #3498db;
+                        font-size: 1.25rem;
+                    }
+
+                    .task-content {
+                        flex: 1;
+
+                        .task-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 0.75rem;
+
+                            h4 {
+                                font-size: 1rem;
+                                font-weight: 600;
+                                color: #2c3e50;
+                                margin: 0;
+                            }
+
+                            .task-time {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                font-size: 0.9rem;
+                                color: #7f8c8d;
+
+                                svg {
+                                    font-size: 0.9rem;
+                                }
+                            }
+                        }
+
+                        .task-details {
+                            display: flex;
+                            gap: 1rem;
+                            margin-bottom: 0.5rem;
+
+                            .task-patient,
+                            .task-room {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                font-size: 0.9rem;
+                                color: #7f8c8d;
+
+                                svg {
+                                    font-size: 0.9rem;
+                                }
+                            }
+                        }
+
+                        .task-completion {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            font-size: 0.9rem;
+                            color: #27ae60;
+                            margin-top: 0.5rem;
+
+                            svg {
+                                font-size: 0.9rem;
+                            }
+                        }
+                    }
+
+                    .task-actions {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+                }
+            }
+
+            .no-tasks {
+                padding: 3rem;
+                text-align: center;
+
+                .no-tasks-icon {
+                    font-size: 3rem;
+                    color: #bdc3c7;
+                    margin-bottom: 1rem;
+                }
+
+                p {
+                    color: #7f8c8d;
+                }
+            }
+        }
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+
+        .modal {
+            background-color: #fff;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1.25rem 1.5rem;
+                border-bottom: 1px solid #ecf0f1;
+
+                h3 {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: #2c3e50;
+                    margin: 0;
+                }
+
+                .close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    color: #7f8c8d;
+
+                    &:hover {
+                        color: #e74c3c;
+                    }
+                }
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+
+                .patient-details,
+                .task-details {
+                    .details-section {
+                        margin-bottom: 2rem;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        h4 {
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            color: #2c3e50;
+                            margin-bottom: 1rem;
+                            padding-bottom: 0.5rem;
+                            border-bottom: 1px solid #ecf0f1;
+                        }
+
+                        .details-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 1rem;
+
+                            @media (max-width: 768px) {
+                                grid-template-columns: 1fr;
+                            }
+
+                            .detail-item {
+                                margin-bottom: 0.5rem;
+
+                                .detail-label {
+                                    font-weight: 500;
+                                    color: #7f8c8d;
+                                    margin-right: 0.5rem;
+                                }
+
+                                .priority-badge,
+                                .status-badge {
+                                    display: inline-block;
+                                    padding: 0.25rem 0.75rem;
+                                    border-radius: 50px;
+                                    font-size: 0.8rem;
+                                    font-weight: 500;
+                                }
+
+                                .priority-badge {
+                                    &.high {
+                                        background-color: rgba(231, 76, 60, 0.1);
+                                        color: #e74c3c;
+                                    }
+
+                                    &.medium {
+                                        background-color: rgba(243, 156, 18, 0.1);
+                                        color: #f39c12;
+                                    }
+
+                                    &.low {
+                                        background-color: rgba(46, 204, 113, 0.1);
+                                        color: #2ecc71;
+                                    }
+                                }
+
+                                .status-badge {
+                                    &.pending {
+                                        background-color: rgba(241, 196, 15, 0.1);
+                                        color: #f39c12;
+                                    }
+
+                                    &.completed {
+                                        background-color: rgba(46, 204, 113, 0.1);
+                                        color: #27ae60;
+                                    }
+                                }
+                            }
+                        }
+
+                        .vitals-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                            gap: 1rem;
+
+                            .vital-item {
+                                background-color: #f8f9fa;
+                                border-radius: 8px;
+                                padding: 1rem;
+                                text-align: center;
+
+                                .vital-icon {
+                                    font-size: 1.5rem;
+                                    color: #3498db;
+                                    margin-bottom: 0.5rem;
+                                }
+
+                                .vital-value {
+                                    font-size: 1.25rem;
+                                    font-weight: 700;
+                                    color: #2c3e50;
+                                    margin-bottom: 0.25rem;
+                                }
+
+                                .vital-label {
+                                    font-size: 0.8rem;
+                                    color: #7f8c8d;
+                                }
+                            }
+                        }
+
+                        .medications-table {
+                            width: 100%;
+                            border-collapse: collapse;
+
+                            th,
+                            td {
+                                padding: 0.75rem 1rem;
+                                text-align: left;
+                                border-bottom: 1px solid #ecf0f1;
+                            }
+
+                            th {
+                                font-weight: 600;
+                                color: #7f8c8d;
+                                font-size: 0.9rem;
+                            }
+
+                            tr:last-child td {
+                                border-bottom: none;
+                            }
+                        }
+
+                        .patient-notes {
+                            background-color: #f8f9fa;
+                            border-radius: 8px;
+                            padding: 1rem;
+                            color: #2c3e50;
+                            line-height: 1.5;
+                        }
+                    }
+                }
+            }
+
+            .modal-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 1rem;
+                padding: 1.25rem 1.5rem;
+                border-top: 1px solid #ecf0f1;
+            }
+        }
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 992px) {
+    .nurse-rooms {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+
+            .header-actions {
+                width: 100%;
+
+                .search-box {
+                    width: 100%;
+                }
+            }
+        }
+
+        .content-tabs {
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+
+            .tab {
+                white-space: nowrap;
+            }
+        }
+
+        .rooms-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .nurse-rooms {
+        padding: 1rem;
+
+        .page-header {
+            .header-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+
+                .filter-dropdown {
+                    width: 100%;
+
+                    select {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+}

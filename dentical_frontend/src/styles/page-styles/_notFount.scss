@@ -1,0 +1,84 @@
+// Variables
+$primary-color: #2563eb;
+$secondary-color: #1e40af;
+$accent-color: #3b82f6;
+$light-color: #f8fafc;
+$dark-color: #1e293b;
+$text-color: #334155;
+$light-gray: #e2e8f0;
+$border-radius: 8px;
+$box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s ease;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+// Not found page
+.not-found-container {
+    min-height: 100vh;
+    @include flex-center;
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    padding: 1rem;
+}
+
+.not-found-content {
+    @include flex-column;
+    align-items: center;
+    text-align: center;
+    max-width: 500px;
+    background-color: white;
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    box-shadow: $box-shadow;
+
+    h1 {
+        font-size: 6rem;
+        font-weight: 700;
+        color: $primary-color;
+        line-height: 1;
+        margin-bottom: 1rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+        color: $dark-color;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        color: $text-color;
+        margin-bottom: 2rem;
+    }
+
+    .home-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: $primary-color;
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: $border-radius;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: $transition;
+
+        &:hover {
+            background-color: $secondary-color;
+        }
+
+        .home-icon {
+            font-size: 1.2rem;
+        }
+    }
+}

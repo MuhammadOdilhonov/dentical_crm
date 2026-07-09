@@ -1,0 +1,41 @@
+# Python 3.14 ga moslashtirilgan requirements (asl requirements.txt Python 3.13 uchun edi)
+# Faqat kodda haqiqatda ishlatiladigan paketlar. O'rnatish:
+#   venv\Scripts\python.exe -m pip install -r requirements_py314.txt
+
+Django>=5.2,<5.3
+djangorestframework
+djangorestframework-simplejwt
+drf-yasg
+django-filter
+django-cors-headers
+django-jazzmin
+django-celery-beat
+django-chartjs
+django-multiselectfield
+
+# WebSocket / ASGI
+channels
+channels-redis
+daphne
+
+# Celery + Redis
+celery
+redis
+
+# Data / export
+numpy
+pandas
+XlsxWriter
+pillow
+reportlab
+qrcode
+
+# Telegram bot (app/signals.py ishlatadi)
+aiogram
+python-dotenv
+
+# Boshqa
+requests
+pytz
+pyfiglet
+python-slugify

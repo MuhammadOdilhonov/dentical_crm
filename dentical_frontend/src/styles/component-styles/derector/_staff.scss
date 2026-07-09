@@ -1,0 +1,1355 @@
+// Variables
+$primary-color: #2563eb;
+$primary-light: #3b82f6;
+$primary-dark: #1e40af;
+$secondary-color: #64748b;
+$success-color: #10b981;
+$danger-color: #ef4444;
+$warning-color: #f59e0b;
+$info-color: #0ea5e9;
+$light-color: #f8fafc;
+$dark-color: #1e293b;
+$text-color: #334155;
+$text-muted: #64748b;
+$border-color: #cbd5e1;
+$border-light: #e2e8f0;
+$background-color: #f1f5f9;
+$card-bg: #ffffff;
+$sidebar-width: 450px;
+$border-radius: 8px;
+$box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$transition: all 0.3s ease;
+
+// Mixins
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+    flex-wrap: $wrap;
+}
+
+@mixin grid($columns: 1fr, $gap: 1rem) {
+    display: grid;
+    grid-template-columns: $columns;
+    gap: $gap;
+}
+
+@mixin button-variant($bg-color, $text-color: white, $hover-bg: darken($bg-color, 10%)) {
+    background-color: $bg-color;
+    color: $text-color;
+
+    &:hover {
+        background-color: $hover-bg;
+    }
+}
+
+@mixin badge-variant($bg-color, $text-color) {
+    background-color: rgba($bg-color, 0.15);
+    color: $text-color;
+    border: 1px solid rgba($bg-color, 0.3);
+}
+
+// Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// Main Container
+.xodim-container {
+    width: 100%;
+    padding: 20px;
+    background-color: $background-color;
+    color: $text-color;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    min-height: calc(100vh - 60px);
+    position: relative;
+
+    // Header
+    .xodim-header {
+        @include flex(row, space-between, center);
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid $border-light;
+
+        .xodim-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: $dark-color;
+            margin: 0;
+        }
+
+        .xodim-actions {
+            @include flex(row, flex-end, center);
+            gap: 12px;
+        }
+    }
+
+    // Statistics Toggle
+    .xodim-stats-toggle {
+        background-color: $card-bg;
+        border-radius: $border-radius;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        cursor: pointer;
+        box-shadow: $box-shadow;
+        transition: $transition;
+
+        &:hover {
+            background-color: darken($card-bg, 2%);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: $dark-color;
+            @include flex(row, space-between, center);
+        }
+    }
+
+    // Statistics Container
+    .xodim-stats-container {
+        margin-bottom: 24px;
+        animation: fadeIn 0.3s ease;
+
+        .xodim-stats-grid {
+            @include grid(repeat(auto-fill, minmax(220px, 1fr)), 20px); // Adjusted minmax for potentially more cards
+
+            @media (max-width: 1200px) {
+                @include grid(repeat(2, 1fr), 20px);
+            }
+
+            @media (max-width: 768px) {
+                @include grid(1fr, 20px);
+            }
+
+            .xodim-stat-card {
+                background-color: $card-bg;
+                border-radius: $border-radius;
+                padding: 20px;
+                box-shadow: $box-shadow;
+                @include flex(row, flex-start, center);
+                gap: 16px;
+                transition: $transition;
+
+                &:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                }
+
+                .xodim-stat-icon-wrapper {
+                    width: 50px; // Slightly smaller icon wrapper
+                    height: 50px;
+                    border-radius: 50%;
+                    background-color: rgba($primary-color, 0.1);
+                    @include flex(row, center, center);
+                    flex-shrink: 0;
+
+                    .xodim-stat-icon {
+                        font-size: 22px; // Slightly smaller icon
+                        color: $primary-color;
+                    }
+                }
+
+                .xodim-stat-content {
+                    flex: 1;
+
+                    .xodim-stat-value {
+                        font-size: 24px; // Slightly smaller value
+                        font-weight: 700;
+                        color: $dark-color;
+                        margin-bottom: 4px; // Adjusted margin
+                    }
+
+                    .xodim-stat-label {
+                        color: $text-muted;
+                        font-size: 13px; // Slightly smaller label
+                        font-weight: 500;
+                    }
+                }
+            }
+        }
+
+        // Position Distribution Stats
+        .xodim-position-stats {
+            margin-top: 30px;
+            background-color: $card-bg;
+            border-radius: $border-radius;
+            padding: 20px;
+            box-shadow: $box-shadow;
+
+            h3 {
+                font-size: 18px;
+                font-weight: 600;
+                color: $dark-color;
+                margin-top: 0;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid $border-light;
+            }
+
+            .xodim-position-stats-list {
+                @include flex(column, flex-start, stretch);
+                gap: 16px;
+            }
+
+            .xodim-position-stat-item {
+                .xodim-position-stat-header {
+                    @include flex(row, space-between, center);
+                    margin-bottom: 8px;
+
+                    .xodim-position-name {
+                        font-weight: 500;
+                        color: $dark-color;
+                    }
+
+                    .xodim-position-count {
+                        font-weight: 600;
+                        color: $primary-color;
+                    }
+                }
+
+                .xodim-position-progress-bar {
+                    height: 8px;
+                    background-color: $border-light;
+                    border-radius: 4px;
+                    overflow: hidden;
+                    margin-bottom: 8px;
+
+                    .xodim-position-progress {
+                        height: 100%;
+                        background-color: $primary-color;
+                        border-radius: 4px;
+                        transition: width 0.5s ease;
+                    }
+                }
+            }
+        }
+
+        // KPI Statistics
+        .xodim-kpi-stats {
+            margin-top: 30px;
+            background-color: $card-bg;
+            border-radius: $border-radius;
+            padding: 20px;
+            box-shadow: $box-shadow;
+
+            h3 {
+                font-size: 18px;
+                font-weight: 600;
+                color: $dark-color;
+                margin-top: 0;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid $border-light;
+            }
+
+            .xodim-kpi-table {
+
+                th,
+                td {
+                    padding: 12px 14px; // Adjust padding for KPI table
+                }
+
+                // Additional specific styles for KPI table if needed
+            }
+
+            .xodim-no-data {
+                // Re-using no-data style for KPI
+                padding: 20px;
+                text-align: center;
+                color: $text-muted;
+                font-style: italic;
+            }
+        }
+    }
+
+    // Filters Container
+    .xodim-filters-container {
+        margin-bottom: 24px;
+
+        .xodim-search-filter {
+            @include flex(row, space-between, center);
+            margin-bottom: 16px;
+            gap: 16px;
+
+            @media (max-width: 576px) {
+                @include flex(column, flex-start, stretch);
+            }
+
+            .xodim-search-input {
+                position: relative;
+                flex: 1;
+                max-width: 400px;
+
+                @media (max-width: 576px) {
+                    max-width: 100%;
+                    width: 100%;
+                }
+
+                .xodim-search-icon {
+                    position: absolute;
+                    left: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: $text-muted;
+                    font-size: 16px;
+                }
+
+                input {
+                    width: 100%;
+                    padding: 10px 12px 10px 40px;
+                    border: 1px solid $border-color;
+                    border-radius: $border-radius;
+                    font-size: 14px;
+                    transition: $transition;
+
+                    &:focus {
+                        outline: none;
+                        border-color: $primary-color;
+                        box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+                    }
+
+                    &::placeholder {
+                        color: $text-muted;
+                    }
+                }
+            }
+
+            .xodim-filter-toggle-btn {
+                @include flex(row, center, center);
+                gap: 8px;
+                padding: 10px 16px;
+                background-color: $light-color;
+                border: 1px solid $border-color;
+                border-radius: $border-radius;
+                font-size: 14px;
+                font-weight: 500;
+                color: $text-color;
+                cursor: pointer;
+                transition: $transition;
+
+                &:hover {
+                    background-color: darken($light-color, 3%);
+                }
+
+                &.active {
+                    background-color: rgba($primary-color, 0.1);
+                    border-color: $primary-color;
+                    color: $primary-color;
+                }
+            }
+        }
+
+        .xodim-advanced-filters {
+            @include grid(repeat(auto-fill, minmax(200px, 1fr)), 16px);
+            padding: 20px;
+            background-color: $card-bg;
+            border-radius: $border-radius;
+            box-shadow: $box_shadow;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+
+            .xodim-filter-group {
+                @include flex(column, flex-start, stretch);
+                gap: 8px;
+
+                label {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: $dark-color;
+                }
+
+                select {
+                    padding: 10px 12px;
+                    border: 1px solid $border-color;
+                    border-radius: $border-radius;
+                    background-color: $card-bg;
+                    font-size: 14px;
+                    color: $text-color;
+                    transition: $transition;
+
+                    &:focus {
+                        outline: none;
+                        border-color: $primary-color;
+                        box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+                    }
+                }
+            }
+        }
+    }
+
+    // Dashboard Card
+    .xodim-dashboard-card {
+        background-color: $card-bg;
+        border-radius: $border-radius;
+        box-shadow: $box_shadow;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    // Table Styles
+    .xodim-table-responsive {
+        overflow-x: auto;
+        width: 100%;
+
+        .xodim-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+
+            th,
+            td {
+                padding: 14px 16px;
+                text-align: left;
+                border-bottom: 1px solid $border-light;
+                vertical-align: middle; // Ensure vertical alignment
+            }
+
+            th {
+                background-color: rgba($light-color, 0.7);
+                font-weight: 600;
+                color: $dark-color;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            tbody tr {
+                transition: $transition;
+
+                &:hover {
+                    background-color: rgba($light-color, 0.5);
+                }
+            }
+
+            .xodim-no-data {
+                padding: 40px 20px;
+                text-align: center;
+                color: $text-muted;
+                font-style: italic;
+            }
+        }
+    }
+
+    // Role Badges
+    .xodim-role-badge {
+        @include flex(row, flex-start, center); // Align items to start for consistency
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex; // To ensure badges behave like inline elements
+
+        svg {
+            // Style for icons within badges
+            margin-right: 4px;
+        }
+
+        &.doctor {
+            @include badge-variant($info-color, $info-color);
+        }
+
+        &.nurse {
+            @include badge-variant($success-color, $success-color);
+        }
+
+        &.admin {
+            @include badge-variant($primary-color, $primary-color);
+        }
+
+        &.director {
+            // Assuming director role might be added
+            @include badge-variant($warning-color, $warning-color);
+        }
+    }
+
+    // Status Badges
+    .xodim-status-badge {
+        @include flex(row, flex-start, center); // Align items to start
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+
+        svg {
+            margin-right: 4px;
+        }
+
+        &.active {
+            @include badge-variant($success-color, $success-color);
+        }
+
+        &.inactive {
+            @include badge-variant($danger-color, $danger-color);
+        }
+
+        &.vacation {
+            @include badge-variant($warning-color, $warning-color);
+        }
+    }
+
+    // Action Buttons
+    .xodim-action-buttons {
+        @include flex(row, flex-start, center);
+        gap: 8px;
+    }
+
+    .xodim-btn-icon {
+        @include flex(row, center, center);
+        width: 32px;
+        height: 32px;
+        border-radius: $border-radius;
+        border: none;
+        cursor: pointer;
+        transition: $transition;
+
+        &.xodim-edit {
+            background-color: rgba($info-color, 0.15);
+            color: $info-color;
+
+            &:hover {
+                background-color: rgba($info-color, 0.25);
+            }
+        }
+
+        &.xodim-delete {
+            background-color: rgba($danger-color, 0.15);
+            color: $danger-color;
+
+            &:hover {
+                background-color: rgba($danger-color, 0.25);
+            }
+        }
+
+        &.xodim-view {
+            background-color: rgba($secondary-color, 0.15); // Changed view color for differentiation
+            color: $secondary-color;
+
+            &:hover {
+                background-color: rgba($secondary-color, 0.25);
+            }
+        }
+    }
+
+    // Loading and Error States
+    .xodim-loading-container,
+    .xodim-error-container {
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .xodim-loading {
+        @include flex(row, center, center);
+        gap: 10px;
+        padding: 12px 20px;
+        background-color: rgba($info-color, 0.1);
+        color: $info-color;
+        border-radius: $border-radius;
+        display: inline-flex;
+    }
+
+    .xodim-error {
+        @include flex(column, center, center); // Changed to column for better message display
+        gap: 10px;
+        padding: 12px 20px;
+        background-color: rgba($danger-color, 0.1);
+        color: $danger-color;
+        border-radius: $border-radius;
+        display: inline-flex;
+        text-align: center;
+
+        .xodim-btn-sm {
+            margin-top: 10px;
+        }
+    }
+
+    .xodim-spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    // Sidebar Styles
+    .xodim-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+
+        &.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+    }
+
+    .xodim-sidebar {
+        position: fixed;
+        top: 0;
+        right: -$sidebar-width;
+        width: $sidebar-width;
+        height: 100vh;
+        background-color: $card-bg;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+        transition: right 0.3s ease;
+        @include flex(column, flex-start, stretch);
+
+        &.active {
+            right: 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 576px) {
+            width: 100%;
+            right: -100%;
+        }
+
+        .xodim-sidebar-header {
+            @include flex(row, space-between, center);
+            padding: 16px 20px;
+            border-bottom: 1px solid $border-light;
+
+            h2 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: $dark-color;
+            }
+        }
+
+        .xodim-close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: $text-muted;
+            transition: $transition;
+
+            &:hover {
+                color: $dark-color;
+            }
+        }
+
+        .xodim-sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+
+            form {
+                @include flex(column, flex-start, stretch);
+                gap: 16px;
+            }
+        }
+    }
+
+    // Form Styles
+    .xodim-form-group {
+        @include flex(column, flex-start, stretch);
+        gap: 8px;
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: $dark-color;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid $border-color;
+            border-radius: $border-radius;
+            font-size: 14px;
+            color: $text-color;
+            transition: $transition;
+            box-sizing: border-box; // Ensure padding doesn't increase width
+
+            &:focus {
+                outline: none;
+                border-color: $primary-color;
+                box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+            }
+
+            &.error {
+                border-color: $danger-color;
+
+                &:focus {
+                    box-shadow: 0 0 0 3px rgba($danger-color, 0.2);
+                }
+            }
+
+            &:disabled {
+                background-color: $light-color;
+                cursor: not-allowed;
+            }
+        }
+
+        input[type="number"] {
+            // Specific styling for number inputs if needed
+            // -moz-appearance: textfield; // Firefox
+            // &::-webkit-outer-spin-button,
+            // &::-webkit-inner-spin-button { // Chrome, Safari, Edge, Opera
+            //     -webkit-appearance: none;
+            //     margin: 0;
+            // }
+        }
+
+
+        .error-message {
+            color: $danger-color;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    }
+
+    .xodim-checkbox-label {
+        @include flex(row, flex-start, center);
+        gap: 8px;
+        cursor: pointer;
+
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+    }
+
+    .xodim-form-actions {
+        @include flex(row, flex-end, center);
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    // Button Styles
+    .xodim-btn {
+        @include flex(row, center, center);
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: $border-radius;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: $transition;
+        border: none;
+        line-height: 1.5; // Ensure consistent button height
+
+        svg {
+            // Ensure icons in buttons are vertically centered
+            vertical-align: middle;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        &.xodim-btn-primary {
+            @include button-variant($primary-color);
+        }
+
+        &.xodim-btn-secondary {
+            @include button-variant($secondary-color);
+        }
+
+        &.xodim-btn-danger {
+            @include button-variant($danger-color);
+        }
+
+        &.xodim-btn-success {
+            @include button-variant($success-color);
+        }
+
+        &.xodim-btn-warning {
+            @include button-variant($warning-color);
+        }
+
+        &.xodim-btn-outline {
+            background-color: transparent;
+            border: 1px solid $primary-color;
+            color: $primary-color;
+
+            &:hover {
+                background-color: rgba($primary-color, 0.1);
+            }
+        }
+
+        &.xodim-btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    }
+}
+
+// Modal Styles (Copied from existing, assuming they are shared and correct)
+.xodim-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.xodim-modal {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px; // Default max-width
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.xodim-full-schedule-modal {
+    // If you have a specific modal for schedules
+    max-width: 900px;
+}
+
+.xodim-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.xodim-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem; // Consider using $font-size-lg or similar variable
+    display: flex;
+    align-items: center;
+}
+
+.xodim-close-button {
+    // This is also defined in .xodim-sidebar, ensure consistency or specificity
+    background: none;
+    border: none;
+    font-size: 1.2rem; // Consider using a variable
+    cursor: pointer;
+    color: #666; // $text-muted
+    transition: color 0.2s;
+
+    &:hover {
+        color: $danger-color; // Or $dark-color
+    }
+}
+
+.xodim-modal-content {
+    padding: 20px;
+}
+
+// User Details Styles (from existing, for StaffDetailsModal if used)
+.xodim-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.xodim-user-details-section {
+    border: 1px solid $border-light; // Use variable
+    border-radius: $border-radius;
+    padding: 15px;
+    background-color: $light-color; // Use variable
+}
+
+.xodim-user-details-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2rem; // Variable
+    color: $dark-color; // Variable
+    border-bottom: 1px solid $border-light; // Variable
+    padding-bottom: 8px;
+}
+
+.xodim-detail-row {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.xodim-detail-label {
+    font-weight: 600;
+    width: 150px;
+    color: $text-color; // Variable
+}
+
+.xodim-detail-value {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+// Schedule Styles (from existing, if StaffDetailsModal shows schedule)
+.xodim-schedule-container {
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid $border-light;
+        color: $dark-color;
+    }
+}
+
+// ... (rest of the schedule styles if they were part of _staff.scss, otherwise they might be in _staffModal.scss or similar)
+// For brevity, I'm omitting the very specific schedule editing styles unless they are directly in _staff.scss.
+// The provided _staff.scss had schedule styles, so I'm keeping the structure.
+
+.xodim-schedule-grid {
+    @include grid(repeat(auto-fill, minmax(200px, 1fr)), 16px);
+
+    @media (max-width: 576px) {
+        @include grid(1fr, 16px);
+    }
+}
+
+.xodim-schedule-card {
+    border: 1px solid $border-light;
+    border-radius: $border-radius;
+    overflow: hidden;
+    transition: $transition;
+
+    &.working {
+        border-color: $success-color;
+        border-width: 2px;
+    }
+
+    &.not-working {
+        border-color: $danger-color;
+        border-width: 2px;
+    }
+
+    &:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .xodim-schedule-day-header {
+        @include flex(row, space-between, center);
+        padding: 12px 16px;
+        background-color: $light-color;
+
+        h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: $dark-color;
+        }
+    }
+
+    .xodim-schedule-time {
+        padding: 16px;
+        text-align: center;
+
+        p {
+            margin: 0 0 12px 0;
+            color: $text-color;
+            font-weight: 500;
+        }
+    }
+
+    .xodim-schedule-not-working {
+        color: $danger-color;
+        font-style: italic;
+        font-weight: 500;
+    }
+
+    .xodim-schedule-not-set {
+        color: $text-muted;
+        font-style: italic;
+    }
+}
+
+// Toggle Switch for schedule (if applicable here)
+.xodim-schedule-toggle {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px; // Adjusted height for better proportion
+    z-index: 5; // Ensure it's above other elements if overlapping
+
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+
+        &:checked+.xodim-schedule-slider {
+            background-color: $success-color;
+
+            &:before {
+                transform: translateX(18px); // Adjusted for new height/width
+            }
+        }
+
+        &:focus+.xodim-schedule-slider {
+            box-shadow: 0 0 1px $success-color;
+        }
+
+        &:disabled+.xodim-schedule-slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    .xodim-schedule-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc; // $border-color or $text-muted
+        transition: 0.4s;
+        border-radius: 20px; // Keep it rounded
+
+        &:before {
+            position: absolute;
+            content: "";
+            height: 16px; // Smaller handle
+            width: 16px; // Smaller handle
+            left: 2px; // Adjust position
+            bottom: 2px; // Adjust position
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+    }
+}
+
+/* Schedule section styles */
+.xodim-schedule-section {
+    margin-top: 20px;
+}
+
+.xodim-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.xodim-section-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.xodim-weekly-schedule {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.xodim-day-schedule {
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 12px;
+    background-color: #fff;
+    transition: all 0.2s;
+}
+
+.xodim-day-schedule.working {
+    border-left: 4px solid #4caf50;
+}
+
+.xodim-day-schedule.not-working {
+    border-left: 4px solid #f44336;
+    opacity: 0.8;
+}
+
+.xodim-day-schedule.editing {
+    border-left: 4px solid #2196f3;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+.xodim-day-name {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.xodim-day-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.xodim-working-time {
+    font-weight: 500;
+    color: #4caf50;
+}
+
+.xodim-not-working {
+    font-style: italic;
+    color: #f44336;
+}
+
+.xodim-not-set {
+    font-style: italic;
+    color: #9e9e9e;
+}
+
+.xodim-day-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.xodim-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    gap: 6px;
+}
+
+.xodim-btn-sm {
+    padding: 4px 10px;
+    font-size: 0.85rem;
+}
+
+.xodim-btn-primary {
+    background-color: #2196f3;
+    color: white;
+}
+
+.xodim-btn-primary:hover {
+    background-color: #1976d2;
+}
+
+.xodim-btn-secondary {
+    background-color: #9e9e9e;
+    color: white;
+}
+
+.xodim-btn-secondary:hover {
+    background-color: #757575;
+}
+
+.xodim-btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.xodim-btn-danger:hover {
+    background-color: #d32f2f;
+}
+
+.xodim-btn-success {
+    background-color: #4caf50;
+    color: white;
+}
+
+.xodim-btn-success:hover {
+    background-color: #388e3c;
+}
+
+.xodim-btn-outline {
+    background-color: transparent;
+    border: 1px solid #2196f3;
+    color: #2196f3;
+}
+
+.xodim-btn-outline:hover {
+    background-color: #e3f2fd;
+}
+
+.xodim-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.xodim-schedule-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.xodim-time-form {
+    width: 100%;
+}
+
+.xodim-time-inputs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.xodim-time-input-group {
+    flex: 1;
+}
+
+.xodim-time-input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.xodim-time-input-group input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.xodim-time-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.xodim-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.xodim-error {
+    background-color: #ffebee;
+    color: #d32f2f;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.xodim-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2196f3;
+    margin-bottom: 15px;
+}
+
+
+// Responsive Adjustments
+@media (max-width: 992px) {
+    .xodim-container {
+        padding: 16px;
+
+        .xodim-header {
+            @include flex(column, flex-start, flex-start);
+            gap: 16px;
+
+            .xodim-actions {
+                width: 100%;
+                @include flex(row, flex-end, center);
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .xodim-container {
+        .xodim-stats-grid {
+            @include grid(repeat(auto-fill, minmax(200px, 1fr)), 16px); // Ensure responsiveness for stat cards
+        }
+
+        .xodim-advanced-filters {
+            @include grid(1fr, 16px);
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .xodim-container {
+        padding: 12px;
+
+        .xodim-header {
+            .xodim-title {
+                font-size: 20px;
+            }
+
+            .xodim-actions {
+                @include flex(column, flex-start, stretch);
+                width: 100%;
+
+                .xodim-btn {
+                    width: 100%;
+                }
+            }
+        }
+
+        .xodim-search-filter {
+            @include flex(column, flex-start, stretch);
+
+            .xodim-search-input {
+                width: 100%;
+            }
+
+            .xodim-filter-toggle-btn {
+                width: 100%;
+            }
+        }
+
+        .xodim-sidebar {
+            // Ensure sidebar is full width on small screens
+            width: 100%;
+            right: -100%;
+
+            &.active {
+                right: 0;
+            }
+        }
+
+        .xodim-form-actions {
+            @include flex(column, flex-start, stretch);
+
+            .xodim-btn {
+                width: 100%;
+            }
+        }
+    }
+}

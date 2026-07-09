@@ -1,0 +1,38 @@
+// page-styles-common
+@import url("./page-styles/common-page-styles.scss");
+
+// component-styles-common
+@import url("./component-styles/common-component-styles.scss");
+
+
+
+// variables
+// @import url('./variables/variables.scss');
+
+/* Umumiy reset va asosiy stillar */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+
+    font-family: Arial, sans-serif;
+    background: #f7f7f7;
+}
+
+/* App konteyner: sidebar va main content yonma-yon joylashadi */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* Main content stillari */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    padding-top: 80px;
+    background: #f7f7f7;
+}

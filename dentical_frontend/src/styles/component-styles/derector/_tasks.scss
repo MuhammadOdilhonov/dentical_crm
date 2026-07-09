@@ -1,0 +1,805 @@
+// Variables
+$primary-color: #1a73e8;
+$primary-light: #e8f0fe;
+$secondary-color: #5f6368;
+$border-color: #dadce0;
+$background-color: #ffffff;
+$hover-color: #f1f3f4;
+$active-color: #e8f0fe;
+$text-color: #3c4043;
+$text-secondary: #5f6368;
+$success-color: #34a853;
+$warning-color: #fbbc04;
+$error-color: #ea4335;
+$info-color: #4285f4;
+$shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+$border-radius: 8px;
+$font-family: 'Google Sans', Roboto, Arial, sans-serif;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@mixin button-reset {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+// Main container
+.director-tasks {
+    font-family: $font-family;
+    color: $text-color;
+    background-color: $background-color;
+    min-height: calc(100vh - 80px);
+    width: 100%;
+    margin-top: 80px;
+    padding-bottom: 20px;
+
+    .tasks-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        border-radius: $border-radius;
+        overflow: hidden;
+    }
+
+    // Header styles
+    .tasks-header {
+        @include flex-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid $border-color;
+        background-color: $background-color;
+        z-index: 10;
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .today-btn {
+                background-color: $background-color;
+                border: 1px solid $border-color;
+                border-radius: 24px;
+                color: $text-color;
+                font-size: 14px;
+                font-weight: 500;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background-color: $hover-color;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+            }
+
+            .navigation-buttons {
+                display: flex;
+                gap: 8px;
+
+                .nav-btn {
+                    @include button-reset;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    @include flex-center;
+                    color: $secondary-color;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: $hover-color;
+                        color: $primary-color;
+                    }
+                }
+            }
+
+            .current-date-title {
+                font-size: 22px;
+                font-weight: 400;
+                margin: 0;
+                color: $text-color;
+            }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .search-box {
+                position: relative;
+
+                .search-icon {
+                    position: absolute;
+                    left: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: $secondary-color;
+                    font-size: 14px;
+                }
+
+                input {
+                    background-color: $hover-color;
+                    border: none;
+                    border-radius: 24px;
+                    padding: 8px 16px 8px 36px;
+                    font-size: 14px;
+                    width: 220px;
+                    color: $text-color;
+                    transition: all 0.2s ease;
+
+                    &:focus {
+                        outline: none;
+                        background-color: $background-color;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                        width: 250px;
+                    }
+
+                    &::placeholder {
+                        color: $text-secondary;
+                    }
+                }
+            }
+
+            .filter-btn {
+                @include button-reset;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                @include flex-center;
+                color: $secondary-color;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background-color: $hover-color;
+                    color: $primary-color;
+                }
+            }
+
+            .view-buttons {
+                display: flex;
+                border: 1px solid $border-color;
+                border-radius: 24px;
+                overflow: hidden;
+                background-color: $hover-color;
+
+                .view-btn {
+                    @include button-reset;
+                    padding: 8px 12px;
+                    font-size: 14px;
+                    color: $text-color;
+                    background-color: transparent;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: rgba($primary-color, 0.05);
+                    }
+
+                    &.active {
+                        background-color: $primary-color;
+                        color: white;
+                        font-weight: 500;
+                    }
+                }
+            }
+
+            .list-view-btn {
+                @include button-reset;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                color: $text-color;
+                border: 1px solid $border-color;
+                border-radius: 24px;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background-color: $hover-color;
+                }
+
+                &.active {
+                    background-color: $primary-color;
+                    color: white;
+                    border-color: $primary-color;
+                }
+            }
+
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                .create-btn {
+                    @include button-reset;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    @include flex-center;
+                    background-color: $primary-color;
+                    color: white;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+                    &:hover {
+                        background-color: darken($primary-color, 5%);
+                        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+                        transform: translateY(-1px);
+                    }
+                }
+            }
+        }
+    }
+
+    // Filters panel
+    .filters-panel {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        background-color: $background-color;
+        border-bottom: 1px solid $border-color;
+        animation: slideDown 0.3s ease;
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            label {
+                font-size: 14px;
+                color: $text-secondary;
+                font-weight: 500;
+            }
+
+            select {
+                background-color: $background-color;
+                border: 1px solid $border-color;
+                border-radius: 4px;
+                color: $text-color;
+                font-size: 14px;
+                padding: 8px 32px 8px 12px;
+                cursor: pointer;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 8px center;
+                background-size: 16px;
+                transition: all 0.2s ease;
+
+                &:focus {
+                    outline: none;
+                    border-color: $primary-color;
+                    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+                }
+            }
+        }
+    }
+
+    // Calendar container
+    .calendar-container {
+        flex: 1;
+        padding: 0;
+        overflow: auto;
+        background-color: $background-color;
+
+        .calendar-header {
+            @include flex-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid $border-color;
+
+            .calendar-navigation {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+
+                h2 {
+                    margin: 0;
+                    font-size: 18px;
+                    font-weight: 500;
+                }
+
+                .btn-icon {
+                    @include button-reset;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    @include flex-center;
+                    color: $secondary-color;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: $hover-color;
+                        color: $primary-color;
+                    }
+                }
+
+                .btn-secondary {
+                    background-color: $hover-color;
+                    border: none;
+                    border-radius: 16px;
+                    color: $text-color;
+                    font-size: 13px;
+                    padding: 4px 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: darken($hover-color, 5%);
+                    }
+                }
+            }
+
+            .calendar-view-selector {
+                display: flex;
+                gap: 4px;
+
+                .btn-sm {
+                    background-color: transparent;
+                    border: 1px solid $border-color;
+                    border-radius: 16px;
+                    color: $text-color;
+                    font-size: 13px;
+                    padding: 4px 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: $hover-color;
+                    }
+
+                    &.active {
+                        background-color: $primary-color;
+                        color: white;
+                        border-color: $primary-color;
+                    }
+                }
+            }
+        }
+    }
+
+    // Tasks list container
+    .tasks-list-container {
+        flex: 1;
+        padding: 16px;
+        overflow: auto;
+        background-color: $background-color;
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0 0 16px 0;
+            color: $text-color;
+        }
+
+        .tasks-list {
+            margin-bottom: 20px;
+
+            .tasks-table {
+                width: 100%;
+                border-collapse: collapse;
+                border-radius: $border-radius;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+                th {
+                    background-color: $hover-color;
+                    color: $text-color;
+                    font-weight: 500;
+                    text-align: left;
+                    padding: 12px 16px;
+                    font-size: 14px;
+                    border-bottom: 1px solid $border-color;
+                }
+
+                td {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid $border-color;
+                    font-size: 14px;
+
+                    &.task-title {
+                        font-weight: 500;
+                    }
+
+                    &.task-assignee {
+                        .assignee-info {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+
+                            .assignee-icon {
+                                color: $secondary-color;
+                                font-size: 14px;
+                            }
+                        }
+                    }
+
+                    &.task-status {
+                        .status-badge {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 4px;
+                            padding: 4px 8px;
+                            border-radius: 12px;
+                            font-size: 12px;
+                            font-weight: 500;
+
+                            .status-icon {
+                                font-size: 10px;
+                            }
+
+                            &.completed {
+                                background-color: rgba($success-color, 0.1);
+                                color: $success-color;
+                            }
+
+                            &.in_progress {
+                                background-color: rgba($info-color, 0.1);
+                                color: $info-color;
+                            }
+
+                            &.pending {
+                                background-color: rgba($warning-color, 0.1);
+                                color: $warning-color;
+                            }
+                        }
+                    }
+
+                    &.task-priority {
+                        .priority-badge {
+                            display: inline-block;
+                            padding: 4px 8px;
+                            border-radius: 12px;
+                            font-size: 12px;
+                            font-weight: 500;
+
+                            &.high-priority {
+                                background-color: rgba($error-color, 0.1);
+                                color: $error-color;
+                            }
+
+                            &.medium-priority {
+                                background-color: rgba($warning-color, 0.1);
+                                color: $warning-color;
+                            }
+
+                            &.low-priority {
+                                background-color: rgba($success-color, 0.1);
+                                color: $success-color;
+                            }
+                        }
+                    }
+
+                    &.task-actions {
+                        display: flex;
+                        gap: 8px;
+
+                        .action-btn {
+                            @include button-reset;
+                            width: 28px;
+                            height: 28px;
+                            border-radius: 4px;
+                            @include flex-center;
+                            transition: all 0.2s ease;
+
+                            &.view {
+                                color: $info-color;
+
+                                &:hover {
+                                    background-color: rgba($info-color, 0.1);
+                                }
+                            }
+
+                            &.edit {
+                                color: $warning-color;
+
+                                &:hover {
+                                    background-color: rgba($warning-color, 0.1);
+                                }
+                            }
+
+                            &.delete {
+                                color: $error-color;
+
+                                &:hover {
+                                    background-color: rgba($error-color, 0.1);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                tr {
+                    &:hover {
+                        background-color: rgba($primary-color, 0.02);
+                    }
+
+                    &.completed {
+                        background-color: rgba($success-color, 0.03);
+                    }
+                }
+
+                .no-data {
+                    text-align: center;
+                    padding: 40px;
+                    color: $text-secondary;
+                }
+            }
+        }
+
+        .pagination-container {
+            @include flex-between;
+            margin-top: 20px;
+
+            .items-per-page {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                label {
+                    font-size: 14px;
+                    color: $text-secondary;
+                }
+
+                select {
+                    background-color: $background-color;
+                    border: 1px solid $border-color;
+                    border-radius: 4px;
+                    color: $text-color;
+                    font-size: 14px;
+                    padding: 4px 24px 4px 8px;
+                    cursor: pointer;
+                    appearance: none;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: right 4px center;
+                    background-size: 16px;
+
+                    &:focus {
+                        outline: none;
+                        border-color: $primary-color;
+                    }
+                }
+            }
+        }
+
+        .no-tasks-message {
+            @include flex-center;
+            flex-direction: column;
+            gap: 16px;
+            padding: 48px 0;
+            color: $text-secondary;
+
+            svg {
+                font-size: 48px;
+                opacity: 0.5;
+            }
+
+            p {
+                font-size: 16px;
+                margin: 0;
+            }
+        }
+    }
+
+    // Modal styles
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9998; // ConfirmModal dan pastroq z-index
+        animation: fadeIn 0.2s ease;
+
+        .modal-content {
+            background-color: $background-color;
+            border-radius: $border-radius;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: scaleIn 0.2s ease;
+            position: relative;
+            z-index: 9999;
+        }
+    }
+
+    // Loading styles
+    .loading-container,
+    .loading-indicator {
+        @include flex-center;
+        flex-direction: column;
+        gap: 16px;
+        padding: 40px 0;
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba($primary-color, 0.1);
+            border-radius: 50%;
+            border-top-color: $primary-color;
+            animation: spin 1s linear infinite;
+        }
+
+        p {
+            font-size: 16px;
+            color: $text-secondary;
+            margin: 0;
+        }
+    }
+
+    // Error message
+    .error-message {
+        padding: 20px;
+        text-align: center;
+        color: $error-color;
+        background-color: rgba($error-color, 0.05);
+        border-radius: $border-radius;
+        margin: 20px 0;
+    }
+
+    // Animations
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+// Media queries for responsive design
+@media (max-width: 1024px) {
+    .director-tasks {
+        .tasks-header {
+            flex-direction: column;
+            height: auto;
+            padding: 12px;
+            gap: 12px;
+
+            .header-left,
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-right {
+                flex-wrap: wrap;
+                gap: 8px;
+
+                .search-box {
+                    order: -1;
+                    width: 100%;
+
+                    input {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .director-tasks {
+        .tasks-header {
+            .header-right {
+                .view-buttons {
+                    flex-wrap: wrap;
+
+                    .view-btn {
+                        flex: 1;
+                    }
+                }
+            }
+        }
+
+        .filters-panel {
+            flex-direction: column;
+            gap: 12px;
+
+            .filter-group {
+                width: 100%;
+
+                select {
+                    flex: 1;
+                }
+            }
+        }
+
+        .tasks-list-container {
+            .tasks-list {
+                .tasks-table {
+
+                    th,
+                    td {
+                        padding: 8px;
+                    }
+
+                    th:nth-child(3),
+                    td:nth-child(3) {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .director-tasks {
+        .tasks-list-container {
+            .tasks-list {
+                .tasks-table {
+
+                    th:nth-child(4),
+                    td:nth-child(4) {
+                        display: none;
+                    }
+                }
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+    }
+}

@@ -1,0 +1,401 @@
+// Variables
+$primary-color: #1a73e8;
+$primary-light: #e8f0fe;
+$secondary-color: #5f6368;
+$border-color: #dadce0;
+$background-color: #ffffff;
+$hover-color: #f1f3f4;
+$active-color: #e8f0fe;
+$text-color: #3c4043;
+$text-secondary: #5f6368;
+$success-color: #34a853;
+$warning-color: #fbbc04;
+$error-color: #ea4335;
+$info-color: #4285f4;
+$font-family: 'Google Sans', Roboto, Arial, sans-serif;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+// Task Calendar
+.task-calendar {
+    font-family: $font-family;
+    color: $text-color;
+
+    // Calendar header with day names
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        border-bottom: 1px solid $border-color;
+
+        .day-name {
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: $text-secondary;
+            text-transform: uppercase;
+
+            &.today {
+                color: $primary-color;
+                font-weight: 600;
+            }
+
+            .day-number-header {
+                font-size: 24px;
+                font-weight: 400;
+                margin-top: 4px;
+                color: $text-color;
+            }
+        }
+    }
+
+    // Calendar grid
+    .calendar-grid {
+        display: grid;
+
+        &.month-grid {
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            height: calc(100vh - 180px);
+            min-height: 600px;
+        }
+
+        &.week-grid {
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: 1fr;
+            height: calc(100vh - 180px);
+            min-height: 600px;
+        }
+
+        // Calendar day cell
+        .calendar-day {
+            border-right: 1px solid $border-color;
+            border-bottom: 1px solid $border-color;
+            padding: 8px;
+            overflow: hidden;
+            position: relative;
+
+            // Day in other month
+            &.other-month {
+                background-color: #f8f9fa;
+
+                .day-number {
+                    color: #bdc1c6;
+                }
+            }
+
+            // Today
+            &.today {
+                .day-number {
+                    background-color: $primary-color;
+                    color: white;
+                }
+            }
+
+            // Day header
+            .day-header {
+                margin-bottom: 8px;
+
+                .day-number {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+            }
+
+            // Day content
+            .day-content {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+
+                // Calendar task
+                .calendar-task {
+                    background-color: white;
+                    border-left: 4px solid;
+                    border-radius: 4px;
+                    padding: 4px 8px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3);
+
+                    &:hover {
+                        box-shadow: 0 1px 3px rgba(60, 64, 67, 0.4);
+                    }
+
+                    // Task priority colors
+                    &.high-priority {
+                        border-left-color: $error-color;
+
+                        &.completed {
+                            opacity: 0.7;
+                            text-decoration: line-through;
+                        }
+                    }
+
+                    &.medium-priority {
+                        border-left-color: $warning-color;
+
+                        &.completed {
+                            opacity: 0.7;
+                            text-decoration: line-through;
+                        }
+                    }
+
+                    &.low-priority {
+                        border-left-color: $success-color;
+
+                        &.completed {
+                            opacity: 0.7;
+                            text-decoration: line-through;
+                        }
+                    }
+
+                    // Task time
+                    .task-time {
+                        font-size: 11px;
+                        color: $text-secondary;
+                        margin-bottom: 2px;
+                    }
+
+                    // Task title
+                    .task-title {
+                        font-weight: 500;
+                        color: $text-color;
+                    }
+                }
+
+                // More tasks indicator
+                .more-tasks {
+                    font-size: 11px;
+                    color: $primary-color;
+                    padding: 2px 8px;
+                    cursor: pointer;
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+
+                // No tasks message
+                .no-tasks {
+                    height: 100%;
+                    @include flex-center;
+                    color: $text-secondary;
+                    font-size: 12px;
+                    opacity: 0.7;
+                }
+            }
+        }
+    }
+
+    // Day view
+    .day-view {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 180px);
+        min-height: 600px;
+
+        .day-header {
+            padding: 16px;
+            border-bottom: 1px solid $border-color;
+
+            .day-title {
+                font-size: 18px;
+                font-weight: 500;
+            }
+        }
+
+        .day-hours {
+            flex: 1;
+            overflow-y: auto;
+
+            .hour-row {
+                display: flex;
+                border-bottom: 1px solid $border-color;
+                min-height: 60px;
+
+                .hour-label {
+                    width: 60px;
+                    padding: 8px;
+                    color: $text-secondary;
+                    font-size: 12px;
+                    text-align: right;
+                    border-right: 1px solid $border-color;
+                }
+
+                .hour-content {
+                    flex: 1;
+                    padding: 8px;
+                    min-height: 60px;
+
+                    .calendar-task {
+                        margin-bottom: 8px;
+                        background-color: white;
+                        border-left: 4px solid;
+                        border-radius: 4px;
+                        padding: 8px;
+                        font-size: 13px;
+                        cursor: pointer;
+                        box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3);
+
+                        &:hover {
+                            box-shadow: 0 1px 3px rgba(60, 64, 67, 0.4);
+                        }
+
+                        // Task priority colors
+                        &.high-priority {
+                            border-left-color: $error-color;
+                        }
+
+                        &.medium-priority {
+                            border-left-color: $warning-color;
+                        }
+
+                        &.low-priority {
+                            border-left-color: $success-color;
+                        }
+
+                        .task-time {
+                            font-size: 12px;
+                            color: $text-secondary;
+                            margin-bottom: 4px;
+                        }
+
+                        .task-title {
+                            font-weight: 500;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Year view
+    .year-view {
+        padding: 16px;
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+
+            @media (max-width: 1024px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            @media (max-width: 768px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            @media (max-width: 480px) {
+                grid-template-columns: 1fr;
+            }
+
+            .month-card {
+                border: 1px solid $border-color;
+                border-radius: 8px;
+                overflow: hidden;
+
+                &.current-month {
+                    border-color: $primary-color;
+
+                    .month-header {
+                        background-color: $primary-light;
+
+                        h3 {
+                            color: $primary-color;
+                        }
+                    }
+                }
+
+                .month-header {
+                    padding: 12px;
+                    background-color: $hover-color;
+                    border-bottom: 1px solid $border-color;
+
+                    h3 {
+                        margin: 0;
+                        font-size: 16px;
+                        font-weight: 500;
+                    }
+                }
+
+                .month-content {
+                    padding: 16px;
+
+                    .task-count {
+                        font-size: 14px;
+                        color: $text-secondary;
+                        margin-bottom: 12px;
+                    }
+
+                    .view-tasks-btn {
+                        display: inline-block;
+                        padding: 6px 12px;
+                        background-color: $primary-light;
+                        color: $primary-color;
+                        border-radius: 4px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        cursor: pointer;
+
+                        &:hover {
+                            background-color: darken($primary-light, 5%);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Media queries for responsive design
+@media (max-width: 768px) {
+    .task-calendar {
+        .calendar-header {
+            .day-name {
+                font-size: 10px;
+                padding: 4px;
+            }
+        }
+
+        .calendar-grid {
+
+            &.month-grid,
+            &.week-grid {
+                min-height: 500px;
+            }
+
+            .calendar-day {
+                padding: 4px;
+
+                .day-content {
+                    .calendar-task {
+                        padding: 2px 4px;
+                        font-size: 10px;
+                    }
+                }
+            }
+        }
+    }
+}

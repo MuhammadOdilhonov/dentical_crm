@@ -1,0 +1,355 @@
+// Variables
+$primary-color: #2563eb;
+$secondary-color: #1e40af;
+$accent-color: #3b82f6;
+$light-color: #f8fafc;
+$dark-color: #1e293b;
+$text-color: #334155;
+$light-gray: #e2e8f0;
+$error-color: #ef4444;
+$success-color: #10b981;
+$border-radius: 8px;
+$box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s ease;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+// Global styles for this component
+.request-access-container {
+    min-height: 100vh;
+    @include flex-center;
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    position: relative;
+    overflow: hidden;
+}
+
+// Animations
+.animation-left,
+.animation-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20%;
+    @include flex-center;
+    z-index: 1;
+}
+
+.animation-left {
+    left: 0;
+}
+
+.animation-right {
+    right: 0;
+}
+
+.circle-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    @include flex-center;
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba($primary-color, 0.3);
+
+    &.circle-1 {
+        width: 100px;
+        height: 100px;
+        animation: rotate 15s linear infinite;
+        border-top-color: $primary-color;
+        border-right-color: transparent;
+    }
+
+    &.circle-2 {
+        width: 150px;
+        height: 150px;
+        animation: rotate 20s linear infinite reverse;
+        border-bottom-color: $accent-color;
+        border-left-color: transparent;
+    }
+
+    &.circle-3 {
+        width: 200px;
+        height: 200px;
+        animation: rotate 25s linear infinite;
+        border-left-color: $secondary-color;
+        border-bottom-color: transparent;
+    }
+}
+
+.pulse-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    @include flex-center;
+}
+
+.pulse {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba($accent-color, 0.2);
+
+    &.pulse-1 {
+        width: 100px;
+        height: 100px;
+        animation: pulse 4s ease-in-out infinite;
+    }
+
+    &.pulse-2 {
+        width: 150px;
+        height: 150px;
+        animation: pulse 4s ease-in-out infinite 1s;
+    }
+
+    &.pulse-3 {
+        width: 200px;
+        height: 200px;
+        animation: pulse 4s ease-in-out infinite 2s;
+    }
+}
+
+// Request content
+.request-content {
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: $box-shadow;
+    width: 100%;
+    max-width: 550px;
+    padding: 2.5rem;
+    z-index: 2;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 100px;
+        height: 100px;
+        background-color: rgba($primary-color, 0.1);
+        border-radius: 50%;
+        z-index: -1;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        width: 100px;
+        height: 100px;
+        background-color: rgba($accent-color, 0.1);
+        border-radius: 50%;
+        z-index: -1;
+    }
+}
+
+.request-header {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    .logo-icon {
+        font-size: 3rem;
+        color: $primary-color;
+        margin-bottom: 1rem;
+    }
+
+    h1 {
+        color: $dark-color;
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        color: $text-color;
+        opacity: 0.8;
+    }
+}
+
+.request-form {
+    @include flex-column;
+    gap: 1.2rem;
+}
+
+.form-group {
+    position: relative;
+
+    input,
+    textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid $light-gray;
+        border-radius: $border-radius;
+        font-size: 1rem;
+        transition: $transition;
+
+        &:focus {
+            outline: none;
+            border-color: $primary-color;
+            box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+        }
+
+        &::placeholder {
+            color: rgba($text-color, 0.5);
+        }
+    }
+
+    input {
+        padding-left: 2.8rem;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba($text-color, 0.6);
+
+        .age-icon {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+    }
+}
+
+.submit-button,
+.back-button,
+.back-to-login {
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    border-radius: $border-radius;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition;
+}
+
+.submit-button {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover {
+        background-color: $secondary-color;
+    }
+}
+
+.back-button,
+.back-to-login {
+    background-color: $light-gray;
+    color: $text-color;
+
+    &:hover {
+        background-color: darken($light-gray, 5%);
+    }
+}
+
+.success-message {
+    text-align: center;
+    @include flex-column;
+    align-items: center;
+    gap: 1.5rem;
+
+    .logo-icon {
+        font-size: 4rem;
+        color: $success-color;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    h2 {
+        color: $dark-color;
+        font-size: 1.5rem;
+    }
+
+    p {
+        color: $text-color;
+        margin-bottom: 1.5rem;
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .request-access-container {
+        padding: 1rem;
+    }
+
+    .animation-left,
+    .animation-right {
+        width: 15%;
+    }
+
+    .circle-container,
+    .pulse-container {
+        transform: scale(0.8);
+    }
+}
+
+@media (max-width: 576px) {
+    .request-content {
+        padding: 1.5rem;
+    }
+
+    .animation-left,
+    .animation-right {
+        display: none;
+    }
+}

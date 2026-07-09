@@ -1,0 +1,1895 @@
+
+
+.jadval-container {
+    padding: 24px;
+    background-color: #f8fafc;
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    .jadval-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+
+        .jadval-page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            svg {
+                color: #3b82f6;
+            }
+        }
+
+        .jadval-header-actions {
+            display: flex;
+            gap: 12px;
+        }
+    }
+
+    .jadval-btn {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+        &.jadval-btn-primary {
+            background-color: #3b82f6;
+            color: white;
+
+            &:hover {
+                background-color: #2563eb;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+
+        &.jadval-btn-secondary {
+            background-color: #f1f5f9;
+            color: #475569;
+
+            &:hover {
+                background-color: #e2e8f0;
+                transform: translateY(-1px);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+
+        &.jadval-btn-icon {
+            svg {
+                font-size: 16px;
+            }
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+    }
+
+    .jadval-filters-container {
+        margin-bottom: 24px;
+
+        .jadval-search-filter {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+
+            .jadval-search-input {
+                flex: 1;
+                position: relative;
+                display: flex;
+
+                input {
+                    flex: 1;
+                    padding: 12px 12px 12px 42px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    background-color: #fff;
+                    transition: all 0.2s ease;
+
+                    &:focus {
+                        outline: none;
+                        border-color: #3b82f6;
+                        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+                    }
+                }
+
+                .jadval-search-icon {
+                    position: absolute;
+                    left: 14px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #94a3b8;
+                }
+
+                .jadval-search-button {
+                    background-color: #3b82f6;
+                    color: white;
+                    border: none;
+                    border-radius: 0 8px 8px 0;
+                    padding: 0 16px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: #2563eb;
+                    }
+                }
+            }
+
+            .jadval-filter-toggle-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 18px;
+                background-color: #f1f5f9;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                color: #475569;
+                transition: all 0.2s ease;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+                &:hover {
+                    background-color: #e2e8f0;
+                }
+
+                &.active {
+                    background-color: #3b82f6;
+                    color: white;
+                }
+            }
+        }
+
+        .jadval-advanced-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease;
+
+            .jadval-filter-group {
+                display: flex;
+                flex-direction: column;
+                min-width: 200px;
+                flex: 1;
+
+                label {
+                    font-size: 13px;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    color: #64748b;
+                }
+
+                select,
+                input {
+                    padding: 10px 14px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    background-color: #fff;
+                    transition: all 0.2s ease;
+
+                    &:focus {
+                        outline: none;
+                        border-color: #3b82f6;
+                        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+                    }
+                }
+
+                .jadval-date-input {
+                    position: relative;
+
+                    input {
+                        padding-left: 40px;
+                        width: 100%;
+                    }
+
+                    .jadval-calendar-icon {
+                        position: absolute;
+                        left: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: #94a3b8;
+                    }
+                }
+            }
+        }
+    }
+
+    .jadval-view-controls {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+
+        .jadval-view-btn {
+            padding: 10px 18px;
+            background-color: #f1f5f9;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+            &:hover {
+                background-color: #e2e8f0;
+            }
+
+            &.active {
+                background-color: #3b82f6;
+                color: white;
+            }
+        }
+    }
+
+    .jadval-dashboard-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+
+        .jadval-table-responsive {
+            // overflow-x: auto;
+
+            .jadval-data-table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+
+                th,
+                td {
+                    padding: 16px;
+                    text-align: left;
+                    font-size: 14px;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+
+                th {
+                    background-color: #f8fafc;
+                    font-weight: 600;
+                    color: #475569;
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                }
+
+                tr {
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: #f8fafc;
+                    }
+                }
+
+                .jadval-status-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: capitalize;
+
+                    &.expected {
+                        background-color: #f1f5f9;
+                        color: #475569;
+                    }
+
+                    &.accepted {
+                        background-color: #dbeafe;
+                        color: #1e40af;
+                    }
+
+                    &.progress,
+                    &.in_progress {
+                        background-color: #fef3c7;
+                        color: #92400e;
+                    }
+
+                    &.finished,
+                    &.completed {
+                        background-color: #dcfce7;
+                        color: #166534;
+                    }
+
+                    &.cancelled {
+                        background-color: #fee2e2;
+                        color: #b91c1c;
+                    }
+                }
+
+                .jadval-branch-badge {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 13px;
+                    background-color: #f1f5f9;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    width: fit-content;
+
+                    .jadval-branch-icon {
+                        color: #64748b;
+                    }
+                }
+
+                .jadval-action-dropdown {
+                    position: relative;
+                    display: inline-block;
+
+                    .jadval-action-dropdown-toggle {
+                        background: none;
+                        border: none;
+                        color: #64748b;
+                        cursor: pointer;
+                        padding: 8px;
+                        border-radius: 6px;
+                        transition: all 0.2s ease;
+
+                        &:hover {
+                            background-color: #f1f5f9;
+                            color: #1e293b;
+                        }
+                    }
+
+                    .jadval-action-dropdown-menu {
+                        position: absolute;
+                        overflow-x: scroll;
+                        top: -10px;
+                        // Remove the right property and use left: 50%, transform: translateX(-50%) for centering
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background-color: #fff;
+                        border-radius: 8px;
+                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                        min-width: 180px;
+                        height: 150px;
+                        z-index: 10000;
+                        display: none;
+                        flex-direction: column;
+                        padding: 8px;
+                        animation: fadeIn 0.2s ease;
+
+                        // Add style for print ticket button
+                        .print-ticket {
+                            color: #3b82f6;
+
+                            &:hover {
+                                background-color: rgba(59, 130, 246, 0.1);
+                            }
+                        }
+
+                        .jadval-action-item {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            padding: 10px 12px;
+                            border: none;
+                            background: none;
+                            text-align: left;
+                            cursor: pointer;
+                            font-size: 14px;
+                            color: #475569;
+                            width: 200px;
+                            border-radius: 6px;
+                            transition: all 0.2s ease;
+
+                            &:hover {
+                                background-color: #f8fafc;
+                            }
+
+                            &.delete {
+                                color: #ef4444;
+
+                                &:hover {
+                                    background-color: #fee2e2;
+                                }
+                            }
+
+                            &.status-accept {
+                                color: #10b981;
+
+                                &:hover {
+                                    background-color: #dcfce7;
+                                }
+                            }
+
+                            &.status-cancel {
+                                color: #ef4444;
+
+                                &:hover {
+                                    background-color: #fee2e2;
+                                }
+                            }
+                        }
+                    }
+
+                    &:hover .jadval-action-dropdown-menu {
+                        display: flex;
+                    }
+                }
+
+                .jadval-loading,
+                .jadval-error,
+                .jadval-no-data {
+                    text-align: center;
+                    padding: 40px;
+                    color: #64748b;
+                    font-size: 15px;
+
+                    .jadval-spinner {
+                        animation: spin 1s linear infinite;
+                        margin-right: 10px;
+                        font-size: 18px;
+                    }
+
+                    .jadval-error-icon,
+                    .jadval-no-data-icon {
+                        margin-right: 10px;
+                        color: #ef4444;
+                        font-size: 18px;
+                    }
+                }
+            }
+        }
+    }
+
+    .jadval-calendar-view {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+
+        .jadval-calendar-header {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+
+            .jadval-calendar-navigation {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+
+                .jadval-nav-btn {
+                    background-color: #f1f5f9;
+                    border: none;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    color: #475569;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: #e2e8f0;
+                        color: #1e293b;
+                    }
+                }
+
+                .jadval-current-month {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    margin: 0;
+                }
+            }
+
+            .jadval-calendar-days {
+                display: flex;
+
+                .jadval-calendar-day {
+                    flex: 1;
+                    text-align: center;
+                    padding: 12px;
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
+
+                    &.today {
+                        background-color: #eff6ff;
+                    }
+
+                    .jadval-day-name {
+                        font-weight: 600;
+                        font-size: 14px;
+                        color: #64748b;
+                        margin-bottom: 6px;
+                    }
+
+                    .jadval-day-date {
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: #1e293b;
+                    }
+                }
+            }
+        }
+
+        .jadval-calendar-body {
+            display: flex;
+            min-height: 600px;
+
+            .jadval-calendar-column {
+                flex: 1;
+                padding: 12px;
+                border-right: 1px solid #f1f5f9;
+                background-color: #fcfcfc;
+
+                &:last-child {
+                    border-right: none;
+                }
+
+                &.today {
+                    background-color: #f8fafc;
+                }
+
+                .jadval-calendar-item {
+                    background-color: #fff;
+                    border-radius: 8px;
+                    padding: 14px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+                    cursor: pointer;
+                    border-left: 4px solid #3b82f6;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                        transform: translateY(-2px);
+                    }
+
+                    &.expected {
+                        border-left-color: #94a3b8;
+                    }
+
+                    &.accepted {
+                        border-left-color: #3b82f6;
+                    }
+
+                    &.progress,
+                    &.in_progress {
+                        border-left-color: #f59e0b;
+                    }
+
+                    &.finished,
+                    &.completed {
+                        border-left-color: #10b981;
+                    }
+
+                    &.cancelled {
+                        border-left-color: #ef4444;
+                    }
+
+                    .jadval-calendar-time {
+                        font-weight: 700;
+                        font-size: 15px;
+                        margin-bottom: 8px;
+                        color: #1e293b;
+                    }
+
+                    .jadval-calendar-patient {
+                        font-weight: 600;
+                        margin-bottom: 6px;
+                        color: #1e293b;
+                    }
+
+                    .jadval-calendar-doctor,
+                    .jadval-calendar-room {
+                        font-size: 13px;
+                        color: #64748b;
+                        margin-bottom: 4px;
+                    }
+
+                    .jadval-calendar-status {
+                        margin-top: 8px;
+
+                        .jadval-status-badge {
+                            display: inline-flex;
+                            align-items: center;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            text-transform: capitalize;
+
+                            &.expected {
+                                background-color: #f1f5f9;
+                                color: #475569;
+                            }
+
+                            &.accepted {
+                                background-color: #dbeafe;
+                                color: #1e40af;
+                            }
+
+                            &.progress,
+                            &.in_progress {
+                                background-color: #fef3c7;
+                                color: #92400e;
+                            }
+
+                            &.finished,
+                            &.completed {
+                                background-color: #dcfce7;
+                                color: #166534;
+                            }
+
+                            &.cancelled {
+                                background-color: #fee2e2;
+                                color: #b91c1c;
+                            }
+                        }
+                    }
+                }
+
+                .jadval-no-appointments {
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: #94a3b8;
+                    font-style: italic;
+                    gap: 16px;
+
+                    .jadval-add-btn {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        background-color: #3b82f6;
+                        color: white;
+                        border: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+
+                        &:hover {
+                            background-color: #2563eb;
+                            transform: scale(1.05);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .jadval-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(15, 23, 42, 0.5);
+        z-index: 999;
+        display: none;
+        backdrop-filter: blur(2px);
+        transition: all 0.3s ease;
+
+        &.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+    }
+
+    .jadval-sidebar {
+        position: fixed;
+        top: 0;
+        right: -450px;
+        width: 450px;
+        height: 100vh;
+        background-color: #fff;
+        z-index: 1000;
+        transition: right 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -10px 0 20px rgba(0, 0, 0, 0.1);
+
+        &.active {
+            right: 0;
+        }
+
+        .jadval-sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h2 {
+                font-size: 20px;
+                font-weight: 700;
+                margin: 0;
+                color: #1e293b;
+            }
+
+            .jadval-close-button {
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: #64748b;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background-color: #f1f5f9;
+                    color: #1e293b;
+                }
+            }
+        }
+
+        .jadval-sidebar-content {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+
+            .step-indicator {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+                position: relative;
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    top: 15px;
+                    left: 15px;
+                    right: 15px;
+                    height: 2px;
+                    background-color: #e2e8f0;
+                    z-index: 1;
+                }
+
+                .step {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    background-color: #f1f5f9;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    color: #64748b;
+                    position: relative;
+                    z-index: 2;
+                    transition: all 0.3s ease;
+
+                    &.active {
+                        background-color: #3b82f6;
+                        color: white;
+                        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+                    }
+
+                    &.completed {
+                        background-color: #10b981;
+                        color: white;
+                    }
+                }
+            }
+
+            .step-title {
+                font-size: 18px;
+                font-weight: 700;
+                margin-bottom: 24px;
+                color: #1e293b;
+            }
+
+            .jadval-form-group {
+                margin-bottom: 24px;
+
+                label {
+                    display: block;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    color: #475569;
+                    font-size: 14px;
+                }
+
+                input,
+                select,
+                textarea {
+                    width: 100%;
+                    padding: 12px 14px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    background-color: #fff;
+                    transition: all 0.2s ease;
+
+                    &:focus {
+                        outline: none;
+                        border-color: #3b82f6;
+                        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+                    }
+                }
+
+                textarea {
+                    resize: vertical;
+                    min-height: 120px;
+                }
+
+                .input-icon-wrapper {
+                    position: relative;
+
+                    .input-icon {
+                        position: absolute;
+                        left: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: #94a3b8;
+                    }
+
+                    input,
+                    select {
+                        padding-left: 42px;
+                    }
+                }
+
+                .time-error {
+                    color: #ef4444;
+                    font-size: 13px;
+                    margin-bottom: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background-color: #fee2e2;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                }
+
+                .time-slots-container {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                    gap: 12px;
+
+                    .time-slot {
+                        padding: 10px 8px;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        text-align: center;
+                        cursor: pointer;
+                        background-color: #fff;
+                        transition: all 0.2s ease;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 6px;
+
+                        .time-icon {
+                            color: #64748b;
+                        }
+
+                        &:hover:not(.booked) {
+                            border-color: #3b82f6;
+                            background-color: #eff6ff;
+                        }
+
+                        &.selected {
+                            border-color: #3b82f6;
+                            background-color: #3b82f6;
+                            color: white;
+                            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+
+                            .time-icon {
+                                color: white;
+                            }
+                        }
+
+                        &.booked {
+                            background-color: #f8fafc;
+                            border-color: #e2e8f0;
+                            color: #cbd5e1;
+                            cursor: not-allowed;
+
+                            .time-icon {
+                                color: #cbd5e1;
+                            }
+                        }
+                    }
+
+                    .no-times-message {
+                        grid-column: 1 / -1;
+                        text-align: center;
+                        padding: 24px;
+                        color: #64748b;
+                        font-style: italic;
+                        background-color: #f8fafc;
+                        border-radius: 8px;
+                    }
+                }
+            }
+
+            .jadval-form-row {
+                display: flex;
+                gap: 16px;
+
+                .jadval-form-group {
+                    flex: 1;
+                }
+            }
+
+            .jadval-form-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                margin-top: 36px;
+            }
+
+            .appointment-view-card {
+                background-color: #fff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+                .appointment-status-indicator {
+                    padding: 14px 24px;
+                    color: white;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    font-size: 14px;
+                    letter-spacing: 0.5px;
+
+                    &.expected {
+                        background-color: #64748b;
+                    }
+
+                    &.accepted {
+                        background-color: #3b82f6;
+                    }
+
+                    &.progress,
+                    &.in_progress {
+                        background-color: #f59e0b;
+                    }
+
+                    &.finished,
+                    &.completed {
+                        background-color: #10b981;
+                    }
+
+                    &.cancelled {
+                        background-color: #ef4444;
+                    }
+                }
+
+                .appointment-view-header {
+                    padding: 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    border-bottom: 1px solid #f1f5f9;
+
+                    .appointment-view-avatar {
+                        width: 64px;
+                        height: 64px;
+                        border-radius: 50%;
+                        background-color: #eff6ff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        color: #3b82f6;
+                    }
+
+                    .appointment-view-title {
+                        h3 {
+                            margin: 0 0 8px;
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #1e293b;
+                        }
+
+                        .appointment-view-subtitle {
+                            display: flex;
+                            align-items: center;
+                            gap: 16px;
+                            color: #64748b;
+                            font-size: 14px;
+
+                            svg {
+                                margin-right: 6px;
+                                color: #94a3b8;
+                            }
+
+                            .appointment-time {
+                                display: flex;
+                                align-items: center;
+                            }
+                        }
+                    }
+                }
+
+                .appointment-view-details {
+                    padding: 24px;
+
+                    .appointment-view-section {
+                        margin-bottom: 28px;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        h4 {
+                            font-size: 16px;
+                            font-weight: 700;
+                            margin: 0 0 16px;
+                            color: #1e293b;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+
+                            svg {
+                                color: #3b82f6;
+                            }
+                        }
+
+                        .appointment-view-info {
+                            display: flex;
+                            margin-bottom: 12px;
+                            padding-bottom: 12px;
+                            border-bottom: 1px dashed #f1f5f9;
+
+                            &:last-child {
+                                margin-bottom: 0;
+                                padding-bottom: 0;
+                                border-bottom: none;
+                            }
+
+                            .info-label {
+                                width: 140px;
+                                font-weight: 600;
+                                color: #64748b;
+                            }
+
+                            .info-value {
+                                flex: 1;
+                                color: #1e293b;
+                            }
+                        }
+                    }
+                }
+
+                .appointment-view-actions {
+                    padding: 20px 24px;
+                    border-top: 1px solid #f1f5f9;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                    background-color: #f8fafc;
+                }
+            }
+
+            .jadval-loading-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 300px;
+                color: #64748b;
+                font-size: 16px;
+
+                .jadval-spinner {
+                    margin-right: 12px;
+                    animation: spin 1s linear infinite;
+                    font-size: 20px;
+                    color: #3b82f6;
+                }
+            }
+        }
+    }
+
+    .time-change-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(15, 23, 42, 0.5);
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(2px);
+        animation: fadeIn 0.3s ease;
+
+        .time-change-modal {
+            background-color: #fff;
+            border-radius: 12px;
+            width: 550px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: zoomIn 0.3s ease;
+
+            .time-change-modal-header {
+                padding: 20px 24px;
+                border-bottom: 1px solid #f1f5f9;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+
+                h3 {
+                    margin: 0;
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #1e293b;
+                }
+
+                .close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: #64748b;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: #f1f5f9;
+                        color: #1e293b;
+                    }
+                }
+            }
+
+            .time-change-modal-body {
+                padding: 24px;
+
+                .appointment-info {
+                    margin-bottom: 24px;
+                    background-color: #f8fafc;
+                    padding: 16px;
+                    border-radius: 8px;
+
+                    .info-row {
+                        display: flex;
+                        margin-bottom: 12px;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        .info-label {
+                            width: 120px;
+                            font-weight: 600;
+                            color: #64748b;
+                        }
+
+                        .info-value {
+                            flex: 1;
+                            color: #1e293b;
+                            font-weight: 500;
+                        }
+                    }
+                }
+
+                .time-selection {
+                    h4 {
+                        font-size: 16px;
+                        font-weight: 700;
+                        margin: 0 0 16px;
+                        color: #1e293b;
+                    }
+
+                    .time-error {
+                        color: #ef4444;
+                        font-size: 13px;
+                        margin-bottom: 12px;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        background-color: #fee2e2;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                    }
+
+                    .time-slots-container {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                        gap: 12px;
+
+                        .time-slot {
+                            padding: 10px 8px;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 8px;
+                            text-align: center;
+                            cursor: pointer;
+                            background-color: #fff;
+                            transition: all 0.2s ease;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 6px;
+
+                            .time-icon {
+                                color: #64748b;
+                            }
+
+                            &:hover:not(.booked) {
+                                border-color: #3b82f6;
+                                background-color: #eff6ff;
+                            }
+
+                            &.selected {
+                                border-color: #3b82f6;
+                                background-color: #3b82f6;
+                                color: white;
+                                box-shadow: 0 4px 6px rgba(#1e40af, 0.3);
+                            }
+                        }
+
+                        .no-times-message {
+                            grid-column: 1 / -1;
+                            text-align: center;
+                            padding: 24px;
+                            color: #64748b;
+                            font-style: italic;
+                            background-color: #f8fafc;
+                            border-radius: 8px;
+                        }
+                    }
+                }
+            }
+
+            .time-change-modal-footer {
+                padding: 20px 24px;
+                border-top: 1px solid #f1f5f9;
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                background-color: #f8fafc;
+            }
+        }
+    }
+
+    // Responsive styles
+    @media (max-width: 768px) {
+        padding: 16px;
+
+        .jadval-page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+
+            .jadval-header-actions {
+                width: 100%;
+            }
+        }
+
+        .jadval-search-filter {
+            flex-direction: column;
+            gap: 10px;
+
+            .jadval-filter-toggle-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .jadval-advanced-filters {
+            .jadval-filter-group {
+                min-width: 100%;
+            }
+        }
+
+        .jadval-view-controls {
+            flex-wrap: wrap;
+
+            .jadval-view-btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        .jadval-calendar-view {
+            .jadval-calendar-header {
+                .jadval-calendar-days {
+                    overflow-x: auto;
+                    padding-bottom: 10px;
+
+                    .jadval-calendar-day {
+                        min-width: 100px;
+                    }
+                }
+            }
+
+            .jadval-calendar-body {
+                overflow-x: auto;
+
+                .jadval-calendar-column {
+                    min-width: 200px;
+                }
+            }
+        }
+
+        .jadval-sidebar {
+            width: 100%;
+            right: -100%;
+        }
+    }
+
+    // Animations
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    @keyframes zoomIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideDown {
+        0% {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+// Admin-specific schedule styles
+.appointments-container {
+
+    // Admin-specific overrides
+    .appointments-page-title {
+        color: #1e40af;
+
+        &:after {
+            background: linear-gradient(to right, #1e40af, #3b82f6);
+        }
+    }
+
+    .appointments-btn-primary {
+        background: linear-gradient(to right, #1e40af, #3b82f6);
+
+        &:hover {
+            background: linear-gradient(to right, darken(#1e40af, 5%), darken(#3b82f6, 5%));
+        }
+    }
+
+    .appointments-status-badge {
+        &.expected {
+            background-color: rgba(#f59e0b, 0.15);
+            border-color: rgba(#f59e0b, 0.4);
+        }
+
+        &.accepted {
+            background-color: rgba(#0ea5e9, 0.15);
+            border-color: rgba(#0ea5e9, 0.4);
+        }
+
+        &.progress {
+            background-color: rgba(#1e40af, 0.15);
+            border-color: rgba(#1e40af, 0.4);
+        }
+
+        &.finished {
+            background-color: rgba(#10b981, 0.15);
+            border-color: rgba(#10b981, 0.4);
+        }
+
+        &.cancelled {
+            background-color: rgba(#ef4444, 0.15);
+            border-color: rgba(#ef4444, 0.4);
+        }
+    }
+
+    .appointments-branch-badge {
+        background-color: rgba(#1e40af, 0.15);
+        color: #1e40af;
+        border: 1px solid rgba(#1e40af, 0.3);
+    }
+
+    .appointments-action-toggle {
+        &:hover {
+            background-color: rgba(#1e40af, 0.15);
+            color: #1e40af;
+        }
+    }
+
+    .appointments-filter-toggle-btn {
+        &.active {
+            background-color: #1e40af;
+            border-color: #1e40af;
+        }
+    }
+
+    .appointments-view-btn {
+        &.active {
+            background-color: #1e40af;
+            border-color: #1e40af;
+        }
+    }
+
+    .appointments-calendar-day {
+        &.today {
+            background-color: rgba(#1e40af, 0.1);
+            border-color: #1e40af;
+        }
+    }
+
+    .appointments-calendar-column {
+        &.today {
+            background-color: rgba(#1e40af, 0.05);
+            border-color: #1e40af;
+        }
+    }
+
+    .step-indicator {
+        .step {
+            &.active {
+                background-color: #1e40af;
+                border-color: #1e40af;
+            }
+        }
+    }
+
+    .time-slot {
+        &:hover:not(.booked) {
+            border-color: #1e40af;
+
+            &:before {
+                background: linear-gradient(to right bottom, rgba(#1e40af, 0.1), rgba(#1e40af, 0.05));
+            }
+        }
+
+        &.selected {
+            background: linear-gradient(to right bottom, #1e40af, #3b82f6);
+            border-color: #1e40af;
+            box-shadow: 0 5px 15px rgba(#1e40af, 0.3);
+        }
+    }
+
+    .appointment-status-indicator {
+        &.expected {
+            background-color: #f59e0b;
+        }
+
+        &.accepted {
+            background-color: #0ea5e9;
+        }
+
+        &.progress {
+            background-color: #1e40af;
+        }
+
+        &.finished {
+            background-color: #10b981;
+        }
+
+        &.cancelled {
+            background-color: #ef4444;
+        }
+    }
+
+    .appointment-view-header {
+        background: linear-gradient(to right, rgba(#1e40af, 0.05), rgba(#1e40af, 0.1));
+
+        .appointment-view-avatar {
+            background-color: rgba(#1e40af, 0.1);
+            color: #1e40af;
+        }
+
+        .appointment-view-subtitle {
+            svg {
+                color: #1e40af;
+            }
+        }
+    }
+
+    .appointment-view-section {
+        h4 {
+            svg {
+                color: #1e40af;
+            }
+        }
+
+        .dental-service-item {
+            border-left-color: #1e40af;
+
+            .service-teeth {
+                color: #1e40af;
+                background-color: rgba(#1e40af, 0.1);
+            }
+        }
+    }
+
+    .action-btn {
+        &.view-btn:hover {
+            background-color: rgba(#0ea5e9, 0.1);
+            border-color: #0ea5e9;
+            color: #0ea5e9;
+        }
+
+        &.edit-btn:hover {
+            background-color: rgba(#1e40af, 0.1);
+            border-color: #1e40af;
+            color: #1e40af;
+        }
+
+        &.time-btn:hover {
+            background-color: rgba(#3b82f6, 0.1);
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+    }
+
+    .appointments-loading-container {
+        color: #1e40af;
+    }
+}
+
+// Admin-specific responsive adjustments
+@media (max-width: 768px) {
+    .appointments-container {
+        .appointments-page-header {
+            .appointments-page-title {
+                font-size: 1.4rem;
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .appointments-container {
+        .appointments-page-header {
+            .appointments-page-title {
+                font-size: 1.2rem;
+            }
+        }
+    }
+}
+
+@media (max-width: 320px) {
+    .appointments-container {
+        .appointments-page-header {
+            .appointments-page-title {
+                font-size: 1.1rem;
+            }
+        }
+    }
+}
+
+.payment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    padding: 20px;
+
+    .payment-modal {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        max-width: 700px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+
+        .payment-modal-header {
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+
+            h3 {
+                margin: 0;
+                color: #2c3e50;
+                font-size: 20px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+
+                svg {
+                    color: #27ae60;
+                }
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: #7f8c8d;
+                padding: 5px;
+                border-radius: 50%;
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    background: #e9ecef;
+                    color: #2c3e50;
+                }
+            }
+        }
+
+        .payment-modal-body {
+            padding: 25px;
+
+            .appointment-info {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 25px;
+                border-left: 4px solid #3498db;
+
+                h4 {
+                    margin: 0 0 15px 0;
+                    color: #2c3e50;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 12px;
+
+                    .info-item {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 8px 0;
+
+                        .label {
+                            font-weight: 500;
+                            color: #7f8c8d;
+                        }
+
+                        .value {
+                            font-weight: 600;
+                            color: #2c3e50;
+                        }
+                    }
+                }
+            }
+
+            .payment-form {
+                h4 {
+                    margin: 0 0 20px 0;
+                    color: #2c3e50;
+                    font-size: 16px;
+                    font-weight: 600;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #e9ecef;
+                }
+
+                .form-row {
+                    display: flex;
+                    gap: 20px;
+                    margin-bottom: 20px;
+
+                    @media (max-width: 768px) {
+                        flex-direction: column;
+                        gap: 15px;
+                    }
+
+                    .form-group {
+                        flex: 1;
+
+                        label {
+                            display: block;
+                            margin-bottom: 8px;
+                            font-weight: 500;
+                            color: #2c3e50;
+                            font-size: 14px;
+                        }
+
+                        input,
+                        textarea {
+                            width: 100%;
+                            padding: 12px;
+                            border: 2px solid #e9ecef;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            transition: all 0.3s ease;
+                            font-family: inherit;
+
+                            &:focus {
+                                outline: none;
+                                border-color: #27ae60;
+                                box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+                            }
+
+                            &::placeholder {
+                                color: #bdc3c7;
+                            }
+                        }
+
+                        textarea {
+                            resize: vertical;
+                            min-height: 80px;
+                        }
+                    }
+                }
+
+                .form-group {
+                    margin-bottom: 20px;
+
+                    label {
+                        display: block;
+                        margin-bottom: 8px;
+                        font-weight: 500;
+                        color: #2c3e50;
+                        font-size: 14px;
+                    }
+
+                    input,
+                    textarea {
+                        width: 100%;
+                        padding: 12px;
+                        border: 2px solid #e9ecef;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        transition: all 0.3s ease;
+                        font-family: inherit;
+
+                        &:focus {
+                            outline: none;
+                            border-color: #27ae60;
+                            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+                        }
+
+                        &::placeholder {
+                            color: #bdc3c7;
+                        }
+                    }
+
+                    textarea {
+                        resize: vertical;
+                        min-height: 80px;
+                    }
+                }
+            }
+        }
+
+        .payment-modal-footer {
+            padding: 20px;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+
+            .appointments-btn {
+                padding: 12px 24px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+
+                &:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                &.appointments-btn-secondary {
+                    background: #95a5a6;
+                    color: white;
+
+                    &:hover:not(:disabled) {
+                        background: #7f8c8d;
+                        transform: translateY(-1px);
+                    }
+                }
+
+                &.appointments-btn-primary {
+                    background: #27ae60;
+                    color: white;
+
+                    &:hover:not(:disabled) {
+                        background: #229954;
+                        transform: translateY(-1px);
+                    }
+                }
+            }
+        }
+    }
+}
+
+.action-btn {
+    &.payment-btn {
+        background: #e8f5e8;
+        color: #27ae60;
+        border: 2px solid #27ae60;
+
+        &:hover {
+            background: #27ae60;
+            color: white;
+        }
+    }
+}

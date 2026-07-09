@@ -1,0 +1,566 @@
+.acceptance-check {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    &__header {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+
+        .logos {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+
+            .logo-item {
+
+                .our-logo,
+                .clinic-logo {
+                    height: 60px;
+                    max-width: 200px;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.3s ease;
+
+                    &:hover {
+                        transform: scale(1.05);
+                    }
+                }
+            }
+        }
+    }
+
+    &__content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+
+        .status-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 5px;
+                background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+                background-size: 400% 400%;
+                animation: gradientShift 3s ease infinite;
+            }
+
+            &.success {
+                &::before {
+                    background: linear-gradient(90deg, #28a745, #20c997);
+                }
+            }
+
+            .status-icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+                animation: pulse 2s infinite;
+                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            }
+
+            .status-title {
+                font-size: 1.8rem;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 20px;
+                line-height: 1.4;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .time-remaining {
+                font-size: 1.3rem;
+                color: #666;
+                margin-bottom: 30px;
+                font-weight: 500;
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                animation: shimmer 2s ease-in-out infinite alternate;
+            }
+
+            .appointment-info {
+                background: #f8f9fa;
+                border-radius: 15px;
+                padding: 25px;
+                margin: 25px 0;
+                text-align: left;
+                border: 1px solid #e9ecef;
+
+                .clinic-info {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid #e9ecef;
+
+                    h3 {
+                        font-size: 1.4rem;
+                        color: #333;
+                        margin-bottom: 8px;
+                        font-weight: 700;
+                    }
+
+                    .clinic-phone {
+                        color: #cac9c9;
+                        font-size: 1rem;
+                        margin: 0;
+                    }
+                }
+
+                .appointment-details {
+                    p {
+                        margin: 10px 0;
+                        font-size: 1rem;
+                        color: #555;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #f0f0f0;
+
+                        &:last-child {
+                            border-bottom: none;
+                        }
+
+                        strong {
+                            color: #333;
+                            font-weight: 600;
+                            display: inline-block;
+                            min-width: 120px;
+                        }
+                    }
+                }
+            }
+
+            .btn {
+                padding: 15px 40px;
+                border: none;
+                border-radius: 50px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                position: relative;
+                overflow: hidden;
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+                    transition: left 0.5s;
+                }
+
+                &:hover::before {
+                    left: 100%;
+                }
+
+                &.btn-success {
+                    background: linear-gradient(45deg, #28a745, #20c997);
+                    color: white;
+                    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+
+                    &:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+                    }
+
+                    &:active {
+                        transform: translateY(0);
+                    }
+                }
+
+                &.btn-primary {
+                    background: linear-gradient(45deg, #007bff, #6610f2);
+                    color: white;
+                    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+
+                    &:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+                    }
+                }
+
+                &.btn-large {
+                    padding: 18px 50px;
+                    font-size: 1.2rem;
+                }
+
+                &:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    transform: none !important;
+                }
+            }
+
+            .entering-status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+                color: #666;
+                font-size: 1.1rem;
+                font-weight: 500;
+
+                .loading-spinner.small {
+                    width: 25px;
+                    height: 25px;
+                    border-width: 3px;
+                }
+            }
+        }
+    }
+
+    &__footer {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+
+        .current-time {
+            margin: 0;
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
+    }
+
+    &__loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: white;
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+    }
+
+    &__error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: white;
+        text-align: center;
+        padding: 20px;
+
+        .error-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: shake 0.5s ease-in-out infinite alternate;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+    }
+}
+
+// Animatsiyalar
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(5px);
+    }
+}
+
+// Mobil qurilmalar uchun
+@media (max-width: 768px) {
+    .acceptance-check {
+        &__header {
+            padding: 15px;
+
+            .logos {
+                .logo-item {
+
+                    .our-logo,
+                    .clinic-logo {
+                        height: 45px;
+                        max-width: 150px;
+                    }
+                }
+            }
+        }
+
+        &__content {
+            padding: 20px 15px;
+
+            .status-card {
+                padding: 30px 20px;
+                border-radius: 15px;
+
+                .status-icon {
+                    font-size: 3rem;
+                }
+
+                .status-title {
+                    font-size: 1.5rem;
+                }
+
+                .time-remaining {
+                    font-size: 1.1rem;
+                }
+
+                .appointment-info {
+                    padding: 20px 15px;
+
+                    .clinic-info {
+                        h3 {
+                            font-size: 1.2rem;
+                        }
+                    }
+
+                    .appointment-details {
+                        p {
+                            font-size: 0.95rem;
+
+                            strong {
+                                min-width: 100px;
+                                font-size: 0.9rem;
+                            }
+                        }
+                    }
+                }
+
+                .btn {
+                    padding: 12px 30px;
+                    font-size: 1rem;
+
+                    &.btn-large {
+                        padding: 15px 40px;
+                        font-size: 1.1rem;
+                    }
+                }
+            }
+        }
+
+        &__footer {
+            padding: 12px;
+
+            .current-time {
+                font-size: 0.9rem;
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .acceptance-check {
+        &__header {
+            .logos {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+
+                gap: 15px;
+
+                .logo-item {
+
+                    .our-logo,
+                    .clinic-logo {
+                        height: 40px;
+                        max-width: 120px;
+                    }
+                }
+            }
+        }
+
+        &__content {
+            .status-card {
+                .status-title {
+                    font-size: 1.3rem;
+                }
+
+                .appointment-info {
+                    .appointment-details {
+                        p {
+                            font-size: 0.9rem;
+                            flex-direction: column;
+                            align-items: flex-start;
+
+                            strong {
+                                min-width: auto;
+                                margin-bottom: 2px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Qorong'u rejim uchun
+@media (prefers-color-scheme: dark) {
+    .acceptance-check {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+
+        &__header {
+            background: rgba(52, 73, 94, 0.95);
+        }
+
+        &__footer {
+            background: rgba(52, 73, 94, 0.9);
+
+            .current-time {
+                color: #ecf0f1;
+            }
+        }
+
+        .status-card {
+            background: #2c3e50;
+            color: #ecf0f1;
+
+            .status-title {
+                color: #ecf0f1;
+            }
+
+            .appointment-info {
+                background: #34495e;
+                border-color: #4a6741;
+
+                .clinic-info h3 {
+                    color: #ecf0f1;
+                }
+
+                .appointment-details p {
+                    color: #bdc3c7;
+                    border-color: #4a6741;
+
+                    strong {
+                        color: #ecf0f1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Print stillari
+@media print {
+    .acceptance-check {
+        background: white !important;
+        color: black !important;
+
+        &__header,
+        &__footer {
+            background: white !important;
+        }
+
+        .status-card {
+            box-shadow: none !important;
+            border: 1px solid #ccc !important;
+        }
+    }
+}
