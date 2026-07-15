@@ -6,6 +6,13 @@ import sys
 
 def main():
     """Run administrative tasks."""
+    # Windows konsolida emoji/UTF-8 printlar xato bermasligi uchun
+    for stream in (sys.stdout, sys.stderr):
+        if stream and hasattr(stream, 'reconfigure'):
+            try:
+                stream.reconfigure(encoding='utf-8', errors='replace')
+            except Exception:
+                pass
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'clinic.settings')
     try:
         from django.core.management import execute_from_command_line

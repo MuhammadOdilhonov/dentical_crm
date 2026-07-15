@@ -1,13 +1,17 @@
 "use client"
 import { useState } from "react"
 import { useLanguage } from "../../contexts/LanguageContext"
-import { FaQuestionCircle, FaTelegram, FaHeadset, FaBook, FaComments, FaPhoneAlt, FaEnvelope } from "react-icons/fa"
+import { useAuth } from "../../contexts/AuthContext"
+import { FaQuestionCircle, FaTelegram, FaHeadset, FaBook, FaComments, FaPhoneAlt, FaEnvelope, FaArrowRight } from "react-icons/fa"
+import UserGuide from "../../components/guide/UserGuide"
 
 const Help = () => {
     const { t } = useLanguage()
+    const { user } = useAuth()
     const [question, setQuestion] = useState("")
     const [selectedFiles, setSelectedFiles] = useState([])
     const [showImagePreview, setShowImagePreview] = useState(false)
+    const [showGuide, setShowGuide] = useState(false)
 
     // Toggle filters visibility
     const toggleImagePreview = () => {
@@ -61,6 +65,33 @@ const Help = () => {
                 <h1 className="help-title">Yordam Markazi</h1>
                 <p className="help-subtitle">Sizning savollaringizga javob berishdan mamnunmiz</p>
             </div>
+
+            {/* Qo'llanmani ochish kartasi — bosilganda butun ekranda ochiladi */}
+            <section className="faq-section" style={{ marginBottom: 24 }}>
+                <button className="gd-launch" onClick={() => setShowGuide(true)}>
+                    <span className="gd-launch-icon">
+                        <FaBook />
+                    </span>
+                    <span className="gd-launch-text">
+                        <h3>Qo'llanma — tizimdan foydalanish yo'riqnomasi</h3>
+                        <p>
+                            Har bir bo'lim nimaga kerakligi, ular bir-biriga qanday bog'langani va qadma-qadam
+                            qanday ishlatilishi to'liq tushuntirilgan. Ochish uchun bosing.
+                        </p>
+                    </span>
+                    <span className="gd-launch-arrow">
+                        <FaArrowRight />
+                    </span>
+                </button>
+            </section>
+
+            {/* Butun ekranli qo'llanma */}
+            {showGuide && (
+                <UserGuide
+                    role={user?.role === "superadmin" ? "director" : user?.role || "director"}
+                    onClose={() => setShowGuide(false)}
+                />
+            )}
 
             <section className="faq-section">
                 <div className="section-header">

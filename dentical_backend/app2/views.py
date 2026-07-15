@@ -337,9 +337,12 @@ class MeetingFilterView(APIView):
         branches = Branch.objects.filter(clinic=user.clinic)
         branch_serializer = BranchSerializer(branches, many=True)
 
-        # Tanlangan branchga bog'liq Customers
+        # Bemorlar KLINIKA darajasida — filialidan qat'i nazar barchasi chiqadi
+        from django.db.models import Q
         branch_id = request.query_params.get('branch_id')
-        customers = Customer.objects.filter(branch_id=branch_id) if branch_id else []
+        customers = Customer.objects.filter(
+            Q(clinic=user.clinic) | Q(branch__clinic=user.clinic)
+        ).distinct() if branch_id else []
         customer_serializer = CustomerSerializer(customers, many=True)
 
         # Tanlangan branchga bog'liq Doctors

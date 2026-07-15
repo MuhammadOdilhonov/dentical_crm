@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     // Agar allowedRoles berilgan bo'lsa va foydalanuvchi roli ruxsat etilmagan bo'lsa
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
         // Foydalanuvchini o'z rolining dashboard sahifasiga yo'naltirish
-        const dashboardPath = `/dashboard/${user.role}`
+        const dashboardPath = user.role === "superadmin" ? "/superadmin" : `/dashboard/${user.role}`
         return <Navigate to={dashboardPath} replace />
     }
 

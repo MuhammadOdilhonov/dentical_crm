@@ -22,10 +22,10 @@ const updateUserProfile = async (userId, profileData) => {
     }
 }
 
-// Change password
+// Change password (birinchi kirishda old_password shart emas)
 const changePassword = async (passwordData) => {
     try {
-        const response = await client.post("/users/change-password/", passwordData)
+        const response = await client.post("/user/set-new-password/", passwordData)
         return response.data
     } catch (error) {
         console.error("Error changing password:", error)

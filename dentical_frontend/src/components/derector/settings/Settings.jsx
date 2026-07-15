@@ -23,11 +23,14 @@ import {
     FaArrowUp,
     FaPlay,
     FaVideo,
+    FaBook,
     FaClock,
     FaEye,
+    FaArrowRight,
 } from "react-icons/fa"
 import { useAuth } from "../../../contexts/AuthContext"
 import { useLanguage } from "../../../contexts/LanguageContext"
+import UserGuide from "../../guide/UserGuide"
 import apiSettings from "../../../api/apiSettings"
 import apiTarif from "../../../api/apiTarif"
 
@@ -36,6 +39,15 @@ export default function Settings() {
     const { language, t } = useLanguage()
 
     const [activeTab, setActiveTab] = useState("general")
+
+    // Boshqa sahifadan "Filial yaratish" tugmasi bilan kelganda filiallar tabini ochish
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get("tab") === "branches") {
+            setActiveTab("branches")
+            setIsAddingBranch(true)
+        }
+    }, [])
     const [isLoading, setIsLoading] = useState(false)
     const [saveLoading, setSaveLoading] = useState(false)
     const [message, setMessage] = useState({ type: "", text: "" })
@@ -43,6 +55,9 @@ export default function Settings() {
     // Video guide state
     const [selectedVideo, setSelectedVideo] = useState(null)
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+
+    // Butun ekranli qo'llanma ochiq/yopiqligi
+    const [showGuide, setShowGuide] = useState(false)
 
     // General settings
     const [clinicData, setClinicData] = useState({
@@ -61,7 +76,7 @@ export default function Settings() {
         name: "",
         address: "",
         phone_number: "",
-        email: "",
+        floors: 1,
     })
 
     // Tariff settings
@@ -297,7 +312,7 @@ export default function Settings() {
             name: "",
             address: "",
             phone_number: "",
-            email: "",
+            floors: 1,
         })
 
         // Refresh branches to get original data
@@ -389,7 +404,7 @@ export default function Settings() {
                 name: "",
                 address: "",
                 phone_number: "",
-                email: "",
+                floors: 1,
             })
 
             setIsAddingBranch(false)
@@ -457,6 +472,12 @@ export default function Settings() {
                         onClick={() => setActiveTab("video-guide")}
                     >
                         <FaVideo /> Video qo'llanma
+                    </button>
+                    <button
+                        className={`settings-tab ${activeTab === "guide" ? "active" : ""}`}
+                        onClick={() => setActiveTab("guide")}
+                    >
+                        <FaBook /> Qo'llanma
                     </button>
                 </div>
 
@@ -633,16 +654,19 @@ export default function Settings() {
                                             </div>
 
                                             <div className="form-group">
-                                                <label htmlFor="new-branch-email">{t("email")}</label>
+                                                <label htmlFor="new-branch-floors">{t("floors_count")} *</label>
                                                 <div className="input-with-icon">
-                                                    <FaEnvelope className="input-icon" />
+                                                    <FaBuilding className="input-icon" />
                                                     <input
-                                                        id="new-branch-email"
-                                                        type="email"
-                                                        name="email"
-                                                        value={newBranch.email}
+                                                        id="new-branch-floors"
+                                                        type="number"
+                                                        min="1"
+                                                        max="50"
+                                                        name="floors"
+                                                        value={newBranch.floors}
                                                         onChange={handleBranchDataChange}
-                                                        placeholder="example@domain.com"
+                                                        placeholder="1"
+                                                        required
                                                     />
                                                 </div>
                                             </div>
@@ -756,22 +780,24 @@ export default function Settings() {
                                                         </div>
 
                                                         <div className="form-group">
-                                                            <label>{t("email")}</label>
+                                                            <label>{t("floors_count")}</label>
                                                             {editingBranch === branch.id ? (
                                                                 <div className="input-with-icon">
-                                                                    <FaEnvelope className="input-icon" />
+                                                                    <FaBuilding className="input-icon" />
                                                                     <input
-                                                                        type="email"
-                                                                        name="email"
-                                                                        value={branch.email}
+                                                                        type="number"
+                                                                        min="1"
+                                                                        max="50"
+                                                                        name="floors"
+                                                                        value={branch.floors || 1}
                                                                         onChange={handleBranchDataChange}
-                                                                        placeholder="example@domain.com"
+                                                                        placeholder="1"
                                                                     />
                                                                 </div>
                                                             ) : (
                                                                 <div className="info-field">
-                                                                    <FaEnvelope className="field-icon" />
-                                                                    <p>{branch.email || "—"}</p>
+                                                                    <FaBuilding className="field-icon" />
+                                                                    <p>{branch.floors || 1}</p>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1046,6 +1072,30 @@ export default function Settings() {
                                     )}
                                 </div>
                             )}
+
+                            {/* Interaktiv Qo'llanma — karta bosilganda butun ekranda ochiladi */}
+                            {activeTab === "guide" && (
+                                <div className="settings-panel">
+                                    <button className="gd-launch" onClick={() => setShowGuide(true)}>
+                                        <span className="gd-launch-icon">
+                                            <FaBook />
+                                        </span>
+                                        <span className="gd-launch-text">
+                                            <h3>Qo'llanma — tizimdan foydalanish yo'riqnomasi</h3>
+                                            <p>
+                                                Har bir bo'lim nimaga kerakligi, ular bir-biriga qanday bog'langani va
+                                                qadma-qadam qanday ishlatilishi to'liq tushuntirilgan. Ochish uchun bosing.
+                                            </p>
+                                        </span>
+                                        <span className="gd-launch-arrow">
+                                            <FaArrowRight />
+                                        </span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Butun ekranli qo'llanma */}
+                            {showGuide && <UserGuide role="director" onClose={() => setShowGuide(false)} />}
 
                             {/* Video Guide */}
                             {activeTab === "video-guide" && (

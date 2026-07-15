@@ -1271,148 +1271,304 @@ $sidebar-width: 450px;
     }
 }
 
-// Calendar view
-.appointments-calendar-view {
+// ============================================
+// Haftalik kalendar (time-grid):
+// tepada kunlar, chapda soatlar, qizil joriy vaqt chizig'i
+// ============================================
+$apt-cal-gutter: 68px; // chapdagi soatlar ustuni kengligi
+
+.appointments-calendar-view.apt-cal {
     background-color: white;
-    border-radius: $border-radius;
-    box-shadow: $box_shadow;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+    border: 1px solid #eef2f7;
     overflow: hidden;
     margin-bottom: 1.75rem;
 }
 
-.appointments-calendar-header {
-    padding: 1.25rem;
-    border-bottom: 1px solid $border-color;
-}
+// Hafta navigatsiyasi (‹ sana oralig'i ›)
+.apt-cal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #eef2f7;
+    background: linear-gradient(180deg, #fbfdff, #f6f9fc);
 
-.appointments-calendar-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.75rem;
+    .apt-cal-nav-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1.5px solid #dbe4ee;
+        background: #ffffff;
+        color: #475569;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
 
-    @media (max-width: 768px) {
-        grid-template-columns: repeat(3, 1fr);
+        &:hover {
+            border-color: $primary-color;
+            color: $primary-color;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+        }
     }
 
-    @media (max-width: 576px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.appointments-calendar-day {
-    text-align: center;
-    padding: 0.75rem;
-    border-radius: $border-radius;
-    background-color: rgba($light-gray, 0.3);
-
-    &.today {
-        background-color: rgba($primary-color, 0.1);
-        border: 1px solid $primary-color;
-    }
-
-    .appointments-day-name {
-        font-weight: 600;
-        color: $text-color;
-        margin-bottom: 0.25rem;
-    }
-
-    .appointments-day-date {
-        font-size: 1.25rem;
+    .apt-cal-range {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
         font-weight: 700;
-        color: $dark-color;
+        color: #0f172a;
+
+        svg { color: $primary-color; }
     }
 }
 
-.appointments-calendar-body {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.75rem;
-    padding: 1.25rem;
-    min-height: 500px;
-
-    @media (max-width: 768px) {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    @media (max-width: 576px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.appointments-calendar-column {
-    border-radius: $border-radius;
-    padding: 0.75rem;
-    background-color: rgba($light-gray, 0.1);
-    border: 1px solid $border-color;
-
-    &.today {
-        background-color: rgba($primary-color, 0.05);
-        border-color: $primary-color;
-    }
-}
-
-.appointments-calendar-item {
-    background-color: white;
-    border-radius: $border-radius;
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    transition: $transition;
+// Skroll konteyner — kunlar qatori sticky bo'lib tepada qoladi
+.apt-cal-scroll {
+    max-height: 660px;
+    overflow-y: auto;
     position: relative;
 
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-track { background: #f1f5f9; }
+    &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+}
+
+// Kunlar qatori — tepada
+.apt-cal-header {
+    display: grid;
+    grid-template-columns: $apt-cal-gutter repeat(7, 1fr);
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    background: #ffffff;
+    border-bottom: 2px solid #e8eef5;
+
+    .apt-cal-corner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 14px;
+        border-right: 1px solid #eef2f7;
     }
 
+    .apt-cal-day {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 4px 10px;
+        border-right: 1px solid #f1f5f9;
+
+        &:last-child { border-right: none; }
+
+        .apt-cal-day-name {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+        }
+
+        .apt-cal-day-num {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        // Bugungi kun — ajralib turadi
+        &.today {
+            .apt-cal-day-name { color: $primary-color; }
+
+            .apt-cal-day-num {
+                background: linear-gradient(135deg, $primary-color, #1d4ed8);
+                color: #ffffff;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            }
+        }
+    }
+}
+
+// Asosiy to'r: chapda soatlar + 7 kun ustunlari
+.apt-cal-body {
+    display: grid;
+    grid-template-columns: $apt-cal-gutter repeat(7, 1fr);
+    position: relative;
+
+    // Chapdagi soatlar ustuni
+    .apt-cal-times {
+        border-right: 1px solid #eef2f7;
+        background: #fbfdff;
+
+        .apt-cal-time {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #94a3b8;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    // Kun ustuni
+    .apt-cal-col {
+        position: relative;
+        border-right: 1px solid #f1f5f9;
+
+        &:last-child { border-right: none; }
+
+        // Bugungi kun ustuni yengil ko'k fonda
+        &.today {
+            background: rgba($primary-color, 0.045);
+        }
+
+        // Soat katakchalari (gorizontal chiziqlar)
+        .apt-cal-cell {
+            border-bottom: 1px solid #f1f5f9;
+        }
+    }
+}
+
+// Qabul kartochkasi — vaqtiga qarab joylashadi
+.apt-cal-event {
+    position: absolute;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left-width: 4px;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, z-index 0s;
+
+    &:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+        z-index: 4;
+    }
+
+    .apt-cal-event-time {
+        font-size: 10.5px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+    }
+
+    .apt-cal-event-patient {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .apt-cal-event-doctor {
+        font-size: 10.5px;
+        color: #64748b;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    // Holat ranglari
     &.expected {
-        border-left: 3px solid $warning-color;
+        border-left-color: $warning-color;
+        background: #fffbeb;
+        .apt-cal-event-time { color: #b45309; }
     }
 
     &.accepted {
-        border-left: 3px solid $info-color;
+        border-left-color: $info-color;
+        background: #f0f9ff;
+        .apt-cal-event-time { color: #0369a1; }
     }
 
     &.progress {
-        border-left: 3px solid $primary-color;
+        border-left-color: $primary-color;
+        background: #eff6ff;
+        .apt-cal-event-time { color: #1d4ed8; }
     }
 
     &.finished {
-        border-left: 3px solid $success-color;
+        border-left-color: $success-color;
+        background: #f0fdf4;
+        .apt-cal-event-time { color: #15803d; }
     }
 
     &.cancelled {
-        border-left: 3px solid $error-color;
-        opacity: 0.7;
+        border-left-color: $error-color;
+        background: #fef2f2;
+        opacity: 0.75;
+        .apt-cal-event-time { color: #b91c1c; }
+        .apt-cal-event-patient { text-decoration: line-through; }
+    }
+}
+
+// Joriy vaqt — harakatlanuvchi QIZIL chiziq
+.apt-cal-now {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 2px solid #ef4444;
+    z-index: 5;
+    pointer-events: none;
+
+    .apt-cal-now-label {
+        position: absolute;
+        left: 4px;
+        top: -11px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        padding: 2px 8px;
+        border-radius: 999px;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+        line-height: 1.4;
     }
 
-    .appointments-calendar-time {
-        font-weight: 600;
-        color: $dark-color;
-        margin-bottom: 0.5rem;
+    .apt-cal-now-dot {
+        position: absolute;
+        left: $apt-cal-gutter - 5px;
+        top: -5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+        animation: aptNowPulse 2s ease-in-out infinite;
     }
+}
 
-    .appointments-calendar-patient {
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-
-    .appointments-calendar-doctor,
-    .appointments-calendar-room {
-        font-size: 0.85rem;
-        color: rgba($text-color, 0.8);
-        margin-bottom: 0.25rem;
-    }
-
-    .appointments-calendar-status {
-        margin-top: 0.5rem;
-
-        .appointments-status-badge {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem;
-        }
-    }
+@keyframes aptNowPulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25); }
+    50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.12); }
 }
 
 .appointments-no-appointments {
@@ -2071,24 +2227,22 @@ $sidebar-width: 450px;
         right: -100%;
     }
 
-    .appointments-calendar-body {
-        grid-template-columns: repeat(2, 1fr);
+    // Kichik ekranlarda kalendar gorizontal aylantiriladi
+    .apt-cal-scroll {
+        overflow-x: auto;
     }
 
-    .appointments-calendar-days {
-        grid-template-columns: repeat(3, 1fr);
+    .apt-cal-header,
+    .apt-cal-body {
+        min-width: 720px;
+    }
+
+    .apt-cal-toolbar .apt-cal-range {
+        font-size: 13px;
     }
 }
 
 @media (max-width: 576px) {
-    .appointments-calendar-body {
-        grid-template-columns: 1fr;
-    }
-
-    .appointments-calendar-days {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
     .appointments-table-responsive {
         margin: 0 -1rem;
         width: calc(100% + 2rem);
@@ -2382,6 +2536,99 @@ $sidebar-width: 450px;
         &:hover {
             background: #27ae60;
             color: white;
+        }
+    }
+}
+/* ===== Qabul yaratish wizard — yangilangan zamonaviy dizayn ===== */
+.appointments-sidebar {
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 4px 4px 26px;
+        position: relative;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            top: 50%;
+            height: 3px;
+            transform: translateY(-50%);
+            background: #e2e8f0;
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+        .step {
+            position: relative;
+            z-index: 1;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            background: #ffffff;
+            color: #94a3b8;
+            border: 2px solid #e2e8f0;
+            transition: all 0.25s ease;
+
+            &.active {
+                background: linear-gradient(135deg, #0ea5e9, #2563eb);
+                border-color: transparent;
+                color: #ffffff;
+                box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+                transform: scale(1.12);
+            }
+
+            &.completed {
+                background: #22c55e;
+                border-color: #22c55e;
+                color: #ffffff;
+            }
+        }
+    }
+
+    .step-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0f2fe;
+    }
+
+    .appointments-sidebar-content {
+        select,
+        input[type="text"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            background: #f8fafc;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+            &:focus {
+                outline: none;
+                border-color: #0ea5e9;
+                background: #ffffff;
+                box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+            }
+        }
+
+        label {
+            font-weight: 600;
+            color: #334155;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: inline-block;
         }
     }
 }

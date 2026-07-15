@@ -13,6 +13,7 @@ import AppointmentDetailsResult from "./components/appointmentDetailsResult/Appo
 import AppointmentDetails from "./components/appointmentDetails/AppointmentDetails"
 import AcceptanceCheck from "./components/acceptanceCheck/AcceptanceCheck"
 import Target from "./pages/target/Target"
+import SuperAdminLayout from "./components/superadmin/SuperAdminLayout"
 
 function App() {
   return (
@@ -31,6 +32,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/*"
+              element={
+                <ProtectedRoute allowedRoles={["superadmin"]}>
+                  <SuperAdminLayout />
                 </ProtectedRoute>
               }
             />

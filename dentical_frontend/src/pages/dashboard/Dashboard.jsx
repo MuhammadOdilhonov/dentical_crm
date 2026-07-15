@@ -21,6 +21,7 @@ import DirectorRooms from "../../components/derector/Rooms/Rooms"
 import APatients from "../../components/admin/APatients/APatients"
 import Profile from "../../components/profile/Profile"
 import Notifications from "../../components/notifications/Notifications"
+import RealtimeNotifications from "../../components/notifications/RealtimeNotifications"
 import { FaBuilding, FaCalendarDay, FaChartLine, FaExclamationTriangle, FaRedo } from "react-icons/fa"
 import ARooms from "../../components/admin/ARooms/ARooms"
 import StaffNurses from "../../components/derector/staffNurses/StaffNurses"
@@ -36,6 +37,7 @@ import Help from "../help/Help"
 import ProtectedRoute from "../../components/protectedRoute/ProtectedRoute"
 import ServicePrices from "../../components/common/ServicePrices"
 import MedicineManagement from "../../components/medicine/MedicineManagement"
+import OnboardingWizard from "../../components/onboarding/OnboardingWizard"
 
 export default function Dashboard() {
     const { user, hasRole, selectedBranch, changeBranch, branchesData } = useAuth()
@@ -193,6 +195,7 @@ export default function Dashboard() {
 
     const getDashboardRoute = () => {
         if (!user) return "/dashboard"
+        if (user.role === "superadmin") return "/superadmin"
         if (user.role === "director") return "/dashboard/director"
         if (user.role === "admin") return "/dashboard/admin"
         if (user.role === "doctor") return "/dashboard/doctor"
@@ -250,6 +253,10 @@ export default function Dashboard() {
 
     return (
         <div className="dashboard-container">
+            {/* Real-time xabarnomalar: o'ng yuqorida toast + ovoz */}
+            <RealtimeNotifications />
+            {/* Birinchi kirishda ketma-ketlikni tushuntiruvchi oyna */}
+            <OnboardingWizard user={user} />
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
             <div className="dashboard-content">

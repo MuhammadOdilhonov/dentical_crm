@@ -122,7 +122,8 @@ class Branch(models.Model):
     name = models.CharField(max_length=255)
     address = models.TextField()
     phone_number = models.CharField(max_length=20)
-    email = models.CharField(max_length=255)
+    email = models.CharField(max_length=255, blank=True, null=True)
+    floors = models.PositiveIntegerField(default=1, help_text="Filialdagi qavatlar soni")
 
     def __str__(self):
         return f"{self.name} ({self.clinic.name})"
@@ -141,6 +142,13 @@ class User(AbstractUser):
         ('nurse', 'Nurse'),
         ('receptionist', 'Receptionist'),
         ('director', 'Director'),
+    )
+
+    WORK_TYPE_CHOICES = (
+        ('salary', 'Oylik'),
+        ('kpi', 'KPI'),
+        ('salary_kpi', 'Oylik + KPI'),
+        ('trainee', "Ish o'rganuvchi"),
     )
 
     SPECIALIZATION_CHOICES = (
@@ -174,12 +182,17 @@ class User(AbstractUser):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='faol')
     salary = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     kpi = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="KPI foizda (masalan, 10.00)")
+    work_type = models.CharField(
+        max_length=20, choices=WORK_TYPE_CHOICES, default='salary',
+        help_text="Xodim qanday asosda ishlaydi: oylik, KPI, ikkalasi yoki ish o'rganuvchi"
+    )
     is_active = models.BooleanField(default=True)
     reason_holiday = models.TextField(null=True, blank=True)
     start_holiday = models.DateField(null=True, blank=True)
     end_holiday = models.DateField(null=True, blank=True)
     telegram_chat_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="Telegram Chat ID")
     last_activity = models.DateTimeField(default=now)
+    password_changed = models.BooleanField(default=True, help_text="Foydalanuvchi vaqtinchalik parolni o'zgartirganmi")
 
     objects = CustomUserManager()
 
@@ -255,14 +268,10 @@ class Cabinet(BaseModel):
     floor = models.CharField(max_length=100, choices=FLOOR_CHOICES)
     status = models.CharField(max_length=100, choices=STATUS_CHOICES)
     type = models.CharField(max_length=100, choices=TYPE_CHOICES)
-    description = models.TextField()
+    description = models.TextField(blank=True, default='')
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # Save again to ensure all changes are persisted
-        if self.user.exists():
-            for user in self.user.all():
-                if user.branch != self.branch:
-                    raise ValueError("User's branch must match the cabinet's branch.")
+    # Eslatma: shifokor-filial mosligi CabinetSerializer.validate() da tekshiriladi
+    # (bu yerda M2M saqlangandan keyin xato otish 500 va chala saqlangan holatga olib kelardi)
 
 class Customer(BaseModel):
     GENDER_CHOICES = (
@@ -282,7 +291,9 @@ class Customer(BaseModel):
     passport_id = models.CharField(max_length=100)
     location = models.CharField(max_length=100)
     # diagnosis = models.CharField(max_length=100)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    # Bemor klinikaga tegishli — filialga bog'lanib qolmaydi (filial ixtiyoriy, faqat ma'lumot uchun)
+    clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name='customers', null=True, blank=True)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(max_length=100, choices=STATUS_CHOICES)
     # doctor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'doctor'})
     height = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -336,10 +347,26 @@ class Meeting(BaseModel):
     comment = models.TextField()
     dental_services = models.ManyToManyField(DentalService, blank=True, null=True, related_name='meetings')
     diognosis = models.CharField(max_length=255, null=True, blank=True)  # New field for diagnosis
-    
+    arrived_at = models.DateTimeField(null=True, blank=True, verbose_name="Bemor kelgan vaqt")
+    started_at = models.DateTimeField(null=True, blank=True, verbose_name="Qabul boshlangan vaqt")
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name="Qabul tugagan vaqt")
+
+    @property
+    def late_minutes(self):
+        """Bemor necha daqiqa kechikkan (belgilangan vaqtdan keyin kelgan bo'lsa)."""
+        if self.arrived_at and self.date and self.arrived_at > self.date:
+            return int((self.arrived_at - self.date).total_seconds() // 60)
+        return 0
+
+    @property
+    def duration_minutes(self):
+        """Qabul necha daqiqa davom etgan."""
+        if self.started_at and self.finished_at:
+            return int((self.finished_at - self.started_at).total_seconds() // 60)
+        return None
+
     def save(self, *args, **kwargs):
-        if self.customer.branch != self.branch:
-            raise ValidationError("Meeting's branch must match the customer's branch.")
+        # Bemor istalgan filialga borishi mumkin — faqat shifokor filiali tekshiriladi
         if self.doctor.branch != self.branch:
             raise ValidationError("Meeting's branch must match the doctor's branch.")
         super().save(*args, **kwargs)
@@ -376,17 +403,21 @@ class Notification(BaseModel):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        channel_layer = get_channel_layer()
-        notification_data = {
-            "type": "notification_message",
-            "title": self.title,
-            "message": self.message,
-            "timestamp": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        }
-        # Barcha foydalanuvchilarga xabar yuborish
-        async_to_sync(channel_layer.group_send)(
-            "global_notifications", notification_data
-        )
+        # Real-time yuborish xatosi asosiy amalni buzmasligi kerak
+        try:
+            channel_layer = get_channel_layer()
+            notification_data = {
+                "type": "notification_message",
+                "title": self.title,
+                "message": self.message,
+                "timestamp": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            # Barcha foydalanuvchilarga xabar yuborish
+            async_to_sync(channel_layer.group_send)(
+                "global_notifications", notification_data
+            )
+        except Exception as e:
+            logger.error(f"Real-time xabar yuborilmadi: {e}")
 
 
 class ClinicNotification(BaseModel):
@@ -414,20 +445,33 @@ class ClinicNotification(BaseModel):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        channel_layer = get_channel_layer()
-        notification_data = {
-            "type": "notification_message",
-            "title": self.title,
-            "message": self.message,
-            "timestamp": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        }
+        # Real-time yuborish xatosi asosiy amalni buzmasligi kerak
+        try:
+            channel_layer = get_channel_layer()
+            notification_data = {
+                "type": "notification_message",
+                "title": self.title,
+                "message": self.message,
+                "timestamp": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
 
-        # Xabar faqat specific user (doctor) ga yuboriladi
-        if hasattr(self, 'user') and self.user:  # user bo'lishi kerak
-            async_to_sync(channel_layer.group_send)(
-                f"clinic_notifications_{self.user.id}",
-                notification_data
-            )
+            # Xabar statusiga qarab klinikadagi tegishli rol egalariga yuboriladi
+            role_map = {
+                'doctor': ['doctor'],
+                'admin': ['admin'],
+                'director': ['director'],
+                'admin_director': ['admin', 'director'],
+            }
+            roles = role_map.get(self.status, [])
+            if roles:
+                recipients = self.clinic.users.filter(role__in=roles, is_active=True)
+                for recipient in recipients:
+                    async_to_sync(channel_layer.group_send)(
+                        f"clinic_notifications_{recipient.id}",
+                        notification_data
+                    )
+        except Exception as e:
+            logger.error(f"Real-time xabar yuborilmadi: {e}")
 
 
 class UserNotification(BaseModel):
@@ -447,16 +491,20 @@ class UserNotification(BaseModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        channel_layer = get_channel_layer()
-        notification_data = {
-            "type": "notification_message",
-            "title": self.title,
-            "message": self.message,
-            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-        }
-        async_to_sync(channel_layer.group_send)(
-            f"notifications_{self.recipient.id}", notification_data
-        )
+        # Real-time yuborish xatosi asosiy amalni buzmasligi kerak
+        try:
+            channel_layer = get_channel_layer()
+            notification_data = {
+                "type": "notification_message",
+                "title": self.title,
+                "message": self.message,
+                "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            async_to_sync(channel_layer.group_send)(
+                f"notifications_{self.recipient.id}", notification_data
+            )
+        except Exception as e:
+            logger.error(f"Real-time xabar yuborilmadi: {e}")
 
 class Room(BaseModel):
     STATUS_CHOICES = (

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import {
     FaSearch,
     FaEdit,
@@ -28,6 +29,8 @@ import {
     FaFilePdf,
     FaPrint,
     FaMoneyBillWave,
+    FaChevronLeft,
+    FaChevronRight,
 } from "react-icons/fa"
 import { useAuth } from "../../../contexts/AuthContext"
 import { useLanguage } from "../../../contexts/LanguageContext"
@@ -35,7 +38,14 @@ import Pagination from "../../pagination/Pagination"
 import apiAppointments from "../../../api/apiAppointments"
 import apiCustomerDebts from "../../../api/apiCustomerDebts"
 
+// Haftalik kalendar sozlamalari: ish soatlari oralig'i va bir soat balandligi (px)
+const CAL_START_HOUR = 8
+const CAL_END_HOUR = 21
+const CAL_HOUR_HEIGHT = 64
+const CAL_APPT_MINUTES = 45 // bitta qabul kartochkasining vizual davomiyligi
+
 export default function Appointments() {
+    const navigate = useNavigate()
     const { selectedBranch } = useAuth()
     const { t } = useLanguage()
 
@@ -97,6 +107,7 @@ export default function Appointments() {
     // State for view mode
     const [currentView, setCurrentView] = useState("table")
     const [startDate, setStartDate] = useState(new Date())
+    const [nowTime, setNowTime] = useState(new Date()) // kalendar uchun joriy vaqt (qizil chiziq)
 
     // State for time change modal
     const [showTimeChangeModal, setShowTimeChangeModal] = useState(false)
@@ -130,7 +141,25 @@ export default function Appointments() {
     // Load appointments when component mounts or when branch/filters change
     useEffect(() => {
         fetchAppointments()
-    }, [currentPage, itemsPerPage, searchTerm]) // Faqat asosiy dependency'lar
+    }, [currentPage, itemsPerPage, searchTerm, currentView]) // Faqat asosiy dependency'lar
+
+    // Kalendar uchun joriy vaqtni har 30 soniyada yangilab turish (qizil chiziq yurishi uchun)
+    useEffect(() => {
+        if (currentView !== "calendar") return
+        const timer = setInterval(() => setNowTime(new Date()), 30000)
+        return () => clearInterval(timer)
+    }, [currentView])
+
+    // Kalendar ochilganda joriy soat atrofiga avtomatik aylantirish
+    useEffect(() => {
+        if (currentView !== "calendar") return
+        const scroller = document.querySelector(".apt-cal-scroll")
+        if (scroller) {
+            const minutes = new Date().getHours() * 60 + new Date().getMinutes()
+            const top = ((minutes - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT - 180
+            scroller.scrollTop = Math.max(top, 0)
+        }
+    }, [currentView])
 
     // Alohida useEffect filterlar uchun
     useEffect(() => {
@@ -160,9 +189,10 @@ export default function Appointments() {
     const fetchAppointments = async () => {
         setLoading(true)
         try {
+            // Kalendar ko'rinishida butun hafta ko'rinishi uchun ko'proq yozuv olinadi
             const params = {
-                page: currentPage + 1,
-                page_size: itemsPerPage,
+                page: currentView === "calendar" ? 1 : currentPage + 1,
+                page_size: currentView === "calendar" ? 300 : itemsPerPage,
             }
 
             if (filterStatus !== "all") params.status = filterStatus
@@ -784,6 +814,56 @@ export default function Appointments() {
         setStartDate(new Date())
     }
 
+    // Oldingi / keyingi haftaga o'tish
+    const goToPrevWeek = () => {
+        const date = new Date(startDate)
+        date.setDate(date.getDate() - 7)
+        setStartDate(date)
+    }
+
+    const goToNextWeek = () => {
+        const date = new Date(startDate)
+        date.setDate(date.getDate() + 7)
+        setStartDate(date)
+    }
+
+    // Qabulning kun boshidan boshlab necha daqiqada boshlanishini aniqlash
+    const getAppointmentMinutes = (appointment) => {
+        if (appointment.date && typeof appointment.date === "string" && appointment.date.includes("T")) {
+            const date = new Date(appointment.date)
+            if (!isNaN(date)) return date.getHours() * 60 + date.getMinutes()
+        }
+        if (appointment.time) {
+            const [h, m] = String(appointment.time).split(":")
+            const hours = parseInt(h, 10)
+            const minutes = parseInt(m, 10)
+            if (!isNaN(hours)) return hours * 60 + (isNaN(minutes) ? 0 : minutes)
+        }
+        return null
+    }
+
+    // Bir kundagi qabullarni yonma-yon ustunchalarga (lane) taqsimlash —
+    // bir xil vaqtdagi qabullar ustma-ust tushmasligi uchun
+    const layoutDayAppointments = (dayAppointments) => {
+        const items = dayAppointments
+            .map((appointment) => ({ appointment, start: getAppointmentMinutes(appointment) }))
+            .filter((item) => item.start !== null)
+            .sort((a, b) => a.start - b.start)
+
+        const laneEnds = []
+        items.forEach((item) => {
+            let lane = laneEnds.findIndex((end) => end <= item.start)
+            if (lane === -1) {
+                lane = laneEnds.length
+                laneEnds.push(0)
+            }
+            laneEnds[lane] = item.start + CAL_APPT_MINUTES
+            item.lane = lane
+        })
+
+        return { items, lanes: Math.max(laneEnds.length, 1) }
+    }
+
     // Get branch name by ID
     const getBranchName = (branchId) => {
         const branch = filterData.branches.find((b) => b.id === branchId)
@@ -939,6 +1019,24 @@ export default function Appointments() {
         }
     }
 
+    // Ro'yxat bo'sh bo'lsa — tegishli bo'limga otuvchi "+ qo'shish" tugmasi
+    const EmptyAddHint = ({ show, label, to }) => {
+        if (!show) return null
+        return (
+            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 13, color: "#b45309" }}>⚠ {t("no_data")}.</span>
+                <button
+                    type="button"
+                    className="appointments-btn appointments-btn-primary"
+                    style={{ padding: "7px 14px", fontSize: 13 }}
+                    onClick={() => navigate(to)}
+                >
+                    + {label}
+                </button>
+            </div>
+        )
+    }
+
     // Render step content
     const renderStepContent = () => {
         switch (step) {
@@ -964,6 +1062,11 @@ export default function Appointments() {
                                             ))}
                                     </select>
                                 </div>
+                                <EmptyAddHint
+                                    show={!filterData.branches || filterData.branches.length === 0}
+                                    label={t("create_branch_first")}
+                                    to="/dashboard/director/settings?tab=branches"
+                                />
                             </div>
                         )}
 
@@ -984,6 +1087,11 @@ export default function Appointments() {
                                         ))}
                                 </select>
                             </div>
+                            <EmptyAddHint
+                                show={!!newAppointment.branch && (!filterData.customers || filterData.customers.length === 0)}
+                                label={t("add_new_patient")}
+                                to="/dashboard/director/patients"
+                            />
                         </div>
 
                         <div className="appointments-form-actions">
@@ -1022,6 +1130,11 @@ export default function Appointments() {
                                         ))}
                                 </select>
                             </div>
+                            <EmptyAddHint
+                                show={!filterData.doctors || filterData.doctors.length === 0}
+                                label={t("add_new_doctor")}
+                                to="/dashboard/director/staff"
+                            />
                         </div>
 
                         <div className="appointments-form-actions">
@@ -1060,6 +1173,11 @@ export default function Appointments() {
                                         ))}
                                 </select>
                             </div>
+                            <EmptyAddHint
+                                show={!filterData.cabinets || filterData.cabinets.length === 0}
+                                label={t("add_cabinet")}
+                                to="/dashboard/director/cabinets"
+                            />
                         </div>
 
                         <div className="appointments-form-actions">
@@ -1370,63 +1488,118 @@ export default function Appointments() {
                     />
                 </div>
             ) : (
-                <div className="appointments-calendar-view">
-                    <div className="appointments-calendar-header">
-                        <div className="appointments-calendar-days">
-                            {getWeekDates().map((date, index) => (
-                                <div
-                                    key={index}
-                                    className={`appointments-calendar-day ${date.toDateString() === new Date().toDateString() ? "today" : ""
-                                        }`}
-                                >
-                                    <div className="appointments-day-name">{date.toLocaleDateString("uz-UZ", { weekday: "short" })}</div>
-                                    <div className="appointments-day-date">{date.getDate()}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="appointments-calendar-body">
-                        {getWeekDates().map((date, index) => {
-                            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-                                date.getDate(),
-                            ).padStart(2, "0")}`
-                            const dayAppointments = appointments.filter(
-                                (appointment) => appointment.date && appointment.date.startsWith(dateString),
-                            )
+                <div className="appointments-calendar-view apt-cal">
+                    {(() => {
+                        const weekDates = getWeekDates()
+                        const hours = Array.from({ length: CAL_END_HOUR - CAL_START_HOUR }, (_, i) => CAL_START_HOUR + i)
+                        const nowMinutes = nowTime.getHours() * 60 + nowTime.getMinutes()
+                        const todayIndex = weekDates.findIndex((d) => d.toDateString() === nowTime.toDateString())
+                        const showNowLine =
+                            todayIndex !== -1 && nowMinutes >= CAL_START_HOUR * 60 && nowMinutes <= CAL_END_HOUR * 60
+                        const nowTop = ((nowMinutes - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT
 
-                            return (
-                                <div
-                                    key={index}
-                                    className={`appointments-calendar-column ${date.toDateString() === new Date().toDateString() ? "today" : ""
-                                        }`}
-                                >
-                                    {dayAppointments.length > 0 ? (
-                                        dayAppointments.map((appointment) => (
-                                            <div
-                                                key={appointment.id}
-                                                className={`appointments-calendar-item ${appointment.status}`}
-                                                onClick={() => openViewSidebar(appointment)}
-                                            >
-                                                <div className="appointments-calendar-time">{formatTimeForDisplay(appointment.date)}</div>
-                                                <div className="appointments-calendar-patient">{appointment.customer_name}</div>
-                                                <div className="appointments-calendar-doctor">{appointment.doctor_name}</div>
-                                                <div className="appointments-calendar-room">{appointment.room_name}</div>
-                                                <div className="appointments-calendar-status">
-                                                    <span className={`appointments-status-badge ${appointment.status}`}>
-                                                        {getStatusTranslation(appointment.status)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="appointments-no-appointments">
-                                            <p>{t("no_appointments")}</p>
-                                        </div>
-                                    )}
+                        return (
+                            <>
+                                {/* Hafta navigatsiyasi */}
+                                <div className="apt-cal-toolbar">
+                                    <button className="apt-cal-nav-btn" onClick={goToPrevWeek} title="Oldingi hafta">
+                                        <FaChevronLeft />
+                                    </button>
+                                    <div className="apt-cal-range">
+                                        <FaCalendarAlt />
+                                        <span>
+                                            {weekDates[0].toLocaleDateString("uz-UZ", { day: "numeric", month: "long" })}
+                                            {" — "}
+                                            {weekDates[6].toLocaleDateString("uz-UZ", { day: "numeric", month: "long", year: "numeric" })}
+                                        </span>
+                                    </div>
+                                    <button className="apt-cal-nav-btn" onClick={goToNextWeek} title="Keyingi hafta">
+                                        <FaChevronRight />
+                                    </button>
                                 </div>
-                            )
-                        })}
-                    </div>
+
+                                <div className="apt-cal-scroll">
+                                    {/* Kunlar qatori — tepada */}
+                                    <div className="apt-cal-header">
+                                        <div className="apt-cal-corner">
+                                            <FaClock />
+                                        </div>
+                                        {weekDates.map((date, index) => (
+                                            <div key={index} className={`apt-cal-day ${index === todayIndex ? "today" : ""}`}>
+                                                <span className="apt-cal-day-name">
+                                                    {date.toLocaleDateString("uz-UZ", { weekday: "short" })}
+                                                </span>
+                                                <span className="apt-cal-day-num">{date.getDate()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Soatlar (chapda) + haftalik to'r */}
+                                    <div className="apt-cal-body" style={{ height: `${hours.length * CAL_HOUR_HEIGHT}px` }}>
+                                        <div className="apt-cal-times">
+                                            {hours.map((hour) => (
+                                                <div key={hour} className="apt-cal-time" style={{ height: `${CAL_HOUR_HEIGHT}px` }}>
+                                                    {String(hour).padStart(2, "0")}:00
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {weekDates.map((date, index) => {
+                                            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+                                                date.getDate(),
+                                            ).padStart(2, "0")}`
+                                            const dayAppointments = appointments.filter(
+                                                (appointment) => appointment.date && appointment.date.startsWith(dateString),
+                                            )
+                                            const { items, lanes } = layoutDayAppointments(dayAppointments)
+
+                                            return (
+                                                <div key={index} className={`apt-cal-col ${index === todayIndex ? "today" : ""}`}>
+                                                    {hours.map((hour) => (
+                                                        <div key={hour} className="apt-cal-cell" style={{ height: `${CAL_HOUR_HEIGHT}px` }}></div>
+                                                    ))}
+                                                    {items.map(({ appointment, start, lane }) => {
+                                                        const top = ((start - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT
+                                                        const height = (CAL_APPT_MINUTES / 60) * CAL_HOUR_HEIGHT
+                                                        return (
+                                                            <div
+                                                                key={appointment.id}
+                                                                className={`apt-cal-event ${appointment.status}`}
+                                                                style={{
+                                                                    top: `${top + 1}px`,
+                                                                    height: `${height - 2}px`,
+                                                                    left: `calc(${(lane * 100) / lanes}% + 3px)`,
+                                                                    width: `calc(${100 / lanes}% - 6px)`,
+                                                                }}
+                                                                onClick={() => openViewSidebar(appointment)}
+                                                                title={`${formatTimeForDisplay(appointment.date)} · ${appointment.customer_name} · ${appointment.doctor_name} · ${appointment.room_name}`}
+                                                            >
+                                                                <span className="apt-cal-event-time">
+                                                                    {formatTimeForDisplay(appointment.date)}
+                                                                </span>
+                                                                <span className="apt-cal-event-patient">{appointment.customer_name}</span>
+                                                                <span className="apt-cal-event-doctor">{appointment.doctor_name}</span>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )
+                                        })}
+
+                                        {/* Joriy vaqt — harakatlanuvchi qizil chiziq */}
+                                        {showNowLine && (
+                                            <div className="apt-cal-now" style={{ top: `${nowTop}px` }}>
+                                                <span className="apt-cal-now-label">
+                                                    {nowTime.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+                                                </span>
+                                                <span className="apt-cal-now-dot"></span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )
+                    })()}
                 </div>
             )}
 

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useLanguage } from "../../../contexts/LanguageContext"
 
 export default function TaskCalendar({ tasks, currentDate, view, onTaskClick, onDayClick, onMonthClick }) {
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
+    const appLocale = { uz: "uz-UZ", ru: "ru-RU", en: "en-US" }[language] || "uz-UZ"
     const [calendarDays, setCalendarDays] = useState([])
 
     // Generate calendar days for the current month
@@ -138,7 +139,7 @@ export default function TaskCalendar({ tasks, currentDate, view, onTaskClick, on
                 isCurrentMonth: month === new Date().getMonth() && year === new Date().getFullYear(),
                 isToday: false,
                 tasks: monthTasks,
-                monthName: exactDate.toLocaleString("default", { month: "long" }),
+                monthName: exactDate.toLocaleString(appLocale, { month: "long" }),
             })
         }
 
@@ -200,10 +201,14 @@ export default function TaskCalendar({ tasks, currentDate, view, onTaskClick, on
         return date.getDate()
     }
 
-    // Get short day of week names
+    // Get short day of week names — ilova tiliga mos
     const getShortDayNames = () => {
-        const days = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"]
-        return days
+        const daysByLang = {
+            uz: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"],
+            ru: ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+            en: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+        }
+        return daysByLang[language] || daysByLang.uz
     }
 
     // Handle task click safely
@@ -358,7 +363,7 @@ export default function TaskCalendar({ tasks, currentDate, view, onTaskClick, on
             <div className="day-view">
                 <div className="day-header">
                     <div className="day-title">
-                        {day.date.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+                        {day.date.toLocaleDateString(appLocale, { weekday: "long", day: "numeric", month: "long" })}
                     </div>
                 </div>
 

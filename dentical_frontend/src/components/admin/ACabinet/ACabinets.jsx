@@ -36,6 +36,19 @@ export default function ACabinets() {
     const { selectedBranch } = useAuth()
     const { t } = useLanguage()
 
+    // Tanlangan filialning qavatlar soniga qarab qavat variantlari
+    const getFloorOptions = (branchesList, branchId) => {
+        const selected = (branchesList || []).find((b) => String(b.id) === String(branchId))
+        const floorsCount = selected?.floors && selected.floors > 0 ? selected.floors : 4
+        return Array.from({ length: floorsCount }, (_, i) => String(i + 1))
+    }
+
+    // Xodimlarni kabinet filiali bo'yicha filtrlash
+    const filterStaffByBranch = (staffList, branchId) => {
+        if (!branchId) return staffList || []
+        return (staffList || []).filter((s) => String(s.branch) === String(branchId))
+    }
+
     // State for cabinets data
     const [cabinetsData, setCabinetsData] = useState([])
     const [isLoading, setIsLoading] = useState(true)
@@ -1079,10 +1092,9 @@ export default function ACabinets() {
                                 <div className="form-group">
                                     <label htmlFor="floor">{t("floor")}</label>
                                     <select id="floor" name="floor" value={formData.floor} onChange={handleInputChange} required>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
+                                        {getFloorOptions(branches, formData.branch).map((fl) => (
+                                            <option key={fl} value={fl}>{fl}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -1105,7 +1117,7 @@ export default function ACabinets() {
                                     onChange={handleInputChange}
                                 >
                                     <option value="">{t("select_doctor")}</option>
-                                    {doctors.map((doctor) => (
+                                    {filterStaffByBranch(doctors, formData.branch).map((doctor) => (
                                         <option key={doctor.id} value={doctor.id}>
                                             {doctor.first_name} {doctor.last_name}
                                             {doctor.has_cabinet ? ` (${t("already_assigned")})` : ""}
@@ -1123,7 +1135,7 @@ export default function ACabinets() {
                                 <label htmlFor="userNurses">{t("nurses")}</label>
                                 <select id="userNurses" name="userNurses" value="" onChange={handleNurseSelection}>
                                     <option value="">{t("select_nurse")}</option>
-                                    {nurses.map((nurse) => (
+                                    {filterStaffByBranch(nurses, formData.branch).map((nurse) => (
                                         <option key={nurse.id} value={nurse.id}>
                                             {nurse.first_name} {nurse.last_name}
                                             {nurse.has_cabinet ? ` (${t("already_assigned")})` : ""}
@@ -1240,10 +1252,9 @@ export default function ACabinets() {
                                 <div className="form-group">
                                     <label htmlFor="edit-floor">{t("floor")}</label>
                                     <select id="edit-floor" name="floor" value={formData.floor} onChange={handleInputChange} required>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
+                                        {getFloorOptions(branches, formData.branch).map((fl) => (
+                                            <option key={fl} value={fl}>{fl}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -1266,7 +1277,7 @@ export default function ACabinets() {
                                     onChange={handleInputChange}
                                 >
                                     <option value="">{t("select_doctor")}</option>
-                                    {doctors.map((doctor) => (
+                                    {filterStaffByBranch(doctors, formData.branch).map((doctor) => (
                                         <option key={doctor.id} value={doctor.id}>
                                             {doctor.first_name} {doctor.last_name}
                                             {doctor.has_cabinet && doctor.id !== Number(formData.userDoctor)
@@ -1286,7 +1297,7 @@ export default function ACabinets() {
                                 <label htmlFor="edit-userNurses">{t("nurses")}</label>
                                 <select id="edit-userNurses" name="userNurses" value="" onChange={handleNurseSelection}>
                                     <option value="">{t("select_nurse")}</option>
-                                    {nurses.map((nurse) => (
+                                    {filterStaffByBranch(nurses, formData.branch).map((nurse) => (
                                         <option key={nurse.id} value={nurse.id}>
                                             {nurse.first_name} {nurse.last_name}
                                             {nurse.has_cabinet && !formData.userNurses.includes(nurse.id)

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
 import { useLanguage } from "../../../contexts/LanguageContext"
 import { useAuth } from "../../../contexts/AuthContext"
 import {
@@ -34,6 +35,20 @@ import apiBranches from "../../../api/apiBranches"
 
 export default function Cabinets() {
     const { t } = useLanguage()
+    const navigate = useNavigate()
+
+    // Tanlangan filialning qavatlar soniga qarab qavat variantlarini qaytaradi
+    const getFloorOptions = (branchesList, branchId) => {
+        const selected = (branchesList || []).find((b) => String(b.id) === String(branchId))
+        const floorsCount = selected?.floors && selected.floors > 0 ? selected.floors : 4
+        return Array.from({ length: floorsCount }, (_, i) => String(i + 1))
+    }
+
+    // Xodimlarni kabinet filiali bo'yicha filtrlash (boshqa filial xodimi biriktirilmasin)
+    const filterStaffByBranch = (staffList, branchId) => {
+        if (!branchId) return staffList || []
+        return (staffList || []).filter((s) => String(s.branch) === String(branchId))
+    }
     const { user, selectedBranch } = useAuth()
 
     // State for cabinets data
@@ -1048,6 +1063,33 @@ export default function Cabinets() {
                             </button>
                         </div>
                         <form onSubmit={handleAddCabinet} className="cab-form">
+                            {/* Avval filial tanlanadi — filial bo'lmasa yaratish tugmasi */}
+                            <div className="cab-form-group">
+                                <label htmlFor="branch">{t("branch")}</label>
+                                {branches.length === 0 ? (
+                                    <div className="cab-warning">
+                                        <FaInfoCircle /> {t("no_branches_yet")}{" "}
+                                        <button
+                                            type="button"
+                                            className="cab-form-submit"
+                                            style={{ marginLeft: 8, padding: "6px 12px" }}
+                                            onClick={() => navigate("/dashboard/director/settings?tab=branches")}
+                                        >
+                                            <FaPlus /> {t("create_branch_first")}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <select id="branch" name="branch" value={newCabinet.branch} onChange={handleInputChange} required>
+                                        <option value="">{t("select_branch")}</option>
+                                        {branches.map((branch) => (
+                                            <option key={branch.id} value={branch.id}>
+                                                {branch.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
                             <div className="cab-form-group">
                                 <label htmlFor="name">{t("name")}</label>
                                 <input
@@ -1058,18 +1100,6 @@ export default function Cabinets() {
                                     onChange={handleInputChange}
                                     required
                                 />
-                            </div>
-
-                            <div className="cab-form-group">
-                                <label htmlFor="branch">{t("branch")}</label>
-                                <select id="branch" name="branch" value={newCabinet.branch} onChange={handleInputChange} required>
-                                    <option value="">{t("select_branch")}</option>
-                                    {branches.map((branch) => (
-                                        <option key={branch.id} value={branch.id}>
-                                            {branch.name}
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
 
                             <div className="cab-form-row">
@@ -1098,10 +1128,9 @@ export default function Cabinets() {
                                 <div className="cab-form-group">
                                     <label htmlFor="floor">{t("floor")}</label>
                                     <select id="floor" name="floor" value={newCabinet.floor} onChange={handleInputChange} required>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
+                                        {getFloorOptions(branches, newCabinet.branch).map((fl) => (
+                                            <option key={fl} value={fl}>{fl}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -1124,7 +1153,7 @@ export default function Cabinets() {
                                     onChange={handleInputChange}
                                 >
                                     <option value="">{t("select_doctor")}</option>
-                                    {doctors.map((doctor) => (
+                                    {filterStaffByBranch(doctors, newCabinet.branch).map((doctor) => (
                                         <option key={doctor.id} value={doctor.id}>
                                             {doctor.first_name} {doctor.last_name}
                                         </option>
@@ -1141,7 +1170,7 @@ export default function Cabinets() {
                                 <label htmlFor="userNurses">{t("nurses")}</label>
                                 <select id="userNurses" name="userNurses" value="" onChange={handleNurseSelection}>
                                     <option value="">{t("select_nurse")}</option>
-                                    {nurses.map((nurse) => (
+                                    {filterStaffByBranch(nurses, newCabinet.branch).map((nurse) => (
                                         <option key={nurse.id} value={nurse.id}>
                                             {nurse.first_name} {nurse.last_name}
                                         </option>
@@ -1274,10 +1303,9 @@ export default function Cabinets() {
                                         onChange={handleEditInputChange}
                                         required
                                     >
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
+                                        {getFloorOptions(branches, currentCabinet.branch).map((fl) => (
+                                            <option key={fl} value={fl}>{fl}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -1306,7 +1334,7 @@ export default function Cabinets() {
                                     onChange={handleEditInputChange}
                                 >
                                     <option value="">{t("select_doctor")}</option>
-                                    {doctors.map((doctor) => (
+                                    {filterStaffByBranch(doctors, currentCabinet.branch).map((doctor) => (
                                         <option key={doctor.id} value={doctor.id}>
                                             {doctor.first_name} {doctor.last_name}
                                         </option>
@@ -1323,7 +1351,7 @@ export default function Cabinets() {
                                 <label htmlFor="edit-userNurses">{t("nurses")}</label>
                                 <select id="edit-userNurses" name="userNurses" value="" onChange={handleEditNurseSelection}>
                                     <option value="">{t("select_nurse")}</option>
-                                    {nurses.map((nurse) => (
+                                    {filterStaffByBranch(nurses, currentCabinet.branch).map((nurse) => (
                                         <option key={nurse.id} value={nurse.id}>
                                             {nurse.first_name} {nurse.last_name}
                                         </option>

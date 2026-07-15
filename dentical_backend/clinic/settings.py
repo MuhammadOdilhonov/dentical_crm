@@ -4,6 +4,13 @@ from datetime import timedelta
 import socket
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env faylini eng boshida yuklaymiz — EMAIL_*, REDIS_HOST va boshqalar shu yerdan olinadi
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
 from celery.schedules import crontab
 
 
@@ -84,15 +91,32 @@ ASGI_APPLICATION = 'clinic.asgi.application'  # Replace clinic_crm with your pro
 #     }
 # }
 REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
-    # Lokal muhitda Redis ishlaydi
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(REDIS_HOST, 6379)],  # Redis serverining manzili va porti
+
+def _redis_available(host, port=6379):
+    """Redis ishga tushganmi — tez tekshiruv (lokalda Redis bo'lmasa InMemory ishlatiladi)."""
+    try:
+        s = socket.create_connection((host, port), timeout=0.5)
+        s.close()
+        return True
+    except OSError:
+        return False
+
+if _redis_available(REDIS_HOST):
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [(REDIS_HOST, 6379)],  # Redis serverining manzili va porti
+            },
         },
-    },
-}
+    }
+else:
+    # Redis yo'q — real-time xabarlar bitta jarayon ichida ishlaydi, tizim buzilmaydi
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:6379/0'  # Redis broker
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -103,7 +127,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(hour=0, minute=0),  # Har kuni 00:00 da ishga tushadi
     },
     'check_and_expire_clinic_subscriptions_daily': {
-        'task': 'custom_admin.tasks.check_and_expire_clinic_subscriptions',
+        'task': 'app.tasks.check_and_expire_clinic_subscriptions',
         'schedule': crontab(hour=0, minute=10),  # har kuni 00:10 da
     },
 }
@@ -386,7 +410,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'starclaudsuport@gmail.com'  # Gmail pochtangiz
-EMAIL_HOST_PASSWORD = 'yhvqsewlnwwqvsco'  # Gmail app password
+# Gmail ma'lumotlari environment orqali beriladi (EMAIL_HOST_USER / EMAIL_HOST_PASSWORD)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'starclaudsuport@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'yhvqsewlnwwqvsco')  # Gmail app password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 FRONTEND_URL = 'https://clinic-crm-alpha.vercel.app'

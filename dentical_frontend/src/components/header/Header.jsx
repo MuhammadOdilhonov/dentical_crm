@@ -21,6 +21,13 @@ export default function Header() {
         setShowDropdown(!showDropdown)
     }
 
+    // API user obyektida "name" yo'q — first_name/last_name dan yasaymiz
+    const userDisplayName =
+        user?.name ||
+        [user?.first_name, user?.last_name].filter(Boolean).join(" ") ||
+        user?.email ||
+        t("guest")
+
     return (
         <header className="dashboard-header">
             <div className="search-bar">
@@ -31,16 +38,16 @@ export default function Header() {
             <div className="header-actions">
                 <div className="user-dropdown-container">
                     <button className="user-dropdown-button" onClick={toggleDropdown}>
-                        <span className="user-name">{user?.name || t("guest")}</span>
-                        <div className="user-avatar">{user?.name ? user.name.charAt(0) : "G"}</div>
+                        <span className="user-name">{userDisplayName}</span>
+                        <div className="user-avatar">{userDisplayName.charAt(0)}</div>
                     </button>
 
                     {showDropdown && (
                         <div className="user-dropdown">
                             <div className="dropdown-user-info">
-                                <div className="dropdown-avatar">{user?.name ? user.name.charAt(0) : "G"}</div>
+                                <div className="dropdown-avatar">{userDisplayName.charAt(0)}</div>
                                 <div>
-                                    <h4>{user?.name || t("guest")}</h4>
+                                    <h4>{userDisplayName}</h4>
                                     <p className="dropdown-role">{user?.role ? t(user.role) : t("guest")}</p>
                                 </div>
                             </div>

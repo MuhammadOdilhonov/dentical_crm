@@ -265,9 +265,21 @@ export const printDocument = async (content, type = "ticket") => {
     }
 }
 
+// Bemor keldi deb belgilash — kechikish backend'da avtomatik hisoblanadi
+export const markPatientArrived = async (meetingId) => {
+    try {
+        const response = await client.post(`/meetings/${meetingId}/arrive/`)
+        return response.data
+    } catch (error) {
+        console.error("Error marking patient arrived:", error)
+        throw error
+    }
+}
+
 const appointmentsApi = {
     fetchAppointments,
     fetchAppointmentById,
+    markPatientArrived,
     fetchFilterData,
     fetchBusyTimes,
     createAppointment,

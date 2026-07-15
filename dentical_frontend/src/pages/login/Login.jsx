@@ -47,6 +47,14 @@ export default function Login() {
     const [resetLoading, setResetLoading] = useState(false)
     const [resetSuccess, setResetSuccess] = useState(false)
 
+    // Birinchi kirishda majburiy parol o'zgartirish
+    const [showFirstPasswordModal, setShowFirstPasswordModal] = useState(false)
+    const [pendingUser, setPendingUser] = useState(null)
+    const [firstNewPassword, setFirstNewPassword] = useState("")
+    const [firstConfirmPassword, setFirstConfirmPassword] = useState("")
+    const [firstPassError, setFirstPassError] = useState("")
+    const [firstPassLoading, setFirstPassLoading] = useState(false)
+
     // Refs for verification code inputs
     const codeInputRefs = useRef([])
 
@@ -78,8 +86,21 @@ export default function Login() {
                     password,
                 }
 
-                await login(userData)
-                navigate("/dashboard")
+                const loggedInUser = await login(userData)
+
+                // Birinchi kirish — vaqtinchalik parolni o'zgartirish majburiy
+                if (loggedInUser && loggedInUser.password_changed === false) {
+                    setPendingUser(loggedInUser)
+                    setShowFirstPasswordModal(true)
+                    return
+                }
+
+                // SuperAdmin bo'lsa alohida panelga yo'naltirish
+                if (loggedInUser && (loggedInUser.role === "superadmin" || loggedInUser.is_superuser)) {
+                    navigate("/superadmin")
+                } else {
+                    navigate("/dashboard")
+                }
             } else {
                 setError(t("emailPasswordRequired"))
             }
@@ -266,6 +287,44 @@ export default function Login() {
         }
     }
 
+    // Birinchi kirishda yangi parol o'rnatish
+    const handleFirstPasswordChange = async (e) => {
+        e.preventDefault()
+        if (!firstNewPassword || !firstConfirmPassword) {
+            setFirstPassError(t("passwordsRequired"))
+            return
+        }
+        if (firstNewPassword !== firstConfirmPassword) {
+            setFirstPassError(t("passwordsDoNotMatch"))
+            return
+        }
+        if (firstNewPassword.length < 8) {
+            setFirstPassError(t("passwordMinLength"))
+            return
+        }
+
+        setFirstPassLoading(true)
+        setFirstPassError("")
+        try {
+            await apiProfile.changePassword({
+                new_password: firstNewPassword,
+                confirm_password: firstConfirmPassword,
+            })
+            setShowFirstPasswordModal(false)
+
+            // Rolga qarab yo'naltirish
+            if (pendingUser && (pendingUser.role === "superadmin" || pendingUser.is_superuser)) {
+                navigate("/superadmin")
+            } else {
+                navigate("/dashboard")
+            }
+        } catch (error) {
+            setFirstPassError(error.response?.data?.error || t("passwordResetFailed"))
+        } finally {
+            setFirstPassLoading(false)
+        }
+    }
+
     return (
         <div className="login-container">
             <div className="animation-left">
@@ -304,18 +363,6 @@ export default function Login() {
                                     onClick={() => handleLanguageChange("en")}
                                 >
                                     EN
-                                </button>
-                                <button
-                                    className={`lang-btn ${language === "kz" ? "active" : ""}`}
-                                    onClick={() => handleLanguageChange("kz")}
-                                >
-                                    KZ
-                                </button>
-                                <button
-                                    className={`lang-btn ${language === "zh" ? "active" : ""}`}
-                                    onClick={() => handleLanguageChange("zh")}
-                                >
-                                    ZH
                                 </button>
                             </div>
 
@@ -487,6 +534,73 @@ export default function Login() {
                     <div className="pulse pulse-3"></div>
                 </div>
             </div>
+
+            {/* Birinchi kirishda majburiy parol o'zgartirish modali */}
+            {showFirstPasswordModal && (
+                <div className="modal-overlay">
+                    <div className="reset-password-modal">
+                        <div className="modal-header">
+                            <h2>{t("createNewPassword")}</h2>
+                        </div>
+                        <div className="modal-body">
+                            <div className="reset-step">
+                                <div className="reset-step-icon">
+                                    <FaLock />
+                                </div>
+                                <h3>{t("firstLoginChangePassword")}</h3>
+                                <p>{t("firstLoginChangePasswordInfo")}</p>
+
+                                <form onSubmit={handleFirstPasswordChange}>
+                                    <div className="form-group">
+                                        <label htmlFor="firstNewPassword">{t("newPassword")}</label>
+                                        <input
+                                            id="firstNewPassword"
+                                            type="password"
+                                            value={firstNewPassword}
+                                            onChange={(e) => setFirstNewPassword(e.target.value)}
+                                            placeholder={t("enterNewPassword")}
+                                            required
+                                            autoFocus
+                                            disabled={firstPassLoading}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="firstConfirmPassword">{t("confirmPassword")}</label>
+                                        <input
+                                            id="firstConfirmPassword"
+                                            type="password"
+                                            value={firstConfirmPassword}
+                                            onChange={(e) => setFirstConfirmPassword(e.target.value)}
+                                            placeholder={t("confirmNewPassword")}
+                                            required
+                                            disabled={firstPassLoading}
+                                        />
+                                    </div>
+
+                                    {firstPassError && (
+                                        <div className="reset-error">
+                                            <FaExclamationCircle />
+                                            {firstPassError}
+                                        </div>
+                                    )}
+
+                                    <div className="form-actions">
+                                        <button type="submit" className="btn btn-primary" disabled={firstPassLoading}>
+                                            {firstPassLoading ? (
+                                                <>
+                                                    <span className="spinner">⟳</span> {t("resetting")}
+                                                </>
+                                            ) : (
+                                                t("savePasswordAndContinue")
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Password Reset Modal */}
             {showResetModal && (

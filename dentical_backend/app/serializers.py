@@ -34,7 +34,9 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (  'id', 'email', 'password', 'first_name', 'last_name', 
                     'role', 'role_name', 'phone_number', 'specialization',
                     'specialization_name', 'status', 'clinic', 'branch', 'clinic_name',
-                    'salary', 'kpi', 'reason_holiday', 'start_holiday', 'end_holiday')  # Removed 'username'
+                    'salary', 'kpi', 'work_type', 'reason_holiday', 'start_holiday', 'end_holiday', 'is_superuser',
+                    'password_changed')  # Removed 'username'
+        read_only_fields = ('is_superuser', 'password_changed')
         # extra_kwargs = {
         #     'clinic': {'read_only': True},  # Automatically set from the authenticated user
         #     'branch': {'read_only': True},
@@ -86,10 +88,22 @@ class CabinetUserSerializer(serializers.ModelSerializer):
 class CabinetSerializer(serializers.ModelSerializer):
     user_doctor = serializers.SerializerMethodField()
     user_nurse = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Cabinet
         fields = '__all__'
+
+    def validate(self, attrs):
+        # Biriktirilayotgan shifokor/hamshira kabinet filialida ishlashi kerak
+        branch = attrs.get('branch') or (self.instance.branch if self.instance else None)
+        if branch:
+            for staff in list(attrs.get('user', []) or []) + list(attrs.get('nurse', []) or []):
+                if staff.branch_id and staff.branch_id != branch.id:
+                    raise serializers.ValidationError(
+                        f"{staff.get_full_name()} boshqa filialda ishlaydi. "
+                        f"Kabinetga faqat o'sha filial xodimlarini biriktirish mumkin."
+                    )
+        return attrs
 
     def get_user_doctor(self, obj):
         users = obj.user.filter(role='doctor')
@@ -161,6 +175,8 @@ class MeetingSerializer(serializers.ModelSerializer):
         child=serializers.FileField(), write_only=True, required=False
     )  # Fayllarni yuklash uchun
     dental_services_data = DentalServiceSerializer(source='dental_services', many=True, read_only=True)
+    late_minutes = serializers.IntegerField(read_only=True)
+    duration_minutes = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = Meeting
@@ -168,7 +184,7 @@ class MeetingSerializer(serializers.ModelSerializer):
             'id', 'branch', 'branch_name', 'customer', 'customer_name',
             'doctor', 'doctor_name', 'room','room_name', 'date', 'time', 'full_date', 'status',
             'organs', 'comment', 'dental_services', 'customer_gender', 'diognosis', 'files', 'uploaded_files',
-            'dental_services_data'
+            'dental_services_data', 'arrived_at', 'started_at', 'finished_at', 'late_minutes', 'duration_minutes'
         ]
         # extra_kwargs = {
         #     'branch': {'write_only': True},  # ID orqali yozish uchun
@@ -213,7 +229,10 @@ class BranchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Branch
-        fields = ['id', 'name', 'address', 'phone_number', 'email', 'clinic']  # Add 'clinic' to fields
+        fields = ['id', 'name', 'address', 'phone_number', 'email', 'floors', 'clinic']  # Add 'clinic' to fields
+        extra_kwargs = {
+            'email': {'required': False, 'allow_blank': True, 'allow_null': True},
+        }
 
 class RoomSerializer(serializers.ModelSerializer):
     customers = serializers.PrimaryKeyRelatedField(many=True, queryset=Customer.objects.all())

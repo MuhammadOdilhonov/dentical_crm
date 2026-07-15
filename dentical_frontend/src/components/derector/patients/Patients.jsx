@@ -131,6 +131,7 @@ export default function Patients() {
         diagnosis: patient.diagnosis || "",
         doctor: patient.doctor || "",
         branch: patient.branch,
+        visited_branches: patient.visited_branches || [],
         status: patient.status || "faol",
       }))
 
@@ -291,10 +292,7 @@ export default function Patients() {
 
   // Validate form before submission
   const validateForm = (patient) => {
-    // Проверяем, выбран ли филиал (branch > 0)
-    if (!patient.branch || patient.branch <= 0) {
-      return false
-    }
+    // Filial endi IXTIYORIY — bemor klinika darajasida saqlanadi
     return true
   }
 
@@ -638,7 +636,7 @@ export default function Patients() {
                   <th>{t("phone")}</th>
                   <th>{t("diagnosis")}</th>
                   <th>{t("doctor")}</th>
-                  <th>{t("branch")}</th>
+                  <th>{t("visited_branches")}</th>
                   <th>{t("last_visit")}</th>
                   <th>{t("status")}</th>
                   <th>{t("actions")}</th>
@@ -654,7 +652,11 @@ export default function Patients() {
                       <td>{patient.phone}</td>
                       <td>{patient.diagnosis || "-"}</td>
                       <td>{patient.doctor || "-"}</td>
-                      <td>{getBranchName(patient.branch)}</td>
+                      <td>
+                        {patient.visited_branches && patient.visited_branches.length > 0
+                          ? patient.visited_branches.join(", ")
+                          : getBranchName(patient.branch)}
+                      </td>
                       <td>{patient.lastVisit}</td>
                       <td>
                         <span className={`mijoz-status-badge ${patient.status}`}>
@@ -882,14 +884,14 @@ export default function Patients() {
 
             <div className="mijoz-form-row">
               <div className="mijoz-form-group">
-                <label>{t("branch")}</label>
+                <label>{t("branch")} ({t("optional") || "ixtiyoriy"})</label>
                 <select
                   name="branch"
                   value={newPatient.branch}
                   onChange={handleNewPatientChange}
                   className={branchError ? "mijoz-input-error" : ""}
                 >
-                  <option value={0}>Филиал танланг</option>
+                  <option value={0}>{t("select_branch")}</option>
                   {branchesLoading ? (
                     <option value="">{t("loading")}</option>
                   ) : (
@@ -1005,14 +1007,14 @@ export default function Patients() {
 
                 <div className="mijoz-form-row">
                   <div className="mijoz-form-group">
-                    <label>{t("branch")}</label>
+                    <label>{t("branch")} ({t("optional") || "ixtiyoriy"})</label>
                     <select
                       name="branch"
                       value={currentPatient.branch}
                       onChange={handleEditPatientChange}
                       className={editBranchError ? "mijoz-input-error" : ""}
                     >
-                      <option value={0}>Филиал танланг</option>
+                      <option value={0}>{t("select_branch")}</option>
                       {branchesLoading ? (
                         <option value="">{t("loading")}</option>
                       ) : (

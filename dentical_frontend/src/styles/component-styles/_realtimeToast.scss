@@ -1,0 +1,101 @@
+// Real-time xabarnoma toastlari (o'ng yuqori burchak)
+.rt-toast-container {
+    position: fixed;
+    top: 10px;
+    right: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+    width: calc(100% - 40px);
+}
+
+.rt-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #ffffff;
+    border-left: 4px solid #0ea5e9;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+    padding: 14px 14px 14px 16px;
+    animation: rt-slide-in 0.3s ease-out;
+
+    .rt-toast-icon {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #e0f2fe;
+        color: #0284c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        animation: rt-bell 0.8s ease;
+    }
+
+    .rt-toast-body {
+        flex: 1;
+        min-width: 0;
+
+        .rt-toast-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #0f172a;
+            margin-bottom: 3px;
+        }
+
+        .rt-toast-message {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.45;
+            word-break: break-word;
+            max-height: 80px;
+            overflow: hidden;
+            white-space: pre-line;
+        }
+    }
+
+    .rt-toast-close {
+        flex-shrink: 0;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        min-width: 28px;
+        min-height: 28px;
+
+        &:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+    }
+}
+
+@keyframes rt-slide-in {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes rt-bell {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-15deg); }
+    40% { transform: rotate(12deg); }
+    60% { transform: rotate(-8deg); }
+    80% { transform: rotate(4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rt-toast { animation: none; }
+    .rt-toast .rt-toast-icon { animation: none; }
+}

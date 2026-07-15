@@ -1,0 +1,314 @@
+// ============================================
+// Onboarding — birinchi kirishdagi qadam-baqadam tanishtiruv oynasi
+// ============================================
+
+.ob-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 6000;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: obFade 0.3s ease;
+}
+
+.ob-modal {
+    position: relative;
+    width: 620px;
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
+    padding: 26px 30px 22px;
+    animation: obPop 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+
+    .ob-skip {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover { background: #fee2e2; color: #ef4444; }
+    }
+}
+
+// Progress nuqtalari
+.ob-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 22px;
+
+    .ob-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid #e2e8f0;
+        background: #ffffff;
+        color: #94a3b8;
+        font-size: 12.5px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s;
+
+        &.active {
+            border-color: #0ea5e9;
+            background: #0ea5e9;
+            color: #ffffff;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+        }
+
+        &.done {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #10b981;
+        }
+    }
+}
+
+.ob-body {
+    text-align: center;
+    animation: obSlide 0.3s ease;
+
+    .ob-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        font-size: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+    }
+
+    .ob-badge {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        margin-bottom: 10px;
+    }
+
+    .ob-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    // Qaysi menyudan ochilishi
+    .ob-where {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #f0f9ff;
+        border: 1px dashed #7dd3fc;
+        color: #0369a1;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 10px;
+        margin-bottom: 14px;
+
+        svg { color: #0ea5e9; }
+    }
+
+    .ob-text {
+        font-size: 14.5px;
+        line-height: 1.75;
+        color: #475569;
+        text-align: left;
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
+    }
+
+    // Yaratish ketma-ketligi zanjiri
+    .ob-chain {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 12px;
+        padding: 14px 12px;
+        margin-bottom: 14px;
+
+        .ob-chain-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            .ob-chain-num {
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                background: #f59e0b;
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .ob-chain-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: #92400e;
+                white-space: nowrap;
+            }
+
+            .ob-chain-arrow {
+                font-size: 11px;
+                color: #d97706;
+                margin-left: 4px;
+            }
+        }
+    }
+
+    // Bog'liqlik izohi
+    .ob-depends {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        text-align: left;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #1e40af;
+
+        svg {
+            flex-shrink: 0;
+            margin-top: 3px;
+            color: #3b82f6;
+        }
+    }
+}
+
+.ob-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+
+    .ob-footer-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+}
+
+.ob-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid transparent;
+
+    &.ob-btn-primary {
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.45);
+        }
+    }
+
+    &.ob-btn-outline {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        color: #334155;
+
+        &:hover { border-color: #0ea5e9; color: #0284c7; }
+    }
+
+    &.ob-btn-ghost {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        padding-left: 6px;
+        padding-right: 6px;
+
+        &:hover { color: #64748b; }
+    }
+}
+
+@keyframes obFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes obPop {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes obSlide {
+    from { opacity: 0; transform: translateX(14px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 640px) {
+    .ob-modal {
+        padding: 20px 16px 16px;
+    }
+
+    .ob-body .ob-title { font-size: 19px; }
+
+    .ob-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+
+        .ob-footer-right {
+            justify-content: stretch;
+
+            .ob-btn { flex: 1; justify-content: center; }
+        }
+
+        .ob-btn-ghost { align-self: center; }
+    }
+}

@@ -21,6 +21,7 @@ import {
     fetchMedicineSales,
 } from "../../api/apiMedicine"
 import branchesApi from "../../api/apiBranches"
+import client from "../../api/apiService"
 import usersApi from "../../api/apiUsers"
 import apiPatients from "../../api/apiPatients"
 import Pagination from "../pagination/Pagination"
@@ -1006,14 +1007,9 @@ const MedicineManagement = () => {
 
     const fetchCustomerDebtStats = async (customerId) => {
         try {
-            const response = await fetch(`/api/customer/${customerId}/debt-stats/`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                },
-            })
-            const data = await response.json()
-            return data
+            // Backend clientdan foydalanamiz (to'g'ri BaseUrl + token)
+            const response = await client.get(`/customer/${customerId}/debt-stats/`)
+            return response.data
         } catch (error) {
             console.error("Error fetching customer debt stats:", error)
             return null

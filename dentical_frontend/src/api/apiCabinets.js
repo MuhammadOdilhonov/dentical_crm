@@ -66,7 +66,7 @@ export const updateCabinet = async (cabinetId, cabinetData) => {
             status: cabinetData.status,
             description: cabinetData.description,
             branch: cabinetData.branch,
-            doctor: cabinetData.user_doctor || [],
+            user: cabinetData.user_doctor || [],
             nurse: cabinetData.user_nurse || [],
         }
 

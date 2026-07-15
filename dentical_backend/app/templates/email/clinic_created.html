@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentical CRM — Klinika yaratildi</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f4f8;padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#0ea5e9,#0369a1);padding:36px 40px;text-align:center;">
+                            <div style="font-size:42px;line-height:1;">🦷</div>
+                            <h1 style="color:#ffffff;margin:12px 0 4px;font-size:26px;">Dentical CRM</h1>
+                            <p style="color:#e0f2fe;margin:0;font-size:14px;">Tish klinikalari uchun zamonaviy boshqaruv tizimi</p>
+                        </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:36px 40px;">
+                            <h2 style="color:#0f172a;margin:0 0 8px;font-size:20px;">Assalomu alaykum, {{ full_name }}!</h2>
+                            <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+                                Tabriklaymiz! Sizning <strong style="color:#0369a1;">"{{ clinic_name }}"</strong> klinikangiz
+                                Dentical CRM tizimida muvaffaqiyatli ro'yxatdan o'tkazildi.
+                                Quyidagi ma'lumotlar bilan tizimga kirishingiz mumkin:
+                            </p>
+
+                            <!-- Credentials box -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;margin:0 0 20px;">
+                                <tr>
+                                    <td style="padding:20px 24px;">
+                                        <p style="margin:0 0 10px;font-size:14px;color:#334155;">
+                                            <strong style="display:inline-block;width:90px;color:#0369a1;">Login:</strong>
+                                            <span style="font-family:monospace;font-size:15px;">{{ username }}</span>
+                                        </p>
+                                        <p style="margin:0;font-size:14px;color:#334155;">
+                                            <strong style="display:inline-block;width:90px;color:#0369a1;">Parol:</strong>
+                                            <span style="font-family:monospace;font-size:15px;background:#fff7ed;border:1px dashed #fdba74;padding:2px 8px;border-radius:6px;">{{ password }}</span>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            {% if plan_name %}
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin:0 0 20px;">
+                                <tr>
+                                    <td style="padding:16px 24px;">
+                                        <p style="margin:0;font-size:14px;color:#166534;">
+                                            📦 Sizga <strong>"{{ plan_name }}"</strong> tarifi biriktirildi.
+                                            {% if end_date %}Amal qilish muddati: <strong>{{ end_date }}</strong> gacha.{% endif %}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+
+                            <!-- CTA button -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding:8px 0 24px;">
+                                        <a href="{{ login_url }}/login" style="background:#0ea5e9;color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold;padding:14px 44px;border-radius:10px;display:inline-block;">
+                                            Tizimga kirish →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;border-top:1px solid #e2e8f0;padding-top:16px;">
+                                🔒 Xavfsizlik uchun tizimga birinchi marta kirganingizdan so'ng parolni o'zgartirishingizni tavsiya qilamiz.
+                                Ushbu xatni hech kimga yubormang.
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background:#0f172a;padding:20px 40px;text-align:center;">
+                            <p style="color:#94a3b8;margin:0;font-size:12px;">
+                                © Dentical CRM — Barcha huquqlar himoyalangan.<br>
+                                Savollar uchun: <a href="mailto:{{ login_url }}" style="color:#38bdf8;text-decoration:none;">yordam xizmati</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

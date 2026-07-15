@@ -88,6 +88,7 @@ urlpatterns = [
     path('meetings-filter/', MeetingFilterView.as_view(), name='meeting_filter'),
     path('meeting-public/<int:clinic_id>/<int:meeting_id>/', MeetingPublicView.as_view(), name='meeting_public'),
     # Reset password URLs
+    path('user/set-new-password/', SetNewPasswordView.as_view(), name='set-new-password'),
     path('user/change-password/', PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('user/verify-code/', PasswordResetCodeVerifyView.as_view(), name='password-reset-code-verify'),
     path('user/reset-password/', PasswordResetChangeView.as_view(), name='password-reset-change'),

@@ -1,5 +1,8 @@
 from datetime import datetime  # Fix the import for datetime
+import logging
 from django.shortcuts import render, get_object_or_404
+
+logger = logging.getLogger(__name__)
 from rest_framework import viewsets, status, generics, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -66,6 +69,10 @@ class ClinicViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return Clinic.objects.none()  # Agar foydalanuvchi autentifikatsiya qilinmagan bo'lsa, bo'sh queryset qaytariladi
+        if user.is_superuser:
+            return Clinic.objects.all()  # SuperAdmin barcha klinikalarni ko'radi
+        if not user.clinic:
+            return Clinic.objects.none()  # Klinikaga biriktirilmagan foydalanuvchi
         return Clinic.objects.filter(id=user.clinic.id)  # Foydalanuvchining clinicini qaytaradi
     
 
@@ -87,7 +94,8 @@ class ClinicViewSet(viewsets.ModelViewSet):
             first_name='Director',
             last_name='',
             phone_number='',
-            status='faol'
+            status='faol',
+            password_changed=False
         )
         subject = "Klinika uchun direktor yaratildi"
         message = (
@@ -107,9 +115,7 @@ class ClinicViewSet(viewsets.ModelViewSet):
             )
         except Exception as e:
             return Response({"error": f"Klinika yaratildi, lekin email yuborishda xatolik: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
-        self.perform_create(serializer)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
@@ -166,23 +172,28 @@ class UserViewSet(viewsets.ModelViewSet):
             email=email,
             password=random_password,
             clinic=clinic,
+            password_changed=False,  # Birinchi kirishda parolni o'zgartirishi shart
             **user_data  # Pass the remaining fields
         )
 
         # Send the password to the user's email
-        subject = "Your Account Credentials"
-        message = f"Dear {user.get_full_name()},\n\nYour account has been created successfully.\n\nUsername: {email}\nPassword: {random_password}\n\nPlease log in and change your password as soon as possible."
-        # try:
-        gmail = send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[email],
+        subject = "Dentical CRM — kirish ma'lumotlaringiz"
+        message = (
+            f"Hurmatli {user.get_full_name()},\n\n"
+            f"Sizning hisobingiz muvaffaqiyatli yaratildi.\n\n"
+            f"Login: {email}\nParol: {random_password}\n\n"
+            f"Tizimga birinchi kirganingizda parolni o'zgartirishingiz so'raladi."
         )
-            # print('ishlayapti', gmail)
-        # except Exception as e:
-        #     print(f"Failed to send email: {e}")
-        # send_user_credentials_email.delay(subject, message, email)
+        # Email yuborilmasa ham xodim yaratilishi buzilmasligi kerak
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+            )
+        except Exception as e:
+            logger.error(f"Xodimga email yuborilmadi ({email}): {e}")
 
 
     def list(self, request, *args, **kwargs):
@@ -235,6 +246,19 @@ class UserViewSet(viewsets.ModelViewSet):
             
             if user:
                 refresh = RefreshToken.for_user(user)
+
+                # SuperAdmin uchun status/jadval tekshiruvlarisiz kirish
+                if user.is_superuser:
+                    user_data = UserSerializer(user).data
+                    user_data['role'] = 'superadmin'
+                    return Response({
+                        'token': str(refresh.access_token),
+                        'refresh': str(refresh),
+                        'user': user_data,
+                        'filial': False,
+                        'user_settings': True
+                    })
+
                 if user.status != 'faol':
                     return Response(
                         {'error': "Foydalanuvchi statusi faol emas."},
@@ -348,6 +372,38 @@ class SignupView(APIView):
             'clinic_id': clinic.id,
             'user_id': user.id
         })
+
+class SetNewPasswordView(APIView):
+    """
+    Tizimga kirgan foydalanuvchi parolini o'zgartirishi uchun.
+    Birinchi kirishda (password_changed=False) eski parol talab qilinmaydi,
+    keyingi o'zgartirishlarda eski parol majburiy.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        old_password = request.data.get('old_password')
+
+        if not new_password or not confirm_password:
+            return Response({"error": "Yangi parol va tasdiqlash majburiy."}, status=status.HTTP_400_BAD_REQUEST)
+        if new_password != confirm_password:
+            return Response({"error": "Parollar mos kelmadi."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(new_password) < 8:
+            return Response({"error": "Parol kamida 8 ta belgidan iborat bo'lishi kerak."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Parol avval o'zgartirilgan bo'lsa — eski parolni tekshiramiz
+        if user.password_changed:
+            if not old_password or not user.check_password(old_password):
+                return Response({"error": "Eski parol noto'g'ri."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.password_changed = True
+        user.save(update_fields=['password', 'password_changed'])
+        return Response({"message": "Parol muvaffaqiyatli o'zgartirildi."})
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
@@ -474,15 +530,20 @@ class CustomerViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+        from django.db.models import Q
         user = self.request.user
         branch_id = self.request.query_params.get('branch_id')  # Get branch_id from the URL
-        queryset = Customer.objects.filter(branch__clinic=user.clinic).order_by('-id')
+        # Bemor klinika darajasida — filiali bo'lmasa ham ko'rinadi
+        queryset = Customer.objects.filter(
+            Q(clinic=user.clinic) | Q(branch__clinic=user.clinic)
+        ).distinct().order_by('-id')
         if branch_id:
             queryset = queryset.filter(branch_id=branch_id)
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save()
+        # Bemor avtomatik joriy klinikaga biriktiriladi
+        serializer.save(clinic=self.request.user.clinic)
     
     def list(self, request, *args, **kwargs):
         """
@@ -518,6 +579,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
         page = self.paginate_queryset(queryset)
         if page is not None:
+            page = list(page)
+            # Har bir bemor qaysi filiallarga tashrif buyurganini qo'shamiz
+            page_ids = [item['id'] for item in page]
+            visited_map = {}
+            visits = Meeting.objects.filter(customer_id__in=page_ids).values_list(
+                'customer_id', 'branch__name'
+            ).distinct()
+            for cid, branch_name in visits:
+                visited_map.setdefault(cid, []).append(branch_name)
+            for item in page:
+                item['visited_branches'] = visited_map.get(item['id'], [])
             return self.get_paginated_response(page)
 
         return Response(list(queryset))
@@ -719,12 +791,59 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         meeting = serializer.save()
-        if meeting.customer.branch != meeting.branch:
-            raise serializers.ValidationError("Meeting's branch must match the customer's branch.")
+        # Bemor istalgan filialga borishi mumkin — faqat shifokor filiali tekshiriladi
         if meeting.doctor.branch != meeting.branch:
             raise serializers.ValidationError("Meeting's branch must match the doctor's branch.")
-        meeting.save()
     
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def arrive(self, request, pk=None):
+        """Bemor keldi deb belgilash — kechikish avtomatik hisoblanadi."""
+        from django.utils import timezone as dj_tz
+        meeting = self.get_object()
+        meeting.arrived_at = dj_tz.now()
+        meeting.save(update_fields=['arrived_at'])
+        late = meeting.late_minutes
+        # 5 daqiqadan ko'p kechikkan bo'lsa xabarnoma yaratamiz
+        if late >= 5:
+            ClinicNotification.objects.create(
+                title="Bemor kechikdi",
+                message=f"{meeting.customer.full_name} qabulga {late} daqiqa kechikib keldi "
+                        f"(belgilangan vaqt: {meeting.date.strftime('%H:%M')}).",
+                clinic=meeting.branch.clinic,
+                branch=meeting.branch,
+                status='admin_director'
+            )
+        return Response({
+            "message": "Bemor kelgani belgilandi.",
+            "arrived_at": meeting.arrived_at,
+            "late_minutes": late,
+            "is_late": late >= 5,
+        })
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def start(self, request, pk=None):
+        """Qabul boshlandi deb belgilash."""
+        from django.utils import timezone as dj_tz
+        meeting = self.get_object()
+        meeting.started_at = dj_tz.now()
+        meeting.status = 'progress'
+        meeting.save(update_fields=['started_at', 'status'])
+        return Response({"message": "Qabul boshlandi.", "started_at": meeting.started_at})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def finish(self, request, pk=None):
+        """Qabul tugadi deb belgilash — davomiylik hisoblanadi."""
+        from django.utils import timezone as dj_tz
+        meeting = self.get_object()
+        meeting.finished_at = dj_tz.now()
+        meeting.status = 'finished'
+        meeting.save(update_fields=['finished_at', 'status'])
+        return Response({
+            "message": "Qabul yakunlandi.",
+            "finished_at": meeting.finished_at,
+            "duration_minutes": meeting.duration_minutes,
+        })
+
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def daily_meetings(self, request):
         """

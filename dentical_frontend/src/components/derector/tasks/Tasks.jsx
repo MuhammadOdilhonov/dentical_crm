@@ -30,7 +30,7 @@ import apiUsers from "../../../api/apiUsers"
 
 export default function Tasks() {
     const { user, selectedBranch } = useAuth()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
 
     // State for tasks
     const [loading, setLoading] = useState(true)
@@ -222,11 +222,14 @@ export default function Tasks() {
         setCurrentDate(new Date())
     }
 
+    // Ilova tiliga mos locale (tizim tili emas)
+    const appLocale = { uz: "uz-UZ", ru: "ru-RU", en: "en-US" }[language] || "uz-UZ"
+
     // Format date for display
     const formatDateRange = () => {
         if (view === "month") {
             const options = { month: "long", year: "numeric" }
-            return new Intl.DateTimeFormat(navigator.language, options).format(currentDate)
+            return new Intl.DateTimeFormat(appLocale, options).format(currentDate)
         } else if (view === "week") {
             const startOfWeek = new Date(currentDate)
             let dayOfWeek = currentDate.getDay()
@@ -239,7 +242,7 @@ export default function Tasks() {
 
             return `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`
         } else if (view === "day") {
-            return currentDate.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })
+            return currentDate.toLocaleDateString(appLocale, { weekday: "long", day: "numeric", month: "long" })
         } else if (view === "year") {
             return currentDate.getFullYear().toString()
         } else {
@@ -292,7 +295,7 @@ export default function Tasks() {
         setSelectedDay({
             date: monthDate,
             isMonth: true,
-            monthName: monthDate.toLocaleString("default", { month: "long" }),
+            monthName: monthDate.toLocaleString(appLocale, { month: "long" }),
             year: monthDate.getFullYear(),
         })
 

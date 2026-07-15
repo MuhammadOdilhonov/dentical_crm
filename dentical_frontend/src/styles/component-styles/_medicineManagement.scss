@@ -1052,3 +1052,156 @@
         }
     }
 }
+/* =====================================================================
+   OMBOR — TOZA PROFESSIONAL REDIZAYN
+   Quyidagi qoidalar yuqoridagi gradient/binafsha dizaynni bekor qilib,
+   platformaning qolgan qismiga mos oq-kulrang uslub beradi.
+   ===================================================================== */
+.medicine-management {
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0;
+
+    .medicine-header {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-radius: 14px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+        padding: 18px 22px !important;
+
+        h1 {
+            color: #0f172a !important;
+            font-size: 22px !important;
+            text-shadow: none !important;
+        }
+
+        .role-badge, span, div {
+            color: #475569 !important;
+            background: #f1f5f9 !important;
+            text-shadow: none !important;
+        }
+    }
+
+    .medicine-tabs {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 16px 0 !important;
+        gap: 8px;
+
+        button {
+            background: #ffffff !important;
+            color: #475569 !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            font-weight: 600;
+
+            &:hover {
+                border-color: #0ea5e9 !important;
+                color: #0284c7 !important;
+                transform: none !important;
+            }
+
+            &.active {
+                background: #0ea5e9 !important;
+                color: #ffffff !important;
+                border-color: #0ea5e9 !important;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+            }
+        }
+    }
+
+    .medicine-content {
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    // Statistika kartalari — oq karta + rangli chap chiziq
+    .medicine-dashboard {
+        .stats-grid > div,
+        .stat-card {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border-radius: 14px !important;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
+            border-left: 4px solid #0ea5e9;
+            text-shadow: none !important;
+
+            * { color: inherit; text-shadow: none !important; }
+            h3, .stat-value { color: #0f172a !important; }
+            p, .stat-label { color: #64748b !important; }
+
+            &:nth-child(2) { border-left-color: #f59e0b; }
+            &:nth-child(3) { border-left-color: #ef4444; }
+            &:nth-child(4) { border-left-color: #8b5cf6; }
+            &:nth-child(5) { border-left-color: #22c55e; }
+            &:nth-child(6) { border-left-color: #14b8a6; }
+        }
+    }
+
+    .medicines-section {
+        background: transparent !important;
+
+        // Qidiruv paneli va tugmalar
+        input[type="text"], select {
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            color: #0f172a !important;
+
+            &:focus {
+                border-color: #0ea5e9 !important;
+                box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12) !important;
+            }
+        }
+
+        button {
+            text-shadow: none !important;
+            transform: none !important;
+        }
+    }
+
+    // Dori kartalari — toza oq, aniq tugmalar
+    .medicine-card, .medicines-grid > div {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06) !important;
+
+        &:hover {
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        h3, h4 { color: #0f172a !important; }
+        p, span { text-shadow: none !important; }
+
+        // Amal tugmalari — bir xil uslub
+        .card-actions button, .medicine-actions button, button {
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
+        }
+    }
+
+    .categories-section {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+    }
+
+    .pagination-wrapper {
+        background: #ffffff !important;
+        border-radius: 12px !important;
+    }
+
+    // Modallar sarlavhasi
+    .modal-content .modal-header {
+        background: #0f172a !important;
+        border-radius: 14px 14px 0 0;
+
+        h3, h2 { color: #ffffff !important; }
+    }
+}

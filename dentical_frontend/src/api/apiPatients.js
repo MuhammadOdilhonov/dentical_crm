@@ -44,7 +44,10 @@ const fetchPatientById = async (patientId) => {
 // Create a new customer
 const createPatient = async (patientData) => {
   try {
-    const response = await client.post(CUSTOMERS_ENDPOINT, patientData)
+    // Filial tanlanmagan bo'lsa (0) — yubormaymiz, bemor klinika darajasida saqlanadi
+    const payload = { ...patientData }
+    if (!payload.branch || payload.branch <= 0) payload.branch = null
+    const response = await client.post(CUSTOMERS_ENDPOINT, payload)
     return response.data
   } catch (error) {
     console.error("Error creating customer:", error)
@@ -55,7 +58,9 @@ const createPatient = async (patientData) => {
 // Update an existing customer
 const updatePatient = async (patientId, patientData) => {
   try {
-    const response = await client.patch(`${CUSTOMERS_ENDPOINT}${patientId}/`, patientData)
+    const payload = { ...patientData }
+    if (!payload.branch || payload.branch <= 0) payload.branch = null
+    const response = await client.patch(`${CUSTOMERS_ENDPOINT}${patientId}/`, payload)
     return response.data
   } catch (error) {
     console.error(`Error updating customer with ID ${patientId}:`, error)

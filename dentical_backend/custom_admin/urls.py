@@ -14,6 +14,8 @@ router.register(r'targets', TargetViewSet, basename='target')
 urlpatterns = router.urls
 
 urlpatterns += [
+    path("dashboard/", SuperAdminDashboardView.as_view(), name="superadmin_dashboard"),
+    path("clinics/create/", SuperAdminClinicCreateView.as_view(), name="superadmin_clinic_create"),
     path("clinics/", ClinicListView.as_view(), name="clinic_list"),
     path('clinics/<int:clinic_id>/notify/', ClinicNotifyView.as_view()),
     path('clinics/<int:clinic_id>/', ClinicDetailView.as_view(), name='clinic_detail'),

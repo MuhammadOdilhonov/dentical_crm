@@ -31,6 +31,7 @@ import Pagination from "../../pagination/Pagination"
 import ConfirmModal from "../../modal/ConfirmModal"
 import SuccessModal from "../../modal/SuccessModal"
 import StaffDetailsModal from "./StaffDetailsModal" // Assuming this will also be updated or KPI won't be shown there
+import getApiErrorMessage from "../../../utils/apiError"
 
 export default function Staff() {
     const { selectedBranch } = useAuth()
@@ -115,6 +116,7 @@ export default function Staff() {
         branch: selectedBranch === "all" ? "" : selectedBranch,
         salary: "",
         kpi: "", // New KPI field
+        work_type: "salary", // oylik / kpi / salary_kpi / trainee
         reason_holiday: "",
         start_holiday: "",
         end_holiday: "",
@@ -263,15 +265,20 @@ export default function Staff() {
 
     const validateForm = (data) => {
         const errors = {}
+        const workType = data.work_type || "salary"
         if (!data.email) errors.email = t("email_required")
         if (!data.first_name) errors.first_name = t("first_name_required")
         if (!data.last_name) errors.last_name = t("last_name_required")
         if (!data.phone_number) errors.phone_number = t("phone_required")
-        if (!data.salary) errors.salary = t("salary_required")
+        // Oylik faqat ish turi oylikni o'z ichiga olganda majburiy
+        if ((workType === "salary" || workType === "salary_kpi") && !data.salary) {
+            errors.salary = t("salary_required")
+        }
 
-        if (data.role === "doctor") {
+        // KPI ish turi KPI'ni o'z ichiga olganda tekshiriladi
+        if (workType === "kpi" || workType === "salary_kpi") {
             if (data.kpi === undefined || data.kpi === null || data.kpi === "") {
-                // errors.kpi = t("kpi_required_for_doctor"); // Making KPI optional or defaulting to 0
+                errors.kpi = t("kpi_must_be_between_0_and_100")
             } else if (
                 isNaN(Number.parseFloat(data.kpi)) ||
                 Number.parseFloat(data.kpi) < 0 ||
@@ -306,6 +313,7 @@ export default function Staff() {
             branch: selectedBranch === "all" ? (branches.length > 0 ? branches[0].id.toString() : "") : selectedBranch,
             salary: "",
             kpi: "", // Reset KPI
+            work_type: "salary",
             reason_holiday: "",
             start_holiday: "",
             end_holiday: "",
@@ -358,16 +366,18 @@ export default function Staff() {
 
     const prepareStaffData = (data) => {
         const staffData = { ...data }
+        const workType = staffData.work_type || "salary"
 
-        if (staffData.role === "doctor") {
-            if (staffData.kpi === "" || staffData.kpi === null || staffData.kpi === undefined) {
-                // staffData.kpi = 0; // Default to 0 if empty, or delete if backend handles optional
-                delete staffData.kpi // Assuming backend handles optional KPI
-            } else {
-                staffData.kpi = Number.parseFloat(staffData.kpi)
-            }
+        // Ish turiga qarab oylik/KPI maydonlarini tayyorlash
+        if (workType === "kpi" || workType === "salary_kpi") {
+            staffData.kpi = staffData.kpi === "" || staffData.kpi === null || staffData.kpi === undefined
+                ? 0
+                : Number.parseFloat(staffData.kpi)
         } else {
-            delete staffData.kpi // Remove KPI if not a doctor
+            staffData.kpi = 0 // Oylik yoki o'rganuvchi uchun KPI yo'q
+        }
+        if (workType === "kpi" || workType === "trainee") {
+            staffData.salary = 0 // Faqat KPI yoki ish o'rganuvchi uchun oylik yo'q
         }
 
         if (staffData.status !== "tatilda") {
@@ -401,10 +411,7 @@ export default function Staff() {
             showSuccessModal(t("success"), t("staff_added_successfully"))
         } catch (error) {
             console.error("Error adding staff member:", error.response?.data || error.message)
-            showErrorModal(
-                t("error"),
-                t("error_adding_staff") + (error.response?.data?.detail ? `: ${error.response.data.detail}` : ""),
-            )
+            showErrorModal(t("error"), getApiErrorMessage(error, t("error_adding_staff")))
         } finally {
             setIsLoadingStaff(false)
         }
@@ -424,10 +431,7 @@ export default function Staff() {
             showSuccessModal(t("success"), t("staff_updated_successfully"))
         } catch (error) {
             console.error("Error updating staff member:", error.response?.data || error.message)
-            showErrorModal(
-                t("error"),
-                t("error_updating_staff") + (error.response?.data?.detail ? `: ${error.response.data.detail}` : ""),
-            )
+            showErrorModal(t("error"), getApiErrorMessage(error, t("error_updating_staff")))
         } finally {
             setIsLoadingStaff(false)
         }
@@ -451,7 +455,7 @@ export default function Staff() {
             showSuccessModal(t("success"), t("staff_deleted_successfully"))
         } catch (error) {
             console.error("Error deleting staff member:", error)
-            showErrorModal(t("error"), t("error_deleting_staff"))
+            showErrorModal(t("error"), getApiErrorMessage(error, t("error_deleting_staff")))
         } finally {
             setIsLoadingStaff(false)
         }
@@ -890,18 +894,6 @@ export default function Staff() {
                                     {formErrors.last_name && <div className="error-message">{formErrors.last_name}</div>}
                                 </div>
                                 <div className="xodim-form-group">
-                                    <label>{t("salary")} (UZS) *</label>
-                                    <input
-                                        type="text"
-                                        name="salary"
-                                        value={formMode === "add" ? newStaff.salary : currentStaffMember?.salary || ""}
-                                        onChange={formMode === "add" ? handleNewStaffChange : handleEditStaffChange}
-                                        required
-                                        className={formErrors.salary ? "error" : ""}
-                                    />
-                                    {formErrors.salary && <div className="error-message">{formErrors.salary}</div>}
-                                </div>
-                                <div className="xodim-form-group">
                                     <label>{t("role")}</label>
                                     <select
                                         name="role"
@@ -916,11 +908,70 @@ export default function Staff() {
                                     </select>
                                 </div>
 
-                                {/* KPI Input Field - only for doctors */}
-                                {((formMode === "add" && newStaff.role === "doctor") ||
-                                    (formMode === "edit" && currentStaffMember?.role === "doctor")) && (
+                                {/* Ish turi: Oylik / KPI / Ikkalasi / Ish o'rganuvchi */}
+                                <div className="xodim-form-group">
+                                    <label>{t("work_type")} *</label>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                        {[
+                                            { value: "salary", label: t("work_type_salary") },
+                                            { value: "kpi", label: t("work_type_kpi") },
+                                            { value: "salary_kpi", label: t("work_type_salary_kpi") },
+                                            { value: "trainee", label: t("work_type_trainee") },
+                                        ].map((option) => {
+                                            const currentWorkType =
+                                                (formMode === "add" ? newStaff.work_type : currentStaffMember?.work_type) || "salary"
+                                            const isActive = currentWorkType === option.value
+                                            return (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        formMode === "add"
+                                                            ? handleNewStaffChange({ target: { name: "work_type", value: option.value } })
+                                                            : handleEditStaffChange({ target: { name: "work_type", value: option.value } })
+                                                    }
+                                                    style={{
+                                                        padding: "8px 14px",
+                                                        borderRadius: 8,
+                                                        border: isActive ? "2px solid #0ea5e9" : "1px solid #cbd5e1",
+                                                        background: isActive ? "#e0f2fe" : "#ffffff",
+                                                        color: isActive ? "#0369a1" : "#475569",
+                                                        fontWeight: isActive ? 700 : 400,
+                                                        cursor: "pointer",
+                                                    }}
+                                                >
+                                                    {isActive ? "✓ " : ""}{option.label}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Oylik — faqat ish turi oylikni o'z ichiga olganda */}
+                                {(() => {
+                                    const wt = (formMode === "add" ? newStaff.work_type : currentStaffMember?.work_type) || "salary"
+                                    return wt === "salary" || wt === "salary_kpi"
+                                })() && (
                                         <div className="xodim-form-group">
-                                            <label>{t("kpi_percentage")}</label>
+                                            <label>{t("salary")} (UZS) *</label>
+                                            <input
+                                                type="text"
+                                                name="salary"
+                                                value={formMode === "add" ? newStaff.salary : currentStaffMember?.salary || ""}
+                                                onChange={formMode === "add" ? handleNewStaffChange : handleEditStaffChange}
+                                                className={formErrors.salary ? "error" : ""}
+                                            />
+                                            {formErrors.salary && <div className="error-message">{formErrors.salary}</div>}
+                                        </div>
+                                    )}
+
+                                {/* KPI — faqat ish turi KPI'ni o'z ichiga olganda */}
+                                {(() => {
+                                    const wt = (formMode === "add" ? newStaff.work_type : currentStaffMember?.work_type) || "salary"
+                                    return wt === "kpi" || wt === "salary_kpi"
+                                })() && (
+                                        <div className="xodim-form-group">
+                                            <label>{t("kpi_percentage")} *</label>
                                             <input
                                                 type="number"
                                                 name="kpi"

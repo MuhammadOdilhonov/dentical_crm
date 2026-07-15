@@ -119,11 +119,12 @@ def send_weekly_financial_report():
     start_of_week_dt = datetime.combine(start_of_week, time.min)
     end_of_week_dt = datetime.combine(end_of_week, time.max)
 
-    # Daromad (income)
-    income = Meeting.objects.filter(
+    # Daromad (income) — bemorlar to'lagan summalar bo'yicha
+    from app2.models import CustomerDebt
+    income = CustomerDebt.objects.filter(
         created_at__range=(start_of_week_dt, end_of_week_dt)
     ).aggregate(
-        total_income=models.Sum('payment_amount')
+        total_income=models.Sum('amount_paid')
     )['total_income'] or 0
 
     # Xarajat (expenses)
@@ -175,9 +176,10 @@ def send_monthly_financial_report():
     start_of_month = today.replace(day=1)  # Oyning bosh sanasi
     end_of_month = (start_of_month + timedelta(days=31)).replace(day=1) - timedelta(days=1)  # Oyning oxirgi sanasi
 
-    # Daromadlarni hisoblash
-    income = Meeting.objects.filter(created_at__range=(start_of_month, end_of_month)).aggregate(
-        total_income=models.Sum('payment_amount')
+    # Daromadlarni hisoblash — bemorlar to'lagan summalar bo'yicha
+    from app2.models import CustomerDebt
+    income = CustomerDebt.objects.filter(created_at__date__range=(start_of_month, end_of_month)).aggregate(
+        total_income=models.Sum('amount_paid')
     )['total_income'] or 0
 
     # Xarajatlarni hisoblash

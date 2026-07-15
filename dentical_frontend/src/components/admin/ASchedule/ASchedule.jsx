@@ -1321,6 +1321,15 @@ export default function ASchedule() {
                                                 <div className={`appointments-status-badge ${appointment.status}`}>
                                                     {getStatusTranslation(appointment.status)}
                                                 </div>
+                                                {appointment.late_minutes >= 5 && (
+                                                    <div
+                                                        className="appointments-status-badge cancelled"
+                                                        title={`${t("patient_late")}: ${appointment.late_minutes} ${t("minutes_short")}`}
+                                                        style={{ marginTop: 4 }}
+                                                    >
+                                                        ⏰ {t("patient_late")} {appointment.late_minutes} {t("minutes_short")}
+                                                    </div>
+                                                )}
                                             </td>
                                             {selectedBranch === "all" && (
                                                 <td>
@@ -1331,6 +1340,24 @@ export default function ASchedule() {
                                                 </td>
                                             )}
                                             <td onClick={(e) => e.stopPropagation()}>
+                                                {!appointment.arrived_at &&
+                                                    (appointment.status === "expected" || appointment.status === "accepted") && (
+                                                        <button
+                                                            className="appointments-action-toggle"
+                                                            title={t("patient_arrived") || "Bemor keldi"}
+                                                            style={{ color: "#16a34a", marginRight: 6 }}
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await apiAppointments.markPatientArrived(appointment.id)
+                                                                    fetchAppointments()
+                                                                } catch (err) {
+                                                                    alert(t("error_occurred"))
+                                                                }
+                                                            }}
+                                                        >
+                                                            ✓
+                                                        </button>
+                                                    )}
                                                 <button className="appointments-action-toggle" onClick={() => openActionModal(appointment)}>
                                                     <FaEllipsisV />
                                                 </button>

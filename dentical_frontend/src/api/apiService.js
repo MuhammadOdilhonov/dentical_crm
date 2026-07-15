@@ -3,8 +3,9 @@ import axios from "axios"
 // export const BaseUrl = "https://cliniccrm.pythonanywhere.com/api" // To'g'ri URLni tekshiring
 // export const BaseUrlImg = "https://cliniccrm.pythonanywhere.com"
 
-export const BaseUrl = "https://med-crm-service.uz/api" // To'g'ri URLni tekshiring
-export const BaseUrlImg = "https://med-crm-service.uz"
+// Lokal ishlatish uchun: http://127.0.0.1:8000/api , production: https://med-crm-service.uz/api
+export const BaseUrl = "http://127.0.0.1:8000/api"
+export const BaseUrlImg = "http://127.0.0.1:8000"
 
 // Axios instance yaratish
 const client = axios.create({

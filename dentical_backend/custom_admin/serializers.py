@@ -4,7 +4,8 @@ from .models import *
 class SubscriptionPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionPlan
-        fields = ['id','name', 'storage_limit_gb', 'trial_period_days', 'price', 'description']
+        fields = ['id', 'name', 'storage_limit_gb', 'trial_period_days', 'price', 'description',
+                  'director_limit', 'admin_limit', 'doctor_limit', 'branch_limit']
 
 
 class ClinicSubscriptionSerializer(serializers.ModelSerializer):

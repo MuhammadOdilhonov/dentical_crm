@@ -222,9 +222,11 @@ export default function Sidebar(isOpen) {
         </div>
 
         <div className="user-info">
-          <div className="user-avatar">{user?.name?.charAt(0) || "U"}</div>
+          <div className="user-avatar">
+            {(user?.name || user?.first_name || user?.email || "U").charAt(0)}
+          </div>
           <div className="user-details">
-            <h3>{user?.name || "User"}</h3>
+            <h3>{user?.name || [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.email || "User"}</h3>
             <div className={`user-role ${user?.role || "user"}`}>{t(user?.role || "user")}</div>
           </div>
         </div>

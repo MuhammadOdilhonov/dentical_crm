@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+from datetime import date
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import viewsets, status, filters
 from .models import *
@@ -605,11 +606,267 @@ class TargetStatsView(APIView):
     def get(self, request):
         return Response({
             "total": Target.objects.count(),
+            "yangi": Target.objects.filter(status='yangi').count(),
             "aloqada": Target.objects.filter(status='aloqada').count(),
             "mijozga_aylandi": Target.objects.filter(status='mijozga_aylandi').count(),
             "rad_etildi": Target.objects.filter(status='rad_etildi').count(),
             "raqam_xato": Target.objects.filter(status='raqam_xato').count(),
             "telefon_kotarmadi": Target.objects.filter(status='telefon_kotarmadi').count(),
-            # Yangi holatini jami lidlar sonidan ayirib, alohida ko‘rsatmaslik uchun
-            # yoki agar kerak bo‘lsa, "yangi": Target.objects.filter(status='yangi').count()
+        })
+
+
+class SuperAdminClinicCreateView(APIView):
+    """
+    SuperAdmin tomonidan yangi klinika + direktor yaratish.
+    Direktor uchun tasodifiy parol yaratiladi va login ma'lumotlari
+    ko'rsatilgan email (gmail) manziliga yuboriladi.
+    Ixtiyoriy: plan_id berilsa, klinikaga tarif ham biriktiriladi.
+    """
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        from django.db import transaction
+        from django.template.loader import render_to_string
+        from django.utils.crypto import get_random_string
+
+        data = request.data
+        clinic_name = data.get('clinic_name') or data.get('name')
+        full_name = data.get('full_name') or clinic_name
+        phone_number = data.get('phone_number')
+        license_number = data.get('license_number')
+        email = data.get('email')
+        director_first_name = data.get('director_first_name', 'Director')
+        director_last_name = data.get('director_last_name', '')
+        director_phone = data.get('director_phone', phone_number or '')
+
+        # Majburiy maydonlarni tekshirish
+        errors = {}
+        if not clinic_name:
+            errors['clinic_name'] = "Klinika nomi majburiy."
+        if not phone_number:
+            errors['phone_number'] = "Telefon raqami majburiy."
+        if not license_number:
+            errors['license_number'] = "Litsenziya raqami majburiy."
+        if not email:
+            errors['email'] = "Email majburiy."
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Unikallikni tekshirish
+        if Clinic.objects.filter(email=email).exists():
+            return Response({"email": "Bu email bilan klinika allaqachon mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+        if Clinic.objects.filter(license_number=license_number).exists():
+            return Response({"license_number": "Bu litsenziya raqami allaqachon mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(email=email).exists():
+            return Response({"email": "Bu email bilan foydalanuvchi allaqachon mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+
+        password = get_random_string(length=10)
+
+        try:
+            with transaction.atomic():
+                clinic = Clinic.objects.create(
+                    full_name=full_name,
+                    name=clinic_name,
+                    phone_number=phone_number,
+                    license_number=license_number,
+                    email=email,
+                    is_active=True,
+                    logo=request.FILES.get('logo'),  # Ixtiyoriy logo
+                )
+                director = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password,
+                    clinic=clinic,
+                    role='director',
+                    specialization='director',
+                    first_name=director_first_name,
+                    last_name=director_last_name,
+                    phone_number=director_phone,
+                    status='faol',
+                    password_changed=False,  # Birinchi kirishda parolni o'zgartirishi shart
+                )
+
+                # Ixtiyoriy: tarif biriktirish
+                subscription = None
+                plan_id = data.get('plan_id') or data.get('plan')
+                if plan_id:
+                    try:
+                        plan = SubscriptionPlan.objects.get(pk=plan_id)
+                    except SubscriptionPlan.DoesNotExist:
+                        raise ValueError("Tanlangan tarif topilmadi.")
+                    start_date = data.get('start_date') or date.today()
+                    end_date = data.get('end_date')
+                    if not end_date:
+                        days = plan.trial_period_days or 30
+                        end_date = (datetime.strptime(str(start_date), '%Y-%m-%d').date()
+                                    if isinstance(start_date, str) else start_date) + timedelta(days=days)
+                    subscription = ClinicSubscription.objects.create(
+                        clinic=clinic,
+                        plan=plan,
+                        start_date=start_date,
+                        end_date=end_date,
+                        status='active',
+                        paid_amount=data.get('paid_amount') or 0,
+                        discount=data.get('discount'),
+                    )
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"Klinika yaratishda xatolik: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Login ma'lumotlarini emailga yuborish
+        email_sent = False
+        email_error = None
+        context = {
+            'clinic_name': clinic.name,
+            'full_name': f"{director_first_name} {director_last_name}".strip(),
+            'username': email,
+            'password': password,
+            'plan_name': subscription.plan.name if subscription else None,
+            'end_date': subscription.end_date if subscription else None,
+            'login_url': settings.FRONTEND_URL,
+        }
+        plain_message = (
+            f"Assalomu alaykum, {context['full_name']}!\n\n"
+            f"Sizning \"{clinic.name}\" klinikangiz Dentical CRM tizimida muvaffaqiyatli ro'yxatdan o'tkazildi.\n\n"
+            f"Kirish ma'lumotlari:\n"
+            f"Login: {email}\n"
+            f"Parol: {password}\n\n"
+            f"Tizimga kirish: {settings.FRONTEND_URL}\n\n"
+            f"Xavfsizlik uchun tizimga kirgach parolni o'zgartirishingizni tavsiya qilamiz.\n\n"
+            f"Hurmat bilan,\nDentical CRM jamoasi"
+        )
+        try:
+            html_message = render_to_string('email/clinic_created.html', context)
+            send_mail(
+                subject=f"Dentical CRM — \"{clinic.name}\" klinikasi yaratildi",
+                message=plain_message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            email_sent = True
+        except Exception as e:
+            email_error = str(e)
+
+        return Response({
+            "message": "Klinika va direktor muvaffaqiyatli yaratildi.",
+            "clinic": {"id": clinic.id, "name": clinic.name, "email": clinic.email},
+            "director": {"id": director.id, "email": director.email},
+            "credentials": {"login": email, "password": password},
+            "subscription": {
+                "plan": subscription.plan.name,
+                "start_date": subscription.start_date,
+                "end_date": subscription.end_date,
+            } if subscription else None,
+            "email_sent": email_sent,
+            "email_error": email_error,
+        }, status=status.HTTP_201_CREATED)
+
+
+class SuperAdminDashboardView(APIView):
+    """SuperAdmin bosh sahifasi uchun umumiy analitika."""
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        from django.db.models import Sum, Count
+        from django.db.models.functions import TruncMonth
+
+        today = date.today()
+
+        total_clinics = Clinic.objects.count()
+        active_clinics = Clinic.objects.filter(is_active=True).count()
+
+        active_subs = ClinicSubscription.objects.filter(
+            status='active', start_date__lte=today, end_date__gte=today
+        )
+
+        # Umumiy va joriy oy daromadi (to'langan summalar bo'yicha)
+        total_revenue = ClinicSubscription.objects.aggregate(t=Sum('paid_amount'))['t'] or 0
+        month_start = today.replace(day=1)
+        monthly_revenue = ClinicSubscription.objects.filter(
+            start_date__gte=month_start
+        ).aggregate(t=Sum('paid_amount'))['t'] or 0
+
+        # Oylik dinamika (oxirgi 12 oy): yangi klinikalar va tushum
+        year_ago = (month_start - timedelta(days=365)).replace(day=1)
+        clinics_by_month = (
+            Clinic.objects.filter(created_at__date__gte=year_ago)
+            .annotate(month=TruncMonth('created_at'))
+            .values('month').annotate(count=Count('id')).order_by('month')
+        )
+        revenue_by_month = (
+            ClinicSubscription.objects.filter(start_date__gte=year_ago)
+            .annotate(month=TruncMonth('start_date'))
+            .values('month').annotate(total=Sum('paid_amount')).order_by('month')
+        )
+
+        # Tariflar taqsimoti
+        plan_distribution = (
+            active_subs.values('plan__name').annotate(count=Count('id')).order_by('-count')
+        )
+
+        # Muddati tugashiga 30 kun qolgan obunalar
+        expiring_soon = []
+        for sub in active_subs.filter(end_date__lte=today + timedelta(days=30)).select_related('clinic', 'plan').order_by('end_date')[:20]:
+            expiring_soon.append({
+                "clinic_id": sub.clinic.id,
+                "clinic_name": sub.clinic.name,
+                "plan": sub.plan.name,
+                "end_date": sub.end_date,
+                "days_left": (sub.end_date - today).days,
+            })
+
+        # Oxirgi qo'shilgan klinikalar
+        latest_clinics = [{
+            "id": c.id,
+            "name": c.name,
+            "email": c.email,
+            "created_at": c.created_at.date(),
+            "is_active": c.is_active,
+        } for c in Clinic.objects.order_by('-created_at')[:5]]
+
+        return Response({
+            "clinics": {
+                "total": total_clinics,
+                "active": active_clinics,
+                "inactive": total_clinics - active_clinics,
+                "with_active_subscription": active_subs.values('clinic').distinct().count(),
+            },
+            "users": {
+                "total": User.objects.filter(is_superuser=False).count(),
+                "directors": User.objects.filter(role='director').count(),
+                "admins": User.objects.filter(role='admin', is_superuser=False).count(),
+                "doctors": User.objects.filter(role='doctor', is_superuser=False).count(),
+                "nurses": User.objects.filter(role='nurse').count(),
+            },
+            "patients_total": Customer.objects.count(),
+            "meetings_total": Meeting.objects.count(),
+            "revenue": {
+                "total": total_revenue,
+                "this_month": monthly_revenue,
+            },
+            "charts": {
+                "clinics_by_month": [
+                    {"month": item['month'].strftime('%Y-%m'), "count": item['count']}
+                    for item in clinics_by_month
+                ],
+                "revenue_by_month": [
+                    {"month": item['month'].strftime('%Y-%m'), "total": item['total'] or 0}
+                    for item in revenue_by_month
+                ],
+                "plan_distribution": [
+                    {"plan": item['plan__name'], "count": item['count']}
+                    for item in plan_distribution
+                ],
+            },
+            "expiring_soon": expiring_soon,
+            "latest_clinics": latest_clinics,
+            "leads": {
+                "total": Target.objects.count(),
+                "yangi": Target.objects.filter(status='yangi').count(),
+                "mijozga_aylandi": Target.objects.filter(status='mijozga_aylandi').count(),
+            },
         })

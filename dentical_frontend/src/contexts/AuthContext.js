@@ -19,6 +19,16 @@ export function AuthProvider({ children }) {
     // Fetch branches when component mounts
     useEffect(() => {
         const fetchBranches = async () => {
+            // Token yo'q bo'lsa yoki superadmin bo'lsa, filiallar so'ralmaydi
+            const storedToken = localStorage.getItem("token")
+            const storedUser = localStorage.getItem("user")
+            if (!storedToken) return
+            try {
+                const parsedUser = storedUser ? JSON.parse(storedUser) : null
+                if (parsedUser && (parsedUser.role === "superadmin" || parsedUser.is_superuser)) return
+            } catch (e) {
+                // parse xatosi bo'lsa davom etamiz
+            }
             try {
                 const branches = await ApiBranches.fetchBranches()
                 setBranchesData(branches)
