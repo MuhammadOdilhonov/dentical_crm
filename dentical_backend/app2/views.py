@@ -794,6 +794,7 @@ class RecentPatientsView(APIView):
         # Mijozlar ma'lumotlarini qaytarish
         data = [
             {
+                "id": customer.id,
                 "full_name": customer.full_name,
                 "age": customer.age,
                 "diagnosis": customer.status,

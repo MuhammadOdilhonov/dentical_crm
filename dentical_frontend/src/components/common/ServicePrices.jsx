@@ -5,6 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useAuth } from "../../contexts/AuthContext"
 import ApiServicePrices from "../../api/apiServicePrices"
 import Pagination from "../pagination/Pagination"
+import ToothSelector3D from "./ToothSelector3D"
 import {
     FaPlus,
     FaEdit,
@@ -66,7 +67,10 @@ const ServicePrices = () => {
     const [editingService, setEditingService] = useState(null)
 
     const [selectedCategoryItem, setSelectedCategoryItem] = useState(null)
-    const [createForAllTeeth, setCreateForAllTeeth] = useState(false)
+    // Narx qo'shish rejimi: "all" — barcha 32 tishga bir xil narx, "selected" — 3D modeldan tanlangan tishlarga
+    const [teethMode, setTeethMode] = useState("all")
+    const [selectedTeeth, setSelectedTeeth] = useState([])
+    const [savingService, setSavingService] = useState(false)
 
     const [formData, setFormData] = useState({
         name: "",
@@ -201,9 +205,22 @@ const ServicePrices = () => {
         setEditingService(null)
     }
 
+    const handleToggleTooth = (toothNumber) => {
+        setSelectedTeeth((prev) =>
+            prev.includes(toothNumber) ? prev.filter((n) => n !== toothNumber) : [...prev, toothNumber].sort((a, b) => a - b),
+        )
+    }
+
     const handleAddService = async () => {
         try {
             setApiError(null)
+
+            if (teethMode === "selected" && selectedTeeth.length === 0) {
+                setApiError(t("select_at_least_one_tooth"))
+                return
+            }
+
+            setSavingService(true)
             const serviceData = {
                 name: formData.name,
                 description: formData.description,
@@ -211,10 +228,16 @@ const ServicePrices = () => {
                 category: Number.parseInt(formData.category),
             }
 
-            if (createForAllTeeth) {
+            if (teethMode === "all") {
+                // Barcha 32 tishga bir xil narx
                 await ApiServicePrices.createBulkService(serviceData)
             } else {
-                await ApiServicePrices.createService(serviceData)
+                // Faqat 3D modeldan tanlangan tishlarga narx
+                await Promise.all(
+                    selectedTeeth.map((toothNumber) =>
+                        ApiServicePrices.createService({ ...serviceData, teeth_number: toothNumber }),
+                    ),
+                )
             }
 
             await loadData()
@@ -223,6 +246,8 @@ const ServicePrices = () => {
         } catch (err) {
             console.error("Xizmat qo'shishda xatolik:", err)
             setApiError(err.response?.data?.message || err.message || t("loading_error"))
+        } finally {
+            setSavingService(false)
         }
     }
 
@@ -329,7 +354,8 @@ const ServicePrices = () => {
             category: "",
             amount: "",
         })
-        setCreateForAllTeeth(false)
+        setTeethMode("all")
+        setSelectedTeeth([])
     }
 
     const resetCategoryForm = () => {
@@ -741,9 +767,9 @@ const ServicePrices = () => {
                 </div>
             )}
 
-            {/* Add Service Modal */}
+            {/* Add Service Modal — overlay bosilganda yopilmaydi: 3D modelni aylantirishda tasodifan yopilib qolmasligi uchun */}
             {showAddModal && (
-                <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+                <div className="modal-overlay">
                     <div className="modal service-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>{t("add_new_service")}</h2>
@@ -800,19 +826,67 @@ const ServicePrices = () => {
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label className="checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={createForAllTeeth}
-                                        onChange={(e) => setCreateForAllTeeth(e.target.checked)}
-                                    />
-                                    <span className="checkmark"></span>
-                                    {t("create_for_all_teeth")}
-                                    <FaCopy className="bulk-icon" />
-                                </label>
-                                <p className="checkbox-help">{t("bulk_service_help")}</p>
+                            <div className="form-group teeth-mode-group">
+                                <label>{t("apply_price_to")} *</label>
+                                <div className="teeth-mode-buttons">
+                                    <button
+                                        type="button"
+                                        className={`teeth-mode-btn ${teethMode === "all" ? "active" : ""}`}
+                                        onClick={() => setTeethMode("all")}
+                                    >
+                                        <FaCopy className="mode-icon" />
+                                        <span className="mode-title">{t("same_price_all_teeth")}</span>
+                                        <span className="mode-hint">{t("same_price_all_teeth_hint")}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`teeth-mode-btn ${teethMode === "selected" ? "active" : ""}`}
+                                        onClick={() => setTeethMode("selected")}
+                                    >
+                                        <FaTooth className="mode-icon" />
+                                        <span className="mode-title">{t("price_for_selected_teeth")}</span>
+                                        <span className="mode-hint">{t("price_for_selected_teeth_hint")}</span>
+                                    </button>
+                                </div>
                             </div>
+
+                            {teethMode === "selected" && (
+                                <div className="form-group tooth-selector-group">
+                                    <p className="tooth-selector-hint">
+                                        <FaInfoCircle /> {t("select_teeth_3d_hint")}
+                                    </p>
+                                    <ToothSelector3D selectedTeeth={selectedTeeth} onToggleTooth={handleToggleTooth} />
+                                    <div className="selected-teeth-panel">
+                                        <span className="selected-teeth-label">
+                                            {t("selected_teeth")} ({selectedTeeth.length}):
+                                        </span>
+                                        <div className="selected-teeth-chips">
+                                            {selectedTeeth.length > 0 ? (
+                                                selectedTeeth.map((toothNumber) => (
+                                                    <span key={toothNumber} className="tooth-chip">
+                                                        <FaTooth /> #{toothNumber}
+                                                        <button
+                                                            type="button"
+                                                            className="tooth-chip-remove"
+                                                            onClick={() => handleToggleTooth(toothNumber)}
+                                                            aria-label={`${t("tooth")} #${toothNumber} — ${t("cancel")}`}
+                                                        >
+                                                            <FaTimes />
+                                                        </button>
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="no-teeth-selected">{t("no_teeth_selected")}</span>
+                                            )}
+                                        </div>
+                                        {selectedTeeth.length > 0 && (
+                                            <button type="button" className="btn btn-text clear-teeth-btn" onClick={() => setSelectedTeeth([])}>
+                                                {t("clear_selection")}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="modal-footer">
@@ -822,9 +896,15 @@ const ServicePrices = () => {
                             <button
                                 className="btn btn-primary"
                                 onClick={handleAddService}
-                                disabled={!formData.name || !formData.category || !formData.amount}
+                                disabled={
+                                    savingService ||
+                                    !formData.name ||
+                                    !formData.category ||
+                                    !formData.amount ||
+                                    (teethMode === "selected" && selectedTeeth.length === 0)
+                                }
                             >
-                                <FaSave /> {t("save")}
+                                <FaSave /> {savingService ? t("loading") : t("save")}
                             </button>
                         </div>
                     </div>

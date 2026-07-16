@@ -84,9 +84,10 @@ export const deleteMedicine = async (id) => {
 }
 
 // Medicine Purchases API
-export const fetchMedicinePurchases = async () => {
+export const fetchMedicinePurchases = async (params = {}) => {
     try {
-        const response = await client.get("/medicine-purchases/")
+        const queryString = new URLSearchParams(params).toString()
+        const response = await client.get(`/medicine-purchases/${queryString ? `?${queryString}` : ""}`)
         return response.data
     } catch (error) {
         console.error("Error fetching medicine purchases:", error)
@@ -105,9 +106,10 @@ export const createMedicinePurchase = async (purchaseData) => {
 }
 
 // Medicine Sales API
-export const fetchMedicineSales = async () => {
+export const fetchMedicineSales = async (params = {}) => {
     try {
-        const response = await client.get("/medicine-sales/")
+        const queryString = new URLSearchParams(params).toString()
+        const response = await client.get(`/medicine-sales/${queryString ? `?${queryString}` : ""}`)
         return response.data
     } catch (error) {
         console.error("Error fetching medicine sales:", error)

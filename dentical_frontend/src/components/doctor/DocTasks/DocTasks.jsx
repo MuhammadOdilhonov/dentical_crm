@@ -24,7 +24,8 @@ import ConfirmModal from "../../modal/ConfirmModal"
 
 export default function DocTasks() {
     const { user } = useAuth()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
+    const appLocale = { uz: "uz-UZ", ru: "ru-RU", en: "en-US" }[language] || "uz-UZ"
     const [loading, setLoading] = useState(true)
     const [view, setView] = useState("calendar") // calendar, list
     const [calendarView, setCalendarView] = useState("month") // month, week, day, year
@@ -65,11 +66,11 @@ export default function DocTasks() {
                 assignee: user.id,
             }
 
-            // Fetch tasks from API
-            const response = await apiTasks.fetchTasks(currentPage + 1, itemsPerPage)
+            // Fetch tasks from API — faqat shu shifokorning vazifalari (filtrlar bilan)
+            const response = await apiTasks.fetchTasks(currentPage + 1, itemsPerPage, filters)
 
             // Format dates for each task
-            const formattedTasks = response.results.map((task) => ({
+            const formattedTasks = (response.results || []).map((task) => ({
                 ...task,
                 id: task.id,
                 title: task.title,
@@ -78,7 +79,13 @@ export default function DocTasks() {
                 endDate: new Date(`${task.end_date}T${task.end_time}`),
                 status: task.status,
                 priority: task.priority,
-                assignee: task.assignee,
+                assignee: {
+                    id: task.assignee_data?.id ?? task.assignee,
+                    name: task.assignee_data
+                        ? `${task.assignee_data.first_name} ${task.assignee_data.last_name}`.trim()
+                        : `${user.first_name || ""} ${user.last_name || ""}`.trim() || "—",
+                    role: task.assignee_data?.role || "doctor",
+                },
                 createdBy: task.created_by,
                 createdAt: new Date(task.created_at),
             }))
@@ -110,8 +117,9 @@ export default function DocTasks() {
                 response = await apiTasks.fetchYearlyTasks(currentDate, doctorBranch)
             }
 
-            // Format dates for each task
-            const formattedTasks = response.map((task) => ({
+            // Format dates for each task (javob massiv yoki {results} bo'lishi mumkin)
+            const taskItems = Array.isArray(response) ? response : response?.results || []
+            const formattedTasks = taskItems.map((task) => ({
                 ...task,
                 id: task.id,
                 title: task.title,
@@ -120,7 +128,13 @@ export default function DocTasks() {
                 endDate: new Date(`${task.end_date}T${task.end_time}`),
                 status: task.status,
                 priority: task.priority,
-                assignee: task.assignee,
+                assignee: {
+                    id: task.assignee_data?.id ?? task.assignee,
+                    name: task.assignee_data
+                        ? `${task.assignee_data.first_name} ${task.assignee_data.last_name}`.trim()
+                        : `${user.first_name || ""} ${user.last_name || ""}`.trim() || "—",
+                    role: task.assignee_data?.role || "doctor",
+                },
                 createdBy: task.created_by,
                 createdAt: new Date(task.created_at),
             }))
@@ -133,24 +147,17 @@ export default function DocTasks() {
         }
     }, [calendarView, currentDate, doctorBranch])
 
-    // Fetch staff data
+    // Shifokor faqat o'ziga vazifa biriktiradi — staff ro'yxati o'zidan iborat
     const fetchStaffData = useCallback(async () => {
         try {
-            // В реальном приложении здесь будет API запрос для получения списка персонала
-            // Для примера используем моковые данные, но в реальном приложении нужно заменить на API
-
-            // Моковые данные для персонала - в реальном приложении заменить на API запрос
-            const mockStaff = [
+            const self = [
                 {
                     id: user.id,
-                    name: user.name || "Dr. " + user.first_name + " " + user.last_name,
+                    name: `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.name || "—",
                     role: "doctor",
-                    department: "Kardiologiya",
                 },
-                // Другие сотрудники, если нужно
             ]
-
-            setStaff(mockStaff)
+            setStaff(self)
         } catch (error) {
             console.error("Error fetching staff data:", error)
         }
@@ -226,7 +233,7 @@ export default function DocTasks() {
     // Format date for display
     const formatDateRange = () => {
         if (calendarView === "month") {
-            return new Intl.DateTimeFormat(navigator.language, { month: "long", year: "numeric" }).format(currentDate)
+            return new Intl.DateTimeFormat(appLocale, { month: "long", year: "numeric" }).format(currentDate)
         } else if (calendarView === "week") {
             const startOfWeek = new Date(currentDate)
             let dayOfWeek = currentDate.getDay()
@@ -239,14 +246,14 @@ export default function DocTasks() {
 
             return `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`
         } else if (calendarView === "day") {
-            return new Intl.DateTimeFormat(navigator.language, {
+            return new Intl.DateTimeFormat(appLocale, {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
                 year: "numeric",
             }).format(currentDate)
         } else if (calendarView === "year") {
-            return new Intl.DateTimeFormat(navigator.language, { year: "numeric" }).format(currentDate)
+            return new Intl.DateTimeFormat(appLocale, { year: "numeric" }).format(currentDate)
         }
     }
 

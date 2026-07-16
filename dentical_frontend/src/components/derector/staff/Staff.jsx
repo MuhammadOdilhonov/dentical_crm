@@ -44,15 +44,19 @@ export default function Staff() {
         // Add other roles if necessary, e.g., director, nurse
     ]
 
-    // Specialization options
+    // Tish shifokori (stomatolog) mutaxassisliklari
     const specializationOptions = [
-        { value: "general", label: t("general") },
-        { value: "cardiology", label: t("cardiology") },
-        { value: "dermatology", label: t("dermatology") },
-        { value: "pediatrics", label: t("pediatrics") },
-        { value: "neurology", label: t("neurology") },
-        { value: "stomatology", label: t("dentistry") },
-        { value: "other", label: t("other") },
+        { value: "general", label: "Umumiy stomatolog" },
+        { value: "therapist", label: "Terapevt stomatolog" },
+        { value: "surgeon", label: "Jarroh stomatolog" },
+        { value: "orthodontist", label: "Ortodont" },
+        { value: "orthopedist", label: "Ortoped (protezist)" },
+        { value: "periodontist", label: "Parodontolog" },
+        { value: "endodontist", label: "Endodont" },
+        { value: "pediatric", label: "Bolalar stomatologi" },
+        { value: "implantologist", label: "Implantolog" },
+        { value: "hygienist", label: "Gigienist" },
+        { value: "other", label: "Boshqa" },
     ]
 
     // Status options
@@ -85,7 +89,7 @@ export default function Staff() {
         doctor_kpi_stats: [], // New state for KPI stats
     })
     const [isLoadingStats, setIsLoadingStats] = useState(true)
-    const [showStats, setShowStats] = useState(true)
+    const [showStats, setShowStats] = useState(false)
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(0)
@@ -987,22 +991,25 @@ export default function Staff() {
                                         </div>
                                     )}
 
-                                <div className="xodim-form-group">
-                                    <label>{t("specialization")}</label>
-                                    <select
-                                        name="specialization"
-                                        value={
-                                            formMode === "add" ? newStaff.specialization : currentStaffMember?.specialization || "general"
-                                        }
-                                        onChange={formMode === "add" ? handleNewStaffChange : handleEditStaffChange}
-                                    >
-                                        {specializationOptions.map((spec) => (
-                                            <option key={spec.value} value={spec.value}>
-                                                {spec.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                {/* Mutaxassislik faqat shifokor (doctor) tanlanganda ko'rsatiladi */}
+                                {(formMode === "add" ? newStaff.role : currentStaffMember?.role) === "doctor" && (
+                                    <div className="xodim-form-group">
+                                        <label>{t("specialization")}</label>
+                                        <select
+                                            name="specialization"
+                                            value={
+                                                formMode === "add" ? newStaff.specialization : currentStaffMember?.specialization || "general"
+                                            }
+                                            onChange={formMode === "add" ? handleNewStaffChange : handleEditStaffChange}
+                                        >
+                                            {specializationOptions.map((spec) => (
+                                                <option key={spec.value} value={spec.value}>
+                                                    {spec.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                                 <div className="xodim-form-group">
                                     <label>{t("phone")} *</label>
                                     <input

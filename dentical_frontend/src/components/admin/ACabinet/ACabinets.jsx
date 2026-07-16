@@ -107,7 +107,7 @@ export default function ACabinets() {
         floor: "1",
         status: "available",
         description: "",
-        branch: selectedBranch?.id || "",
+        branch: selectedBranch && selectedBranch !== "all" ? selectedBranch : "",
         userDoctor: "",
         userNurses: [],
     })
@@ -420,7 +420,7 @@ export default function ACabinets() {
             floor: "1",
             status: "available",
             description: "",
-            branch: selectedBranch?.id || "",
+            branch: selectedBranch && selectedBranch !== "all" ? selectedBranch : "",
             userDoctor: "",
             userNurses: [],
         })
@@ -474,7 +474,7 @@ export default function ACabinets() {
                 floor: "1",
                 status: "available",
                 description: "",
-                branch: selectedBranch?.id || "",
+                branch: selectedBranch && selectedBranch !== "all" ? selectedBranch : "",
                 userDoctor: "",
                 userNurses: [],
             })

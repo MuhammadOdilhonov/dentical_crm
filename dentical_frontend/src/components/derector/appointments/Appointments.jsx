@@ -38,9 +38,9 @@ import Pagination from "../../pagination/Pagination"
 import apiAppointments from "../../../api/apiAppointments"
 import apiCustomerDebts from "../../../api/apiCustomerDebts"
 
-// Haftalik kalendar sozlamalari: ish soatlari oralig'i va bir soat balandligi (px)
-const CAL_START_HOUR = 8
-const CAL_END_HOUR = 21
+// Haftalik kalendar sozlamalari: 24/7 (vaqt tanlash bilan bir xil) va bir soat balandligi (px)
+const CAL_START_HOUR = 0
+const CAL_END_HOUR = 24
 const CAL_HOUR_HEIGHT = 64
 const CAL_APPT_MINUTES = 45 // bitta qabul kartochkasining vizual davomiyligi
 
@@ -83,9 +83,13 @@ export default function Appointments() {
         room: "",
         date: "",
         time: "",
+        times: [], // bir nechta vaqt tanlash mumkin (kamida 1 ta)
         status: "expected",
         comment: "",
     })
+
+    // 5-qadam: vaqt oralig'i davomiyligi (30 daqiqa yoki 1 soat)
+    const [slotDuration, setSlotDuration] = useState(60)
 
     // State for filter data
     const [filterData, setFilterData] = useState({
@@ -284,22 +288,34 @@ export default function Appointments() {
 
     const handleRefreshData = () => setRefreshTrigger((prev) => prev + 1)
 
-    // Generate time slots
-    const generateTimeSlots = (busyTimesData = []) => {
+    // Generate time slots — tanlangan davomiylikka (30 daq / 1 soat) qarab
+    const generateTimeSlots = (busyTimesData = [], duration = slotDuration) => {
         const slots = []
         const busyTimesList = busyTimesData.map((item) => item.time)
 
-        for (let hour = 0; hour <= 23; hour++) {
-            const formattedHour = hour.toString().padStart(2, "0")
-            const timeSlot = `${formattedHour}:00`
+        for (let minutes = 0; minutes < 24 * 60; minutes += duration) {
+            const hour = Math.floor(minutes / 60)
+            const minute = minutes % 60
+            const timeSlot = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+            const hourStart = `${String(hour).padStart(2, "0")}:00`
 
             slots.push({
                 time: timeSlot,
-                isBooked: busyTimesList.includes(timeSlot),
+                // Soat boshi band bo'lsa, o'sha soatning 30-daqiqasi ham band hisoblanadi
+                isBooked: busyTimesList.includes(timeSlot) || (minute !== 0 && busyTimesList.includes(hourStart)),
             })
         }
 
         setAvailableTimes(slots)
+    }
+
+    // 30 daqiqa / 1 soat tugmalari bosilganda slotlarni qayta chizish
+    const handleDurationChange = (duration) => {
+        if (duration === slotDuration) return
+        setSlotDuration(duration)
+        setTimeError("")
+        setNewAppointment((prev) => ({ ...prev, time: "", times: [] }))
+        generateTimeSlots(busyTimes, duration)
     }
 
     // Handle search input change
@@ -351,12 +367,15 @@ export default function Appointments() {
         }));
     };
 
-    // Handle time selection
+    // Handle time selection — bir nechta vaqtni tanlash/bekor qilish mumkin
     const handleTimeSelect = (time) => {
         setTimeError("")
-        setNewAppointment({
-            ...newAppointment,
-            time,
+        setNewAppointment((prev) => {
+            const currentTimes = prev.times || []
+            const times = currentTimes.includes(time)
+                ? currentTimes.filter((item) => item !== time)
+                : [...currentTimes, time].sort()
+            return { ...prev, times, time: times[0] || "" }
         })
     }
 
@@ -510,6 +529,25 @@ export default function Appointments() {
             room: "",
             date: "",
             time: "",
+            times: [],
+            status: "expected",
+            comment: "",
+        })
+    }
+
+    // Kalendar katakchasi bosilganda — o'sha kun va vaqt bilan qabul qo'shish oynasini ochish
+    const openAddSidebarAt = (dateString, time) => {
+        setShowSidebar(true)
+        setStep(1)
+        setTimeError("")
+        setNewAppointment({
+            branch: selectedBranch === "all" ? "" : selectedBranch,
+            customer: "",
+            doctor: "",
+            room: "",
+            date: dateString,
+            time: time || "",
+            times: time ? [time] : [],
             status: "expected",
             comment: "",
         })
@@ -633,25 +671,33 @@ export default function Appointments() {
         setStep(step - 1)
     }
 
-    // Add new appointment
+    // Add new appointment — tanlangan har bir vaqt uchun alohida qabul yaratiladi
     const addAppointment = async (e) => {
         e.preventDefault()
 
         try {
-            const formattedDate = `${newAppointment.date}T${newAppointment.time}:00Z`
+            const selectedTimes =
+                newAppointment.times && newAppointment.times.length > 0
+                    ? [...newAppointment.times].sort()
+                    : [newAppointment.time]
 
-            const appointmentData = {
-                branch: Number.parseInt(newAppointment.branch),
-                customer: Number.parseInt(newAppointment.customer),
-                doctor: Number.parseInt(newAppointment.doctor),
-                room: Number.parseInt(newAppointment.room),
-                full_date: formattedDate,
-                status: newAppointment.status,
-                comment: newAppointment.comment,
-                organs: {},
+            for (const time of selectedTimes) {
+                const formattedDate = `${newAppointment.date}T${time}:00Z`
+
+                const appointmentData = {
+                    branch: Number.parseInt(newAppointment.branch),
+                    customer: Number.parseInt(newAppointment.customer),
+                    doctor: Number.parseInt(newAppointment.doctor),
+                    room: Number.parseInt(newAppointment.room),
+                    full_date: formattedDate,
+                    status: newAppointment.status,
+                    comment: newAppointment.comment,
+                    organs: {},
+                }
+
+                await apiAppointments.createAppointment(appointmentData)
             }
 
-            await apiAppointments.createAppointment(appointmentData)
             fetchAppointments()
             closeAddSidebar()
         } catch (err) {
@@ -1240,7 +1286,28 @@ export default function Appointments() {
                         </h3>
 
                         <div className="appointments-form-group">
-                            <label>{t("time")}</label>
+                            {/* Davomiylik tanlash: 30 daqiqa yoki 1 soat */}
+                            <div className="duration-toggle">
+                                <button
+                                    type="button"
+                                    className={slotDuration === 30 ? "active" : ""}
+                                    onClick={() => handleDurationChange(30)}
+                                >
+                                    <FaClock /> 30 daqiqa
+                                </button>
+                                <button
+                                    type="button"
+                                    className={slotDuration === 60 ? "active" : ""}
+                                    onClick={() => handleDurationChange(60)}
+                                >
+                                    <FaClock /> 1 soat
+                                </button>
+                            </div>
+
+                            <p className="time-multi-hint">
+                                Kamida 1 ta vaqt tanlang — bir nechta vaqt tanlash ham mumkin (uzoq davolash uchun).
+                            </p>
+
                             {timeError && (
                                 <div className="time-error">
                                     <FaExclamationCircle /> {timeError}
@@ -1251,7 +1318,7 @@ export default function Appointments() {
                                     <button
                                         key={index}
                                         type="button"
-                                        className={`time-slot ${slot.isBooked ? "booked" : ""} ${newAppointment.time === slot.time ? "selected" : ""}`}
+                                        className={`time-slot ${slot.isBooked ? "booked" : ""} ${(newAppointment.times || []).includes(slot.time) ? "selected" : ""}`}
                                         onClick={() => !slot.isBooked && handleTimeSelect(slot.time)}
                                         disabled={slot.isBooked}
                                     >
@@ -1263,6 +1330,26 @@ export default function Appointments() {
                                     <div className="no-times-message">{t("please_select_date_and_room_first")}</div>
                                 )}
                             </div>
+
+                            {/* Tanlangan vaqtlar xulosasi */}
+                            {(newAppointment.times || []).length > 0 && (
+                                <div className="selected-times-summary">
+                                    <span className="selected-times-label">
+                                        Tanlandi ({newAppointment.times.length} ta):
+                                    </span>
+                                    {newAppointment.times.map((time) => (
+                                        <button
+                                            key={time}
+                                            type="button"
+                                            className="selected-time-chip"
+                                            onClick={() => handleTimeSelect(time)}
+                                            title="Olib tashlash"
+                                        >
+                                            {time} <FaTimes />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div className="appointments-form-actions">
@@ -1273,7 +1360,7 @@ export default function Appointments() {
                                 type="button"
                                 className="appointments-btn appointments-btn-primary"
                                 onClick={nextStep}
-                                disabled={!newAppointment.time}
+                                disabled={(newAppointment.times || []).length === 0}
                             >
                                 {t("next")}
                             </button>
@@ -1556,7 +1643,15 @@ export default function Appointments() {
                                             return (
                                                 <div key={index} className={`apt-cal-col ${index === todayIndex ? "today" : ""}`}>
                                                     {hours.map((hour) => (
-                                                        <div key={hour} className="apt-cal-cell" style={{ height: `${CAL_HOUR_HEIGHT}px` }}></div>
+                                                        <div
+                                                            key={hour}
+                                                            className="apt-cal-cell"
+                                                            style={{ height: `${CAL_HOUR_HEIGHT}px` }}
+                                                            onClick={() =>
+                                                                openAddSidebarAt(dateString, `${String(hour).padStart(2, "0")}:00`)
+                                                            }
+                                                            title={`${dateString} · ${String(hour).padStart(2, "0")}:00 — qabul qo'shish`}
+                                                        ></div>
                                                     ))}
                                                     {items.map(({ appointment, start, lane }) => {
                                                         const top = ((start - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT

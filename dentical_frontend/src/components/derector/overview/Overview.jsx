@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import {
     FaUsers,
     FaDoorOpen,
@@ -98,6 +99,7 @@ const getStatusClass = (status) => {
 export default function DirectorDashboard() {
     const { selectedBranch } = useAuth()
     const { t } = useLanguage()
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [dashboardData, setDashboardData] = useState(null)
@@ -278,6 +280,15 @@ export default function DirectorDashboard() {
         ],
     }
 
+    // Dashboardda faqat oxirgi 5 ta yozuv ko'rsatiladi, qolgani tegishli sahifada
+    const recentAppointments = [...(todaysAppointments?.appointments || [])]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5)
+
+    const recentStaff = [...(newStaff?.recent_staff || [])]
+        .sort((a, b) => new Date(b.date_joined) - new Date(a.date_joined))
+        .slice(0, 5)
+
     // Format department efficiency data
     const performanceData =
         departmentEfficiency?.department_data?.map((dept) => ({
@@ -404,7 +415,9 @@ export default function DirectorDashboard() {
                 <div className="dashboard-card">
                     <div className="card-header">
                         <h2>{t("todays_appointments")}</h2>
-                        <button className="btn btn-text">{t("view_all")}</button>
+                        <button className="btn btn-text" onClick={() => navigate("/dashboard/director/appointments")}>
+                            {t("view_all")}
+                        </button>
                     </div>
                     <div className="table-responsive">
                         <table className="data-table">
@@ -418,7 +431,7 @@ export default function DirectorDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {todaysAppointments?.appointments?.map((appointment, index) => (
+                                {recentAppointments.map((appointment, index) => (
                                     <tr key={index}>
                                         <td>{formatDate(appointment.date)}</td>
                                         <td>{appointment.customer__full_name}</td>
@@ -431,7 +444,7 @@ export default function DirectorDashboard() {
                                         </td>
                                     </tr>
                                 ))}
-                                {(!todaysAppointments?.appointments || todaysAppointments.appointments.length === 0) && (
+                                {recentAppointments.length === 0 && (
                                     <tr>
                                         <td colSpan="5" className="no-data">
                                             {t("no_appointments_today")}
@@ -446,7 +459,9 @@ export default function DirectorDashboard() {
                 <div className="dashboard-card">
                     <div className="card-header">
                         <h2>{t("new_staff_members")}</h2>
-                        <button className="btn btn-text">{t("view_all")}</button>
+                        <button className="btn btn-text" onClick={() => navigate("/dashboard/director/staff")}>
+                            {t("view_all")}
+                        </button>
                     </div>
                     <div className="table-responsive">
                         <table className="data-table">
@@ -459,7 +474,7 @@ export default function DirectorDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {newStaff?.recent_staff?.map((staff, index) => (
+                                {recentStaff.map((staff, index) => (
                                     <tr key={index}>
                                         <td>{`${staff.first_name} ${staff.last_name}`}</td>
                                         <td>
@@ -477,7 +492,7 @@ export default function DirectorDashboard() {
                                         <td>{formatDateForDisplay(staff.date_joined)}</td>
                                     </tr>
                                 ))}
-                                {(!newStaff?.recent_staff || newStaff.recent_staff.length === 0) && (
+                                {recentStaff.length === 0 && (
                                     <tr>
                                         <td colSpan="4" className="no-data">
                                             {t("no_new_staff")}

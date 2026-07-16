@@ -152,14 +152,20 @@ class User(AbstractUser):
     )
 
     SPECIALIZATION_CHOICES = (
-        ('general', 'General'),
-        ('cardiology', 'Cardiology'),
-        ('dermatology', 'Dermatology'),
-        ('pediatrics', 'Pediatrics'),
-        ('neurology', 'Neurology'),
+        ('general', 'Umumiy stomatolog'),
+        ('therapist', 'Terapevt stomatolog'),
+        ('surgeon', 'Jarroh stomatolog'),
+        ('orthodontist', 'Ortodont'),
+        ('orthopedist', 'Ortoped (protezist)'),
+        ('periodontist', 'Parodontolog'),
+        ('endodontist', 'Endodont'),
+        ('pediatric', 'Bolalar stomatologi'),
+        ('implantologist', 'Implantolog'),
+        ('hygienist', 'Gigienist'),
+        # Eski/kompatibillik uchun saqlangan qiymatlar
         ('director', 'Director'),
-        ('stomatology', 'Stomatology'),
-        ('other', 'Other'),
+        ('stomatology', 'Stomatologiya'),
+        ('other', 'Boshqa'),
     )
     
     reset_password_code = models.CharField(max_length=6, blank=True, null=True)

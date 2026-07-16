@@ -85,7 +85,7 @@ export default function Cabinets() {
     const [searchTerm, setSearchTerm] = useState("")
     const [showAddModal, setShowAddModal] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
-    const [showStatsModal, setShowStatsModal] = useState(true)
+    const [showStatsModal, setShowStatsModal] = useState(false)
     const [showFilters, setShowFilters] = useState(false)
     const [filterType, setFilterType] = useState("all")
     const [filterFloor, setFilterFloor] = useState("all")

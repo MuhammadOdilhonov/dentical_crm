@@ -33,7 +33,7 @@ import {
 export default function Notifications() {
     const { selectedBranch } = useAuth()
     const { t } = useLanguage()
-    const [activeTab, setActiveTab] = useState("site") // "site" or "work"
+    const [activeTab, setActiveTab] = useState("work") // "work" or "site"
     const [searchTerm, setSearchTerm] = useState("")
     const [showFilters, setShowFilters] = useState(false)
     const [filterRead, setFilterRead] = useState("all") // "all", "read", "unread"
@@ -278,13 +278,13 @@ export default function Notifications() {
             </div>
 
             <div className="notifications-tabs">
-                <button className={`tab-button ${activeTab === "site" ? "active" : ""}`} onClick={() => setActiveTab("site")}>
-                    <FaGlobe /> {t("siteNews")}
-                    {siteUnreadCount > 0 && <span className="badge">{siteUnreadCount}</span>}
-                </button>
                 <button className={`tab-button ${activeTab === "work" ? "active" : ""}`} onClick={() => setActiveTab("work")}>
                     <FaBriefcase /> {t("workNotifications")}
                     {workUnreadCount > 0 && <span className="badge">{workUnreadCount}</span>}
+                </button>
+                <button className={`tab-button ${activeTab === "site" ? "active" : ""}`} onClick={() => setActiveTab("site")}>
+                    <FaGlobe /> {t("siteNews")}
+                    {siteUnreadCount > 0 && <span className="badge">{siteUnreadCount}</span>}
                 </button>
             </div>
 

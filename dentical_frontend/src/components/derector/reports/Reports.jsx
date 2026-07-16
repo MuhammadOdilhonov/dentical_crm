@@ -24,6 +24,7 @@ import {
 } from "react-icons/fa"
 import { useAuth } from "../../../contexts/AuthContext"
 import { useLanguage } from "../../../contexts/LanguageContext"
+import { exportReportToExcel } from "../../../utils/exportReport"
 import { getFinancialStatistics, getCashWithdrawals, createCashWithdrawal } from "../../../api/apiFinanceStatistic"
 import { getPatientStatistics } from "../../../api/apiPatientsStatistic"
 import { getDoctorStatistics } from "../../../api/apiDoctorStatistic"
@@ -255,9 +256,135 @@ export default function Reports() {
         setQuarter(newQuarter)
     }
 
-    // Handle download report
+    // Davr matnini tayyorlash (fayl sarlavhasi uchun)
+    const getPeriodLabel = () => {
+        if (dateRange === "month") return t("month")
+        if (dateRange === "quarter") return `${t("quarter")} Q${quarter}`
+        return t("year")
+    }
+
+    // Hisobotni yuklab olish — hozir ochiq turgan hisobot turi va davriga qarab Excel fayl yaratadi
     const handleDownload = () => {
-        alert(t("download_report_function"))
+        const today = new Date().toISOString().split("T")[0]
+        const subtitle = `${t("period")}: ${getPeriodLabel()} | ${new Date().toLocaleDateString()}`
+
+        if (reportType === "financial") {
+            if (!financialData) {
+                alert(t("no_data"))
+                return
+            }
+            exportReportToExcel({
+                title: `${t("reports")} — ${t("financial")}`,
+                subtitle,
+                sections: [
+                    {
+                        heading: t("financial_indicators"),
+                        summary: [
+                            [t("total_income"), formatCurrency(financialData.total_income)],
+                            [t("total_expenses"), formatCurrency(financialData.total_expenses)],
+                            [t("net_profit"), formatCurrency(financialData.net_profit)],
+                            [t("profitability"), formatPercentage(financialData.profitability)],
+                        ],
+                    },
+                    {
+                        heading: t("financial_details"),
+                        columns: [t("period"), t("income"), t("expenses"), t("profit")],
+                        rows: (financialData.detailed_stats || []).map((item) => [
+                            item.label,
+                            formatCurrency(item.income),
+                            formatCurrency(item.expenses),
+                            formatCurrency(item.income - item.expenses),
+                        ]),
+                    },
+                ],
+                fileName: `hisobot_moliyaviy_${dateRange}_${today}`,
+            })
+        } else if (reportType === "patients") {
+            if (!patientData) {
+                alert(t("no_data"))
+                return
+            }
+            exportReportToExcel({
+                title: `${t("reports")} — ${t("patients")}`,
+                subtitle,
+                sections: [
+                    {
+                        heading: t("patients"),
+                        summary: [
+                            [t("total_patients"), patientData.total_patients || 0],
+                            [t("average_weekly"), patientData.avg_weekly_patients ?? "-"],
+                            [t("average_monthly"), patientData.avg_monthly_patients ?? "-"],
+                            [t("growth"), formatPercentage(patientData.growth_rate)],
+                        ],
+                    },
+                    {
+                        heading: t("patient_details"),
+                        columns: [t("period"), t("patients")],
+                        rows: (patientData.detailed_stats || []).map((item) => [item.label, item.patients]),
+                    },
+                ],
+                fileName: `hisobot_bemorlar_${dateRange}_${today}`,
+            })
+        } else if (reportType === "staff") {
+            if (!doctorData) {
+                alert(t("no_data"))
+                return
+            }
+            const totalPatients = (doctorData.doctor_stats || []).reduce((sum, d) => sum + d.total_patients, 0)
+            exportReportToExcel({
+                title: `${t("reports")} — ${t("staff")}`,
+                subtitle,
+                sections: [
+                    {
+                        heading: t("doctor_efficiency"),
+                        summary: [
+                            [t("top_performing_doctor"), doctorData.most_effective_doctor?.doctor_name || "-"],
+                            [t("total_patients"), totalPatients],
+                        ],
+                    },
+                    {
+                        heading: t("doctor_details"),
+                        columns: [t("doctor"), t("patients"), t("income")],
+                        rows: (doctorData.doctor_stats || []).map((doc) => [
+                            doc.doctor_name,
+                            doc.total_patients,
+                            formatCurrency(doc.total_income),
+                        ]),
+                    },
+                ],
+                fileName: `hisobot_xodimlar_${dateRange}_${today}`,
+            })
+        } else if (reportType === "debts") {
+            if (!debtStatistics) {
+                alert(t("no_data"))
+                return
+            }
+            exportReportToExcel({
+                title: `${t("reports")} — ${t("indebted_patients")}`,
+                subtitle,
+                sections: [
+                    {
+                        heading: t("indebted_patients"),
+                        summary: [
+                            [t("total_paid"), formatCurrency(debtStatistics.total_paid)],
+                            [t("total_discount"), formatCurrency(debtStatistics.total_discount)],
+                            [t("transactions_count"), debtStatistics.count],
+                        ],
+                    },
+                    {
+                        heading: t("debt_details"),
+                        columns: [t("period"), t("amount")],
+                        rows: (debtDynamicData?.data || []).map((item) => [
+                            debtDynamicData.type === "monthly"
+                                ? `${t("day")} ${item.day}`
+                                : item.month || new Date(item.date).toLocaleDateString(),
+                            formatCurrency(item.total_amount),
+                        ]),
+                    },
+                ],
+                fileName: `hisobot_qarzdorlar_${dateRange}_${today}`,
+            })
+        }
     }
 
     // Handle withdrawal form change

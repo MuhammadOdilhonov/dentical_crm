@@ -310,7 +310,7 @@ export default function StaffDoctors() {
     const [filterBranch, setFilterBranch] = useState(selectedBranch)
     const [filterVacation, setFilterVacation] = useState("all")
     const [showFilters, setShowFilters] = useState(false)
-    const [showStats, setShowStats] = useState(true)
+    const [showStats, setShowStats] = useState(false)
     const [showDoctorDetails, setShowDoctorDetails] = useState(false)
     const [selectedDoctor, setSelectedDoctor] = useState(null)
     const [newCertification, setNewCertification] = useState("")

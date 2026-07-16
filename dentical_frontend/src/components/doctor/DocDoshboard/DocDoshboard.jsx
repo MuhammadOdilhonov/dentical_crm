@@ -7,11 +7,8 @@ import {
     FaTasks,
     FaCalendarAlt,
     FaClipboardList,
-    FaSearch,
-    FaBell,
-    FaEllipsisV,
     FaChevronRight,
-    FaClock,
+    FaRegClock,
 } from "react-icons/fa"
 import {
     Chart as ChartJS,
@@ -37,7 +34,6 @@ import {
 } from "../../../api/apiDoctorDashboard"
 import { useLanguage } from "../../../contexts/LanguageContext"
 
-
 // Register ChartJS components
 ChartJS.register(
     ArcElement,
@@ -58,7 +54,6 @@ const DocDoshboard = () => {
     const [error, setError] = useState(null)
     const { t } = useLanguage()
 
-
     // State variables for dashboard data
     const [stats, setStats] = useState({
         todayAppointments: 0,
@@ -72,15 +67,22 @@ const DocDoshboard = () => {
     const [patientTrendData, setPatientTrendData] = useState({})
     const [appointmentTypeData, setAppointmentTypeData] = useState({})
 
-    // Get current time
+    // Live clock for the header
     const [currentTime, setCurrentTime] = useState(
-        new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }),
     )
+
+    const currentDate = new Date().toLocaleDateString("uz-UZ", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    })
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentTime(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }))
-        }, 60000)
+            setCurrentTime(new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }))
+        }, 30000)
 
         return () => clearInterval(timer)
     }, [])
@@ -92,7 +94,6 @@ const DocDoshboard = () => {
                 setLoading(true)
                 setError(null)
 
-                // Fetch all data in parallel
                 const [statsData, appointmentsData, patientTrend, tasksData, meetingsStatus, customersData] = await Promise.all(
                     [
                         getDashboardStats(),
@@ -104,7 +105,6 @@ const DocDoshboard = () => {
                     ],
                 )
 
-                // Process dashboard stats
                 setStats({
                     todayAppointments: statsData.todays_meetings.count,
                     pendingTasks: statsData.todays_tasks.count,
@@ -112,41 +112,39 @@ const DocDoshboard = () => {
                     completedAppointments: statsData.completed_tasks_today.count,
                 })
 
-                // Process appointments data
-                const formattedAppointments = appointmentsData.appointments.map((appointment, index) => {
-                    // Extract time from ISO date string
-                    const appointmentDate = new Date(appointment.date);
-                    const hours = appointmentDate.getUTCHours().toString().padStart(2, '0');
-                    const minutes = appointmentDate.getUTCMinutes().toString().padStart(2, '0');
-                    const time = `${hours}:${minutes}`;
+                // Appointments
+                const formattedAppointments = (appointmentsData.appointments || []).map((appointment, index) => {
+                    const appointmentDate = new Date(appointment.date)
+                    const hours = appointmentDate.getUTCHours().toString().padStart(2, "0")
+                    const minutes = appointmentDate.getUTCMinutes().toString().padStart(2, "0")
+                    const time = `${hours}:${minutes}`
 
-                    console.log(time); // 09:00
-
-
-
-                    // Get initials from full name
-                    const nameParts = appointment.customer__full_name.split(" ")
-                    const initials = nameParts.map((part) => part[0]).join("")
+                    const nameParts = (appointment.customer__full_name || "?").split(" ")
+                    const initials = nameParts
+                        .map((part) => part[0])
+                        .join("")
+                        .substring(0, 2)
+                        .toUpperCase()
 
                     return {
-                        id: index + 1,
+                        id: appointment.id ?? index + 1,
                         patientName: appointment.customer__full_name,
                         avatar: initials,
-                        time: time,
+                        time,
                         type: appointment.branch__name,
                         status: appointment.status,
                     }
                 })
                 setUpcomingAppointments(formattedAppointments)
 
-                // Process patient trend data
+                // Patient trend
                 const trendData = patientTrend.patient_trend
                 setPatientTrendData({
-                    labels: Object.keys(trendData).slice(0, 6), // Take first 6 months
+                    labels: Object.keys(trendData).slice(0, 6),
                     datasets: [
                         {
                             label: t("patients_treated"),
-                            data: Object.values(trendData).slice(0, 6), // Take first 6 months
+                            data: Object.values(trendData).slice(0, 6),
                             borderColor: "#10B981",
                             backgroundColor: "rgba(16, 185, 129, 0.1)",
                             tension: 0.4,
@@ -160,27 +158,25 @@ const DocDoshboard = () => {
                     ],
                 })
 
-                // Process tasks data
-                const formattedTasks = tasksData.weekly_tasks.map((task, index) => {
-                    return {
-                        id: index + 1,
-                        title: task.title,
-                        description: task.description,
-                        priority: task.priority === "high" ? t("high") : task.priority === "medium" ? t("medium") : t("low"),
-                        dueDate: new Date(task.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-                        status:
-                            task.status === "in_progress"
-                                ? t("in_progress")
-                                : task.status === "pending"
-                                    ? t("pending")
-                                    : task.status === "completed"
-                                        ? t("completed")
-                                        : t("not_started"),
-                    }
-                })
+                // Tasks
+                const formattedTasks = (tasksData.weekly_tasks || []).map((task, index) => ({
+                    id: index + 1,
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority === "high" ? t("high") : task.priority === "medium" ? t("medium") : t("low"),
+                    dueDate: new Date(task.end_date).toLocaleDateString("uz-UZ", { month: "short", day: "numeric" }),
+                    status:
+                        task.status === "in_progress"
+                            ? t("in_progress")
+                            : task.status === "pending"
+                                ? t("pending")
+                                : task.status === "completed"
+                                    ? t("completed")
+                                    : t("not_started"),
+                }))
                 setPendingTasks(formattedTasks)
 
-                // Process appointment types data
+                // Appointment types
                 const meetingsData = meetingsStatus.monthly_meetings_status
                 setAppointmentTypeData({
                     labels: [t("accepted"), t("finished"), t("cancelled")],
@@ -194,14 +190,17 @@ const DocDoshboard = () => {
                     ],
                 })
 
-                // Process recent patients data
-                const formattedPatients = customersData.weekly_customers.map((patient, index) => {
-                    // Get initials from full name
-                    const nameParts = patient.full_name.split(" ")
-                    const initials = nameParts.map((part) => part[0]).join("")
+                // Recent patients
+                const formattedPatients = (customersData.weekly_customers || []).map((patient, index) => {
+                    const nameParts = (patient.full_name || "?").split(" ")
+                    const initials = nameParts
+                        .map((part) => part[0])
+                        .join("")
+                        .substring(0, 2)
+                        .toUpperCase()
 
                     return {
-                        id: index + 1,
+                        id: patient.id ?? index + 1,
                         name: patient.full_name,
                         avatar: initials,
                         age: patient.age,
@@ -227,45 +226,19 @@ const DocDoshboard = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: {
-                display: false,
-            },
+            legend: { display: false },
             tooltip: {
                 backgroundColor: "#1E293B",
-                titleFont: {
-                    size: 14,
-                    weight: "bold",
-                },
-                bodyFont: {
-                    size: 13,
-                },
+                titleFont: { size: 14, weight: "bold" },
+                bodyFont: { size: 13 },
                 padding: 12,
                 cornerRadius: 8,
                 displayColors: false,
             },
         },
         scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: "rgba(0, 0, 0, 0.05)",
-                },
-                ticks: {
-                    font: {
-                        size: 12,
-                    },
-                },
-            },
-            x: {
-                grid: {
-                    display: false,
-                },
-                ticks: {
-                    font: {
-                        size: 12,
-                    },
-                },
-            },
+            y: { beginAtZero: true, grid: { color: "rgba(0, 0, 0, 0.05)" }, ticks: { font: { size: 12 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 12 } } },
         },
     }
 
@@ -274,25 +247,11 @@ const DocDoshboard = () => {
         maintainAspectRatio: false,
         cutout: "70%",
         plugins: {
-            legend: {
-                position: "bottom",
-                labels: {
-                    usePointStyle: true,
-                    padding: 20,
-                    font: {
-                        size: 12,
-                    },
-                },
-            },
+            legend: { position: "bottom", labels: { usePointStyle: true, padding: 20, font: { size: 12 } } },
             tooltip: {
                 backgroundColor: "#1E293B",
-                titleFont: {
-                    size: 14,
-                    weight: "bold",
-                },
-                bodyFont: {
-                    size: 13,
-                },
+                titleFont: { size: 14, weight: "bold" },
+                bodyFont: { size: 13 },
                 padding: 12,
                 cornerRadius: 8,
                 displayColors: false,
@@ -326,11 +285,21 @@ const DocDoshboard = () => {
 
     return (
         <div className="doctor-dashboard">
-            <h1 className="page-title">{t("doctors_dashboard")}</h1>
+            {/* Header */}
+            <div className="dashboard-header">
+                <div className="dashboard-header-text">
+                    <h1 className="page-title">{t("doctors_dashboard")}</h1>
+                    <p className="dashboard-subtitle">{currentDate}</p>
+                </div>
+                <div className="dashboard-clock">
+                    <FaRegClock />
+                    <span>{currentTime}</span>
+                </div>
+            </div>
 
             {/* Stats Cards */}
             <div className="stats-container">
-                <div className="stat-card" onClick={() => navigate("/doctor/schedule")}>
+                <div className="stat-card" onClick={() => navigate("/dashboard/doctor/schedule")}>
                     <div className="stat-icon appointments">
                         <FaCalendarAlt />
                     </div>
@@ -338,10 +307,10 @@ const DocDoshboard = () => {
                         <h3>{stats.todayAppointments}</h3>
                         <p>{t("todays_appointments")}</p>
                     </div>
-                    <div className="stat-trend up">+{stats.todayAppointments > 0 ? stats.todayAppointments : 0} {t("today")}</div>
+                    <div className="stat-trend up">{stats.todayAppointments} {t("today")}</div>
                 </div>
 
-                <div className="stat-card" onClick={() => navigate("/doctor/tasks")}>
+                <div className="stat-card" onClick={() => navigate("/dashboard/doctor/tasks")}>
                     <div className="stat-icon tasks">
                         <FaTasks />
                     </div>
@@ -349,7 +318,7 @@ const DocDoshboard = () => {
                         <h3>{stats.pendingTasks}</h3>
                         <p>{t("pending_tasks")}</p>
                     </div>
-                    <div className="stat-trend down">+{stats.pendingTasks > 0 ? stats.pendingTasks : 0} {t("today")}</div>
+                    <div className="stat-trend down">{stats.pendingTasks} {t("today")}</div>
                 </div>
 
                 <div className="stat-card">
@@ -360,12 +329,10 @@ const DocDoshboard = () => {
                         <h3>{stats.totalPatients}</h3>
                         <p>{t("total_patients")}</p>
                     </div>
-                    <div className="stat-trend up">
-                        +{stats.totalPatients > 0 ? Math.floor(stats.totalPatients / 30) : 0} {t("this_week")}
-                    </div>
+                    <div className="stat-trend up">{t("this_week")}</div>
                 </div>
 
-                <div className="stat-card">
+                <div className="stat-card" onClick={() => navigate("/dashboard/doctor/tasks")}>
                     <div className="stat-icon completed">
                         <FaClipboardList />
                     </div>
@@ -373,7 +340,7 @@ const DocDoshboard = () => {
                         <h3>{stats.completedAppointments}</h3>
                         <p>{t("completed_today")}</p>
                     </div>
-                    <div className="stat-trend">+{stats.completedAppointments} {t("today")}</div>
+                    <div className="stat-trend">{stats.completedAppointments} {t("today")}</div>
                 </div>
             </div>
 
@@ -384,7 +351,7 @@ const DocDoshboard = () => {
                     <div className="dashboard-card today-appointments">
                         <div className="card-header">
                             <h2>{t("todays_appointments")}</h2>
-                            <button className="view-all-btn" onClick={() => navigate("/doctor/schedule")}>
+                            <button className="view-all-btn" onClick={() => navigate("/dashboard/doctor/schedule")}>
                                 {t("view_all")} <FaChevronRight />
                             </button>
                         </div>
@@ -394,7 +361,9 @@ const DocDoshboard = () => {
                                     <div key={appointment.id} className="appointment-card">
                                         <div className="appointment-time">
                                             <span>{appointment.time}</span>
-                                            <div className={`status-indicator status-${appointment.status.toLowerCase()}`}></div>
+                                            <div
+                                                className={`status-indicator status-${(appointment.status || "").toLowerCase()}`}
+                                            ></div>
                                         </div>
                                         <div className="appointment-details">
                                             <div className="patient-info">
@@ -405,8 +374,12 @@ const DocDoshboard = () => {
                                                 </div>
                                             </div>
                                             <div className="appointment-actions">
-                                                <button className="appointment-btn start">{t("start")}</button>
-                                                <button className="appointment-btn view">{t("view")}</button>
+                                                <button
+                                                    className="appointment-btn start"
+                                                    onClick={() => navigate("/dashboard/doctor/schedule")}
+                                                >
+                                                    {t("view")}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -423,9 +396,6 @@ const DocDoshboard = () => {
                     <div className="dashboard-card patient-treatment">
                         <div className="card-header">
                             <h2>{t("patient_treatment_trend")}</h2>
-                            <button className="card-menu-btn">
-                                <FaEllipsisV />
-                            </button>
                         </div>
                         <div className="chart-container">
                             {patientTrendData.labels && patientTrendData.datasets ? (
@@ -444,7 +414,7 @@ const DocDoshboard = () => {
                     <div className="dashboard-card pending-tasks">
                         <div className="card-header">
                             <h2>{t("pending_tasks")}</h2>
-                            <button className="view-all-btn" onClick={() => navigate("/doctor/tasks")}>
+                            <button className="view-all-btn" onClick={() => navigate("/dashboard/doctor/tasks")}>
                                 {t("view_all")} <FaChevronRight />
                             </button>
                         </div>
@@ -463,8 +433,12 @@ const DocDoshboard = () => {
                                             </div>
                                         </div>
                                         <div className="task-actions">
-                                            <button className="task-btn complete">{t("complete")}</button>
-                                            <button className="task-btn view">{t("view")}</button>
+                                            <button
+                                                className="task-btn view"
+                                                onClick={() => navigate("/dashboard/doctor/tasks")}
+                                            >
+                                                {t("view")}
+                                            </button>
                                         </div>
                                     </div>
                                 ))
@@ -480,9 +454,6 @@ const DocDoshboard = () => {
                     <div className="dashboard-card appointment-types">
                         <div className="card-header">
                             <h2>{t("appointment_types")}</h2>
-                            <button className="card-menu-btn">
-                                <FaEllipsisV />
-                            </button>
                         </div>
                         <div className="chart-container">
                             {appointmentTypeData.labels && appointmentTypeData.datasets ? (
@@ -501,9 +472,6 @@ const DocDoshboard = () => {
                     <div className="dashboard-card recent-patients">
                         <div className="card-header">
                             <h2>{t("recent_patients")}</h2>
-                            <button className="view-all-btn" onClick={() => navigate("/doctor/patients")}>
-                                {t("view_all")} <FaChevronRight />
-                            </button>
                         </div>
                         <div className="table-container">
                             {recentPatients.length > 0 ? (
@@ -514,7 +482,6 @@ const DocDoshboard = () => {
                                             <th>{t("age")}</th>
                                             <th>{t("last_visit")}</th>
                                             <th>{t("condition")}</th>
-                                            <th>{t("action")}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -527,14 +494,11 @@ const DocDoshboard = () => {
                                                     </div>
                                                 </td>
                                                 <td>{patient.age}</td>
-                                                <td>{new Date(patient.lastVisit).toLocaleDateString()}</td>
+                                                <td>{patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : "-"}</td>
                                                 <td>
-                                                    <span className={`condition condition-${patient.condition.toLowerCase()}`}>
+                                                    <span className={`condition condition-${(patient.condition || "").toLowerCase()}`}>
                                                         {patient.condition}
                                                     </span>
-                                                </td>
-                                                <td>
-                                                    <button className="action-button view">{t("view")}</button>
                                                 </td>
                                             </tr>
                                         ))}

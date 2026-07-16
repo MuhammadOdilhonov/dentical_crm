@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import {
     FaTasks,
-    FaCalendarAlt,
     FaSearch,
     FaFilter,
     FaPlus,
@@ -11,288 +10,244 @@ import {
     FaChevronRight,
     FaListUl,
     FaUser,
-    FaFlag,
+    FaEdit,
+    FaTrash,
+    FaEye,
+    FaCheck,
+    FaClock,
+    FaExclamationTriangle,
 } from "react-icons/fa"
 import { useAuth } from "../../../contexts/AuthContext"
 import { useLanguage } from "../../../contexts/LanguageContext"
 import TaskCalendar from "../../commonTasks/taskCalendar/TaskCalendar"
 import TaskForm from "../../commonTasks/taskForm/TaskForm"
 import TaskDetails from "../../commonTasks/taskDetails/TaskDetails"
+import DayTasksList from "../../commonTasks/DayTasksList/DayTasksList"
+import ConfirmModal from "../../modal/ConfirmModal"
 import Pagination from "../../pagination/Pagination"
 import apiTasks from "../../../api/apiTasks"
 import apiUsers from "../../../api/apiUsers"
-import ConfirmModal from "../../modal/ConfirmModal"
 
 export default function ATasks() {
     const { selectedBranch } = useAuth()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
+
+    // State for tasks
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState("calendar") // calendar, list
-    const [calendarView, setCalendarView] = useState("month") // day, week, month, year
+    const [tasks, setTasks] = useState([])
+    const [totalTasks, setTotalTasks] = useState(0)
+    const [error, setError] = useState(null)
+
+    // State for view
+    const [view, setView] = useState("month") // month, week, day, year, list
     const [currentDate, setCurrentDate] = useState(new Date())
     const [showTaskForm, setShowTaskForm] = useState(false)
     const [showTaskDetails, setShowTaskDetails] = useState(false)
+    const [showDayTasks, setShowDayTasks] = useState(false)
+    const [selectedDay, setSelectedDay] = useState(null)
     const [selectedTask, setSelectedTask] = useState(null)
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [newTaskDate, setNewTaskDate] = useState(null)
+    const [selectedMonthTasks, setSelectedMonthTasks] = useState([])
+    const [isMonthView, setIsMonthView] = useState(false)
+
+    // State for filters and pagination
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [priorityFilter, setPriorityFilter] = useState("all")
     const [assigneeFilter, setAssigneeFilter] = useState("all")
-    const [tasks, setTasks] = useState([])
     const [staff, setStaff] = useState([])
-    const [newTaskDate, setNewTaskDate] = useState(null)
-    const [showDayTasks, setShowDayTasks] = useState(false)
-    const [selectedDay, setSelectedDay] = useState(null)
-    const [pagination, setPagination] = useState({
-        page: 0, // React-paginate uses 0-based indexing
-        limit: 10,
-        total: 0,
-        totalPages: 0,
-    })
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [showFilters, setShowFilters] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(5)
 
-    // Fetch tasks from API
-    const fetchTasksData = async () => {
+    // Fetch tasks based on view
+    const fetchTasks = async () => {
         setLoading(true)
         try {
-            // Prepare filters for API
-            const filters = {
-                status: statusFilter !== "all" ? statusFilter : undefined,
-                priority: priorityFilter !== "all" ? priorityFilter : undefined,
-                assignee: assigneeFilter !== "all" ? assigneeFilter : undefined,
-                search: searchQuery || undefined,
-                branch: selectedBranch !== "all" ? selectedBranch : undefined,
+            let tasksData
+            const formattedDate =
+                currentDate instanceof Date ? currentDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
+
+            // Ensure page is at least 1
+            const validPage = Math.max(1, currentPage)
+
+            // Different API calls based on view
+            switch (view) {
+                case "day":
+                    tasksData = await apiTasks.fetchDailyTasks(formattedDate, selectedBranch)
+                    break
+                case "week":
+                    tasksData = await apiTasks.fetchWeeklyTasks(formattedDate, selectedBranch)
+                    break
+                case "month":
+                    tasksData = await apiTasks.fetchMonthlyTasks(formattedDate, selectedBranch)
+                    break
+                case "year":
+                    tasksData = await apiTasks.fetchYearlyTasks(formattedDate, selectedBranch)
+                    break
+                case "list":
+                    // For list view, use the regular tasks endpoint with filters
+                    const filters = {
+                        status: statusFilter !== "all" ? statusFilter : undefined,
+                        priority: priorityFilter !== "all" ? priorityFilter : undefined,
+                        assignee: assigneeFilter !== "all" ? assigneeFilter : undefined,
+                        branch: selectedBranch !== "all" ? selectedBranch : undefined,
+                        search: searchQuery || undefined,
+                    }
+                    tasksData = await apiTasks.fetchTasks(validPage, itemsPerPage, filters)
+                    break
+                default:
+                    tasksData = await apiTasks.fetchMonthlyTasks(formattedDate, selectedBranch)
             }
 
-            // Fetch tasks from API based on calendar view
-            let response
-            const apiPage = pagination.page + 1 // Convert to 1-based indexing for API
+            // Handle different response formats
+            // If tasksData is an array, use it directly, otherwise check for results property
+            const taskItems = Array.isArray(tasksData) ? tasksData : tasksData.results || []
+            const totalCount = Array.isArray(tasksData) ? taskItems.length : tasksData.count || 0
 
-            if (view === "calendar") {
-                switch (calendarView) {
-                    case "day":
-                        response = await apiTasks.fetchDailyTasks(currentDate, selectedBranch)
-                        break
-                    case "week":
-                        response = await apiTasks.fetchWeeklyTasks(currentDate, selectedBranch)
-                        break
-                    case "year":
-                        response = await apiTasks.fetchYearlyTasks(currentDate, selectedBranch)
-                        break
-                    case "month":
-                    default:
-                        response = await apiTasks.fetchMonthlyTasks(currentDate, selectedBranch)
-                        break
-                }
+            // Transform API data to match the expected format in the UI
+            const transformedTasks = taskItems.map((task) => ({
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                startDate: new Date(`${task.start_date}T${task.start_time}`),
+                endDate: new Date(`${task.end_date}T${task.end_time}`),
+                status: task.status,
+                priority: task.priority,
+                assignee: {
+                    id: task.assignee_data ? task.assignee_data.id : task.assignee,
+                    name: task.assignee_data ? `${task.assignee_data.first_name} ${task.assignee_data.last_name}` : "Unknown",
+                    role: task.assignee_data ? task.assignee_data.role : "",
+                },
+                createdBy: task.created_by
+                    ? {
+                        id: task.created_by.id,
+                        name: `${task.created_by.first_name || ""} ${task.created_by.last_name || ""}`.trim() || "Unknown",
+                        role: task.created_by.role || "",
+                    }
+                    : null,
+                createdAt: new Date(task.created_at),
+            }))
 
-                // Format the response for calendar view
-                const formattedTasks = Array.isArray(response) ? response.map(formatTaskData) : []
-                setTasks(formattedTasks)
-            } else {
-                // List view with pagination
-                response = await apiTasks.fetchTasks(apiPage, pagination.limit, filters)
-
-                // Format the response for list view
-                const formattedTasks = response.results.map(formatTaskData)
-                setTasks(formattedTasks)
-
-                setPagination({
-                    ...pagination,
-                    total: response.count,
-                    totalPages: Math.ceil(response.count / pagination.limit),
-                })
-            }
-        } catch (error) {
-            console.error("Error fetching tasks:", error)
-            // Show error notification or message here
+            setTasks(transformedTasks)
+            setTotalTasks(totalCount)
+            setError(null)
+        } catch (err) {
+            console.error("Error fetching tasks:", err)
+            setError(t("error_fetching_tasks"))
         } finally {
             setLoading(false)
         }
     }
 
-    // Helper function to format task data
-    const formatTaskData = (task) => ({
-        ...task,
-        startDate: new Date(`${task.start_date}T${task.start_time}`),
-        endDate: new Date(`${task.end_date}T${task.end_time}`),
-        assignee: {
-            id: task.assignee.id,
-            name: formatUserFullName(task.assignee),
-            role: task.assignee.role,
-        },
-        createdBy: {
-            id: task.created_by.id,
-            name: formatUserFullName(task.created_by),
-            role: task.created_by.role,
-        },
-        createdAt: new Date(task.created_at),
-    })
-
-    // Helper function to format user's full name
-    const formatUserFullName = (user) => {
-        if (user.first_name && user.last_name) {
-            return `${user.first_name} ${user.last_name}`
-        } else if (user.name) {
-            return user.name
-        } else if (user.username) {
-            return user.username
-        } else {
-            return t("unknown_user")
-        }
-    }
-
-    // Fetch staff from API
-    const fetchStaffData = async () => {
+    // Fetch staff (users)
+    const fetchStaff = async () => {
         try {
-            // Fetch all users with a large page size
-            const response = await apiUsers.fetchUsers(1, 10000)
-            setStaff(
-                response.results.map((user) => ({
+            // Use a large page size to get all staff
+            const filters = {
+                branch: selectedBranch !== "all" ? selectedBranch : undefined,
+            }
+            const usersData = await apiUsers.fetchUsers(1, 1000, filters)
+
+            // Transform API data
+            const transformedStaff = usersData.results
+                ? usersData.results.map((user) => ({
                     id: user.id,
-                    name: formatUserFullName(user),
+                    name: `${user.first_name} ${user.last_name}`,
                     role: user.role,
                     department: user.department || "",
-                })),
-            )
-        } catch (error) {
-            console.error("Error fetching staff:", error)
+                }))
+                : []
+
+            setStaff(transformedStaff)
+        } catch (err) {
+            console.error("Error fetching staff:", err)
         }
     }
 
     // Initial data loading
     useEffect(() => {
-        const loadData = async () => {
-            await Promise.all([fetchTasksData(), fetchStaffData()])
-        }
-
-        loadData()
+        fetchStaff()
     }, [selectedBranch])
 
-    // Refetch when filters or calendar view changes
+    // Fetch tasks when view, date, or filters change
     useEffect(() => {
-        fetchTasksData()
-    }, [
-        searchQuery,
-        statusFilter,
-        priorityFilter,
-        assigneeFilter,
-        pagination.page,
-        pagination.limit,
-        calendarView,
-        view,
-        currentDate,
-        selectedBranch,
-    ])
+        fetchTasks()
+    }, [view, currentDate, selectedBranch, currentPage, itemsPerPage])
 
-    // Handle page change
-    const handlePageChange = (newPage) => {
-        setPagination({
-            ...pagination,
-            page: newPage,
-        })
-    }
+    // Fetch tasks when filters change in list view
+    useEffect(() => {
+        if (view === "list") {
+            fetchTasks()
+        }
+    }, [statusFilter, priorityFilter, assigneeFilter, searchQuery])
 
-    // Handle items per page change
-    const handleItemsPerPageChange = (newLimit) => {
-        setPagination({
-            ...pagination,
-            page: 0, // Reset to first page
-            limit: newLimit,
-        })
-    }
-
-    // Navigate to previous period based on current view
+    // Navigate to previous month/week/day
     const handlePrevious = () => {
         const newDate = new Date(currentDate)
-
-        switch (calendarView) {
-            case "day":
-                newDate.setDate(newDate.getDate() - 1)
-                break
-            case "week":
-                newDate.setDate(newDate.getDate() - 7)
-                break
-            case "month":
-                newDate.setMonth(newDate.getMonth() - 1)
-                break
-            case "year":
-                newDate.setFullYear(newDate.getFullYear() - 1)
-                break
-            default:
-                // Handle default case
-                break
+        if (view === "month") {
+            newDate.setMonth(newDate.getMonth() - 1)
+        } else if (view === "week") {
+            newDate.setDate(newDate.getDate() - 7)
+        } else if (view === "day") {
+            newDate.setDate(newDate.getDate() - 1)
+        } else if (view === "year") {
+            newDate.setFullYear(newDate.getFullYear() - 1)
+        } else {
+            newDate.setDate(newDate.getDate() - 7)
         }
-
         setCurrentDate(newDate)
     }
 
-    // Navigate to next period based on current view
+    // Navigate to next month/week/day
     const handleNext = () => {
         const newDate = new Date(currentDate)
-
-        switch (calendarView) {
-            case "day":
-                newDate.setDate(newDate.getDate() + 1)
-                break
-            case "week":
-                newDate.setDate(newDate.getDate() + 7)
-                break
-            case "month":
-                newDate.setMonth(newDate.getMonth() + 1)
-                break
-            case "year":
-                newDate.setFullYear(newDate.getFullYear() + 1)
-                break
-            default:
-                // Handle default case
-                break
+        if (view === "month") {
+            newDate.setMonth(newDate.getMonth() + 1)
+        } else if (view === "week") {
+            newDate.setDate(newDate.getDate() + 7)
+        } else if (view === "day") {
+            newDate.setDate(newDate.getDate() + 1)
+        } else if (view === "year") {
+            newDate.setFullYear(newDate.getFullYear() + 1)
+        } else {
+            newDate.setDate(newDate.getDate() + 7)
         }
-
         setCurrentDate(newDate)
-    }
-
-    // Format date for display based on current view
-    const formatDateRange = () => {
-        switch (calendarView) {
-            case "day":
-                return new Intl.DateTimeFormat(navigator.language, {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                }).format(currentDate)
-
-            case "week": {
-                const startOfWeek = new Date(currentDate)
-                let dayOfWeek = currentDate.getDay()
-                if (dayOfWeek === 0) dayOfWeek = 7
-                const diff = 1 - dayOfWeek
-                startOfWeek.setDate(currentDate.getDate() + diff)
-
-                const endOfWeek = new Date(startOfWeek)
-                endOfWeek.setDate(startOfWeek.getDate() + 6)
-
-                return `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`
-            }
-
-            case "month":
-                return new Intl.DateTimeFormat(navigator.language, {
-                    month: "long",
-                    year: "numeric",
-                }).format(currentDate)
-
-            case "year":
-                return currentDate.getFullYear().toString()
-
-            default:
-                return new Intl.DateTimeFormat(navigator.language, {
-                    month: "long",
-                    year: "numeric",
-                }).format(currentDate)
-        }
     }
 
     // Go to today
     const goToToday = () => {
         setCurrentDate(new Date())
+    }
+
+    // Ilova tiliga mos locale (tizim tili emas)
+    const appLocale = { uz: "uz-UZ", ru: "ru-RU", en: "en-US" }[language] || "uz-UZ"
+
+    // Format date for display
+    const formatDateRange = () => {
+        if (view === "month") {
+            const options = { month: "long", year: "numeric" }
+            return new Intl.DateTimeFormat(appLocale, options).format(currentDate)
+        } else if (view === "week") {
+            const startOfWeek = new Date(currentDate)
+            let dayOfWeek = currentDate.getDay()
+            if (dayOfWeek === 0) dayOfWeek = 7
+            const diff = 1 - dayOfWeek
+            startOfWeek.setDate(currentDate.getDate() + diff)
+
+            const endOfWeek = new Date(startOfWeek)
+            endOfWeek.setDate(startOfWeek.getDate() + 6)
+
+            return `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`
+        } else if (view === "day") {
+            return currentDate.toLocaleDateString(appLocale, { weekday: "long", day: "numeric", month: "long" })
+        } else if (view === "year") {
+            return currentDate.getFullYear().toString()
+        } else {
+            return t("tasks_list")
+        }
     }
 
     // Open task form for creating a new task
@@ -303,105 +258,96 @@ export default function ATasks() {
     }
 
     // Open task form for editing an existing task
-    const handleEditTask = async (task) => {
-        try {
-            // Fetch the full task details if needed
-            const taskDetails = await apiTasks.fetchTaskById(task.id)
-
-            // Format the task data for the form
-            const formattedTask = {
-                ...taskDetails,
-                startDate: new Date(`${taskDetails.start_date}T${taskDetails.start_time}`),
-                endDate: new Date(`${taskDetails.end_date}T${taskDetails.end_time}`),
-                assignee: {
-                    id: taskDetails.assignee.id,
-                    name: formatUserFullName(taskDetails.assignee),
-                    role: taskDetails.assignee.role,
-                },
-            }
-
-            setSelectedTask(formattedTask)
-            setShowTaskForm(true)
-            setShowTaskDetails(false)
-        } catch (error) {
-            console.error("Error fetching task details:", error)
-        }
+    const handleEditTask = (task) => {
+        setSelectedTask({ ...task })
+        setNewTaskDate(null)
+        setShowTaskForm(true)
+        setShowTaskDetails(false)
     }
 
     // Open task details modal
-    const handleViewTask = async (task) => {
+    const handleViewTask = (task) => {
         if (!task) return
 
-        try {
-            // Fetch the full task details
-            const taskDetails = await apiTasks.fetchTaskById(task.id)
+        setSelectedTask({ ...task })
+        setShowTaskDetails(true)
+        setShowDayTasks(false)
+    }
 
-            // Format the task data for display
-            const formattedTask = {
-                ...taskDetails,
-                startDate: new Date(`${taskDetails.start_date}T${taskDetails.start_time}`),
-                endDate: new Date(`${taskDetails.end_date}T${taskDetails.end_time}`),
-                assignee: {
-                    id: taskDetails.assignee.id,
-                    name: formatUserFullName(taskDetails.assignee),
-                    role: taskDetails.assignee.role,
-                },
-                createdBy: {
-                    id: taskDetails.created_by.id,
-                    name: formatUserFullName(taskDetails.created_by),
-                    role: taskDetails.created_by.role,
-                },
-                createdAt: new Date(taskDetails.created_at),
-            }
+    // Handle month click in year view
+    const handleMonthClick = (month) => {
+        if (!month || !month.date) return
 
-            setSelectedTask(formattedTask)
-            setShowTaskDetails(true)
-        } catch (error) {
-            console.error("Error fetching task details:", error)
-        }
+        // Create a new date object to avoid reference issues
+        const monthDate = new Date(month.date)
+
+        // Set the current date
+        setCurrentDate(monthDate)
+
+        // Get month tasks
+        const monthTasks = tasks.filter((task) => {
+            if (!task || !task.startDate) return false
+
+            const taskDate = new Date(task.startDate)
+            return taskDate.getMonth() === monthDate.getMonth() && taskDate.getFullYear() === monthDate.getFullYear()
+        })
+
+        setSelectedDay({
+            date: monthDate,
+            isMonth: true,
+            monthName: monthDate.toLocaleString(appLocale, { month: "long" }),
+            year: monthDate.getFullYear(),
+        })
+
+        setSelectedMonthTasks(monthTasks)
+        setIsMonthView(true)
+        setShowDayTasks(true)
+
+        // Change view to month after selecting a month
+        setView("month")
     }
 
     // Handle day click in calendar
-    const handleDayClick = async (day) => {
+    const handleDayClick = (day) => {
         if (!day) return
+
+        // If year view and month is clicked
+        if (view === "year") {
+            handleMonthClick(day)
+            return
+        }
 
         // Create a new date object to avoid reference issues
         const dayDate = new Date(day.date)
 
-        try {
-            // Fetch tasks for the selected day with correct branch ID
-            const response = await apiTasks.fetchDailyTasks(dayDate, selectedBranch)
+        // Get day tasks
+        const dayTasks = tasks.filter((task) => {
+            if (!task || !task.startDate) return false
 
-            // Format the tasks
-            const dayTasks = response.map((task) => ({
-                ...task,
-                startDate: new Date(`${task.start_date}T${task.start_time}`),
-                endDate: new Date(`${task.end_date}T${task.end_time}`),
-                assignee: {
-                    id: task.assignee.id,
-                    name: formatUserFullName(task.assignee),
-                    role: task.assignee.role,
-                },
-            }))
+            const taskDate = new Date(task.startDate)
+            return (
+                taskDate.getDate() === dayDate.getDate() &&
+                taskDate.getMonth() === dayDate.getMonth() &&
+                taskDate.getFullYear() === dayDate.getFullYear()
+            )
+        })
 
-            setSelectedDay({
-                date: dayDate,
-                isCurrentMonth: day.isCurrentMonth,
-                isToday: day.isToday,
-                tasks: dayTasks,
-            })
+        setSelectedDay({
+            date: dayDate,
+            isCurrentMonth: day.isCurrentMonth,
+            isToday: day.isToday,
+            tasks: dayTasks,
+        })
 
-            // Open add task form with selected date
-            handleAddTask(dayDate)
-        } catch (error) {
-            console.error("Error fetching daily tasks:", error)
-        }
+        setSelectedMonthTasks([])
+        setIsMonthView(false)
+        setShowDayTasks(true)
     }
 
     // Handle task form submission
     const handleTaskSubmit = async (taskData) => {
         try {
-            if (selectedTask) {
+            if (selectedTask && selectedTask.id) {
                 // Update existing task
                 await apiTasks.updateTask(selectedTask.id, taskData)
             } else {
@@ -409,24 +355,40 @@ export default function ATasks() {
                 await apiTasks.createTask(taskData)
             }
 
-            // Refresh the tasks list
-            fetchTasksData()
+            // Refresh tasks
+            fetchTasks()
 
+            // Close form
             setShowTaskForm(false)
             setNewTaskDate(null)
         } catch (error) {
             console.error("Error saving task:", error)
-            // Show error notification or message here
+            alert(t("error_saving_task"))
         }
     }
 
     // Handle task deletion
-    const handleDeleteTask = async (taskId) => {
+    const handleDeleteTask = (taskId) => {
         const task = tasks.find((task) => task.id === taskId)
         if (task) {
             setSelectedTask(task)
             setShowDeleteConfirm(true)
         }
+    }
+
+    // Calculate page count and ensure it's at least 1
+    const pageCount = Math.max(1, Math.ceil(totalTasks / itemsPerPage))
+
+    // Handle page change with validation
+    const handlePageChange = (page) => {
+        // API uses 1-based pagination, but react-paginate uses 0-based indexing
+        setCurrentPage(page + 1)
+    }
+
+    // Handle items per page change
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage)
+        setCurrentPage(1) // Reset to first page when items per page changes
     }
 
     // Confirm task deletion
@@ -436,39 +398,40 @@ export default function ATasks() {
         try {
             await apiTasks.deleteTask(selectedTask.id)
 
-            // Refresh the tasks list
-            fetchTasksData()
+            // Refresh tasks
+            fetchTasks()
 
             // Close modals
             setShowDeleteConfirm(false)
             setShowTaskDetails(false)
         } catch (error) {
             console.error("Error deleting task:", error)
-            // Show error notification or message here
+            alert(t("error_deleting_task"))
         }
     }
 
     // Handle task status change
     const handleStatusChange = async (taskId, newStatus) => {
+        const task = tasks.find((t) => t.id === taskId)
+        if (!task) return
+
         try {
-            // Get the current task data
-            const taskToUpdate = tasks.find((task) => task.id === taskId)
-            if (!taskToUpdate) return
+            await apiTasks.updateTask(taskId, { ...task, status: newStatus })
 
-            // Update the task with new status
-            await apiTasks.updateTask(taskId, {
-                ...taskToUpdate,
-                status: newStatus,
-            })
+            // Refresh tasks
+            fetchTasks()
 
-            // Refresh the tasks list
-            fetchTasksData()
-
+            // Close details
             setShowTaskDetails(false)
         } catch (error) {
             console.error("Error updating task status:", error)
-            // Show error notification or message here
+            alert(t("error_updating_task"))
         }
+    }
+
+    // Toggle filters visibility
+    const toggleFilters = () => {
+        setShowFilters(!showFilters)
     }
 
     if (loading && tasks.length === 0) {
@@ -481,184 +444,204 @@ export default function ATasks() {
     }
 
     return (
-        <div className="admin-tasks">
-            <h1 className="page-title">{t("tasks_management")}</h1>
-
+        <div className="director-tasks admin-tasks">
             <div className="tasks-container">
                 <div className="tasks-header">
-                    <div className="view-controls">
-                        <button
-                            className={`btn ${view === "calendar" ? "btn-primary" : "btn-outline"}`}
-                            onClick={() => setView("calendar")}
-                        >
-                            <FaCalendarAlt /> {t("calendar_view")}
+                    <div className="header-left">
+                        <button className="today-btn" onClick={goToToday}>
+                            {t("today")}
                         </button>
-                        <button
-                            className={`btn ${view === "list" ? "btn-primary" : "btn-outline"}`}
-                            onClick={() => setView("list")}
-                        >
-                            <FaListUl /> {t("list_view")}
-                        </button>
+                        <div className="navigation-buttons">
+                            <button className="nav-btn" onClick={handlePrevious}>
+                                <FaChevronLeft />
+                            </button>
+                            <button className="nav-btn" onClick={handleNext}>
+                                <FaChevronRight />
+                            </button>
+                        </div>
+                        <h2 className="current-date-title">{formatDateRange()}</h2>
                     </div>
 
-                    {view === "calendar" && (
-                        <div className="calendar-view-controls">
-                            <button
-                                className={`btn-sm ${calendarView === "day" ? "active" : ""}`}
-                                onClick={() => setCalendarView("day")}
-                            >
+                    <div className="header-right">
+                        <div className="search-box">
+                            <FaSearch className="search-icon" />
+                            <input
+                                type="text"
+                                placeholder={t("search_tasks")}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        fetchTasks()
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        <button className="filter-btn" onClick={toggleFilters}>
+                            <FaFilter />
+                        </button>
+
+                        <div className="view-buttons">
+                            <button className={`view-btn ${view === "day" ? "active" : ""}`} onClick={() => setView("day")}>
                                 {t("day")}
                             </button>
-                            <button
-                                className={`btn-sm ${calendarView === "week" ? "active" : ""}`}
-                                onClick={() => setCalendarView("week")}
-                            >
+                            <button className={`view-btn ${view === "week" ? "active" : ""}`} onClick={() => setView("week")}>
                                 {t("week")}
                             </button>
-                            <button
-                                className={`btn-sm ${calendarView === "month" ? "active" : ""}`}
-                                onClick={() => setCalendarView("month")}
-                            >
+                            <button className={`view-btn ${view === "month" ? "active" : ""}`} onClick={() => setView("month")}>
                                 {t("month")}
                             </button>
-                            <button
-                                className={`btn-sm ${calendarView === "year" ? "active" : ""}`}
-                                onClick={() => setCalendarView("year")}
-                            >
+                            <button className={`view-btn ${view === "year" ? "active" : ""}`} onClick={() => setView("year")}>
                                 {t("year")}
                             </button>
                         </div>
-                    )}
 
-                    <div className="date-navigation">
-                        <button className="btn-icon" onClick={handlePrevious}>
-                            <FaChevronLeft />
+                        <button className={`list-view-btn ${view === "list" ? "active" : ""}`} onClick={() => setView("list")}>
+                            <FaListUl />
+                            {t("list_view")}
                         </button>
-                        <div className="current-date">{formatDateRange()}</div>
-                        <button className="btn-icon" onClick={handleNext}>
-                            <FaChevronRight />
-                        </button>
-                        <button className="today-btn btn-sm" onClick={goToToday}>
-                            {t("today")}
-                        </button>
-                    </div>
 
-                    <div className="task-actions">
-                        <button className="btn-primary" onClick={() => handleAddTask()}>
-                            <FaPlus /> {t("add_task")}
-                        </button>
+                        <div className="header-actions">
+                            <button className="create-btn" onClick={() => handleAddTask()}>
+                                <FaPlus />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div className="tasks-filters">
-                    <div className="search-box">
-                        <FaSearch className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder={t("search_tasks")}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="filter-group">
-                        <div className="filter-label">
-                            <FaFilter /> {t("status")}:
+                {showFilters && (
+                    <div className="filters-panel">
+                        <div className="filter-group">
+                            <label>{t("status")}:</label>
+                            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                                <option value="all">{t("all")}</option>
+                                <option value="pending">{t("pending")}</option>
+                                <option value="in_progress">{t("in_progress")}</option>
+                                <option value="completed">{t("completed")}</option>
+                            </select>
                         </div>
-                        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                            <option value="all">{t("all")}</option>
-                            <option value="pending">{t("pending")}</option>
-                            <option value="in_progress">{t("in_progress")}</option>
-                            <option value="completed">{t("completed")}</option>
-                        </select>
-                    </div>
 
-                    <div className="filter-group">
-                        <div className="filter-label">
-                            <FaFlag /> {t("priority")}:
+                        <div className="filter-group">
+                            <label>{t("priority")}:</label>
+                            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+                                <option value="all">{t("all")}</option>
+                                <option value="high">{t("high")}</option>
+                                <option value="medium">{t("medium")}</option>
+                                <option value="low">{t("low")}</option>
+                            </select>
                         </div>
-                        <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
-                            <option value="all">{t("all")}</option>
-                            <option value="high">{t("high")}</option>
-                            <option value="medium">{t("medium")}</option>
-                            <option value="low">{t("low")}</option>
-                        </select>
-                    </div>
 
-                    <div className="filter-group">
-                        <div className="filter-label">
-                            <FaUser /> {t("assignee")}:
+                        <div className="filter-group">
+                            <label>{t("assignee")}:</label>
+                            <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)}>
+                                <option value="all">{t("all")}</option>
+                                {staff.map((person) => (
+                                    <option key={person.id} value={person.id.toString()}>
+                                        {person.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-                        <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)}>
-                            <option value="all">{t("all")}</option>
-                            {staff.map((person) => (
-                                <option key={person.id} value={person.id.toString()}>
-                                    {person.name}
-                                </option>
-                            ))}
-                        </select>
                     </div>
-                </div>
+                )}
 
-                {view === "calendar" ? (
+                {view !== "list" ? (
                     <div className="calendar-container">
                         <TaskCalendar
                             tasks={tasks}
                             currentDate={currentDate}
-                            view={calendarView}
+                            view={view}
                             onTaskClick={handleViewTask}
                             onDayClick={handleDayClick}
+                            onMonthClick={handleMonthClick}
                         />
                     </div>
                 ) : (
                     <div className="tasks-list-container">
                         <h2 className="section-title">{t("tasks_list")}</h2>
-                        {tasks.length > 0 ? (
-                            <div className="tasks-list">
-                                {tasks.map((task) => (
-                                    <div key={task.id} className="task-card" onClick={() => handleViewTask(task)}>
-                                        <div className="task-header">
-                                            <h3 className="task-title">{task.title}</h3>
-                                            <div className={`status-badge ${task.status}`}>
-                                                {task.status === "completed" && t("completed")}
-                                                {task.status === "in_progress" && t("in_progress")}
-                                                {task.status === "pending" && t("pending")}
-                                            </div>
-                                        </div>
-                                        <div className="task-details">
-                                            <div className="task-date">
-                                                <FaCalendarAlt />
-                                                <span>
-                                                    {task.startDate.toLocaleDateString()}{" "}
-                                                    {task.startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                                </span>
-                                            </div>
-                                            <div className="task-assignee">
-                                                <FaUser />
-                                                <span>{task.assignee.name}</span>
-                                            </div>
-                                            <div className={`priority-badge ${task.priority}-priority`}>{t(task.priority)}</div>
-                                        </div>
-                                    </div>
-                                ))}
+                        {loading ? (
+                            <div className="loading-indicator">
+                                <div className="loading-spinner"></div>
+                                <p>{t("loading")}...</p>
                             </div>
+                        ) : error ? (
+                            <div className="error-message">{error}</div>
+                        ) : tasks.length > 0 ? (
+                            <>
+                                <div className="tasks-list">
+                                    <table className="tasks-table">
+                                        <thead>
+                                            <tr>
+                                                <th>{t("title")}</th>
+                                                <th>{t("assignee")}</th>
+                                                <th>{t("start_date")}</th>
+                                                <th>{t("status")}</th>
+                                                <th>{t("priority")}</th>
+                                                <th>{t("actions")}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tasks.map((task) => (
+                                                <tr key={task.id} className={`task-row ${task.status}`}>
+                                                    <td className="task-title">{task.title}</td>
+                                                    <td className="task-assignee">
+                                                        <div className="assignee-info">
+                                                            <FaUser className="assignee-icon" />
+                                                            <span>{task.assignee.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="task-date">
+                                                        {task.startDate.toLocaleDateString()}{" "}
+                                                        {task.startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                                    </td>
+                                                    <td className="task-status">
+                                                        <span className={`status-badge ${task.status}`}>
+                                                            {task.status === "completed" && <FaCheck className="status-icon" />}
+                                                            {task.status === "in_progress" && <FaClock className="status-icon" />}
+                                                            {task.status === "pending" && <FaExclamationTriangle className="status-icon" />}
+                                                            {t(task.status)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="task-priority">
+                                                        <span className={`priority-badge ${task.priority}-priority`}>{t(task.priority)}</span>
+                                                    </td>
+                                                    <td className="task-actions">
+                                                        <button className="action-btn view" onClick={() => handleViewTask(task)} title={t("view")}>
+                                                            <FaEye />
+                                                        </button>
+                                                        <button className="action-btn edit" onClick={() => handleEditTask(task)} title={t("edit")}>
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button
+                                                            className="action-btn delete"
+                                                            onClick={() => handleDeleteTask(task.id)}
+                                                            title={t("delete")}
+                                                        >
+                                                            <FaTrash />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="pagination-container">
+                                    <Pagination
+                                        pageCount={pageCount}
+                                        currentPage={currentPage - 1}
+                                        onPageChange={(page) => handlePageChange(page)}
+                                        itemsPerPage={itemsPerPage}
+                                        totalItems={totalTasks}
+                                        onItemsPerPageChange={handleItemsPerPageChange}
+                                    />
+                                </div>
+                            </>
                         ) : (
                             <div className="no-tasks-message">
                                 <FaTasks />
                                 <p>{t("no_tasks_found")}</p>
                             </div>
-                        )}
-
-                        {/* Pagination for list view */}
-                        {view === "list" && tasks.length > 0 && (
-                            <Pagination
-                                pageCount={pagination.totalPages}
-                                currentPage={pagination.page}
-                                onPageChange={handlePageChange}
-                                itemsPerPage={pagination.limit}
-                                totalItems={pagination.total}
-                                onItemsPerPageChange={handleItemsPerPageChange}
-                            />
                         )}
                     </div>
                 )}
@@ -676,7 +659,7 @@ export default function ATasks() {
                                 setShowTaskForm(false)
                                 setNewTaskDate(null)
                             }}
-                            canAssignToAll={true} // Admin can assign tasks to anyone
+                            canAssignToAll={true} // Admin can assign tasks to all staff
                         />
                     </div>
                 </div>
@@ -696,6 +679,41 @@ export default function ATasks() {
                 </div>
             )}
 
+            {showDayTasks && selectedDay && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <DayTasksList
+                            day={selectedDay}
+                            tasks={
+                                isMonthView
+                                    ? selectedMonthTasks
+                                    : tasks.filter((task) => {
+                                        if (!task || !task.startDate) return false
+
+                                        const taskDate = new Date(task.startDate)
+                                        return (
+                                            taskDate.getDate() === selectedDay.date.getDate() &&
+                                            taskDate.getMonth() === selectedDay.date.getMonth() &&
+                                            taskDate.getFullYear() === selectedDay.date.getFullYear()
+                                        )
+                                    })
+                            }
+                            isMonthView={isMonthView}
+                            onClose={() => {
+                                setShowDayTasks(false)
+                                setIsMonthView(false)
+                            }}
+                            onTaskClick={handleViewTask}
+                            onAddTask={() => {
+                                setShowDayTasks(false)
+                                setIsMonthView(false)
+                                handleAddTask(selectedDay.date)
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
             {showDeleteConfirm && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -707,6 +725,7 @@ export default function ATasks() {
                             cancelText={t("cancel")}
                             onConfirm={confirmDeleteTask}
                             onClose={() => setShowDeleteConfirm(false)}
+                            onCancel={() => setShowDeleteConfirm(false)}
                             type="danger"
                         />
                     </div>

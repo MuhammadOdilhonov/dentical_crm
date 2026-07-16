@@ -443,14 +443,10 @@ export default function DocSchedule() {
     }
 
     // Redirect to patient record
-    const redirectToPatientRecord = (patientId) => {
-        setRedirecting(true)
-        // Simulate redirection to another page
-        setTimeout(() => {
-            // In a real app, you would use router.push or window.location
-            resultWindowRef.current = window.open(`/appointment-details/${patientId}`, "_blank")
-            setRedirecting(false)
-        }, 1500)
+    const redirectToPatientRecord = (appointmentId) => {
+        // MUHIM: window.open bosish hodisasi ichida sinxron chaqirilishi shart,
+        // aks holda brauzer popup'ni bloklaydi (setTimeout ichida ochilsa ishlamaydi).
+        resultWindowRef.current = window.open(`/appointment-details/${appointmentId}`, "_blank")
     }
 
     // Handle view mode change
@@ -946,7 +942,7 @@ export default function DocSchedule() {
                                                                 className="btn btn-action-card btn-redirect"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
-                                                                    redirectToPatientRecord(appointment.patientId)
+                                                                    redirectToPatientRecord(appointment.id)
                                                                 }}
                                                             >
                                                                 <FaExternalLinkAlt className="action-icon action-redirect" />
