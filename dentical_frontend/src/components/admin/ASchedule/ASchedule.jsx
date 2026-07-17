@@ -28,12 +28,20 @@ import {
     FaFilePdf,
     FaPrint,
     FaMoneyBillWave,
+    FaChevronLeft,
+    FaChevronRight,
 } from "react-icons/fa"
 import { useAuth } from "../../../contexts/AuthContext"
 import { useLanguage } from "../../../contexts/LanguageContext"
 import Pagination from "../../pagination/Pagination"
 import apiAppointments from "../../../api/apiAppointments"
 import apiCustomerDebts from "../../../api/apiCustomerDebts"
+
+// Haftalik kalendar (time-grid) sozlamalari — direktor jadvali bilan bir xil
+const CAL_START_HOUR = 0
+const CAL_END_HOUR = 24
+const CAL_HOUR_HEIGHT = 64
+const CAL_APPT_MINUTES = 45 // bitta qabul kartochkasining vizual davomiyligi
 
 export default function ASchedule() {
     const { selectedBranch } = useAuth()
@@ -73,9 +81,13 @@ export default function ASchedule() {
         room: "",
         date: "",
         time: "",
+        times: [], // bir nechta vaqt tanlash mumkin (kamida 1 ta)
         status: "expected",
         comment: "",
     })
+
+    // Vaqt slotining davomiyligi: 30 daqiqa yoki 1 soat
+    const [slotDuration, setSlotDuration] = useState(60)
 
     // State for filter data
     const [filterData, setFilterData] = useState({
@@ -96,6 +108,7 @@ export default function ASchedule() {
     // State for view mode
     const [currentView, setCurrentView] = useState("table")
     const [startDate, setStartDate] = useState(new Date())
+    const [nowTime, setNowTime] = useState(new Date()) // kalendar uchun joriy vaqt (qizil chiziq)
 
     // State for time change modal
     const [showTimeChangeModal, setShowTimeChangeModal] = useState(false)
@@ -129,7 +142,25 @@ export default function ASchedule() {
     // Load appointments when component mounts or when branch/filters change
     useEffect(() => {
         fetchAppointments()
-    }, [currentPage, itemsPerPage, searchTerm]) // Faqat asosiy dependency'lar
+    }, [currentPage, itemsPerPage, searchTerm, currentView]) // Faqat asosiy dependency'lar
+
+    // Kalendar uchun joriy vaqtni har 30 soniyada yangilab turish (qizil chiziq yurishi uchun)
+    useEffect(() => {
+        if (currentView !== "calendar") return
+        const timer = setInterval(() => setNowTime(new Date()), 30000)
+        return () => clearInterval(timer)
+    }, [currentView])
+
+    // Kalendar ochilganda joriy soat atrofiga avtomatik aylantirish
+    useEffect(() => {
+        if (currentView !== "calendar") return
+        const scroller = document.querySelector(".apt-cal-scroll")
+        if (scroller) {
+            const minutes = new Date().getHours() * 60 + new Date().getMinutes()
+            const top = ((minutes - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT - 180
+            scroller.scrollTop = Math.max(top, 0)
+        }
+    }, [currentView])
 
     // Alohida useEffect filterlar uchun
     useEffect(() => {
@@ -159,9 +190,10 @@ export default function ASchedule() {
     const fetchAppointments = async () => {
         setLoading(true)
         try {
+            // Kalendar ko'rinishida butun hafta ko'rinishi uchun ko'proq yozuv olinadi
             const params = {
-                page: currentPage + 1,
-                page_size: itemsPerPage,
+                page: currentView === "calendar" ? 1 : currentPage + 1,
+                page_size: currentView === "calendar" ? 300 : itemsPerPage,
             }
 
             if (filterStatus !== "all") params.status = filterStatus
@@ -252,22 +284,34 @@ export default function ASchedule() {
 
     const handleRefreshData = () => setRefreshTrigger((prev) => prev + 1)
 
-    // Generate time slots
-    const generateTimeSlots = (busyTimesData = []) => {
+    // Generate time slots — tanlangan davomiylikka (30 daq / 1 soat) qarab
+    const generateTimeSlots = (busyTimesData = [], duration = slotDuration) => {
         const slots = []
         const busyTimesList = busyTimesData.map((item) => item.time)
 
-        for (let hour = 0; hour <= 23; hour++) {
-            const formattedHour = hour.toString().padStart(2, "0")
-            const timeSlot = `${formattedHour}:00`
+        for (let minutes = 0; minutes < 24 * 60; minutes += duration) {
+            const hour = Math.floor(minutes / 60)
+            const minute = minutes % 60
+            const timeSlot = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+            const hourStart = `${String(hour).padStart(2, "0")}:00`
 
             slots.push({
                 time: timeSlot,
-                isBooked: busyTimesList.includes(timeSlot),
+                // Soat boshi band bo'lsa, o'sha soatning 30-daqiqasi ham band hisoblanadi
+                isBooked: busyTimesList.includes(timeSlot) || (minute !== 0 && busyTimesList.includes(hourStart)),
             })
         }
 
         setAvailableTimes(slots)
+    }
+
+    // 30 daqiqa / 1 soat tugmalari bosilganda slotlarni qayta chizish
+    const handleDurationChange = (duration) => {
+        if (duration === slotDuration) return
+        setSlotDuration(duration)
+        setTimeError("")
+        setNewAppointment((prev) => ({ ...prev, time: "", times: [] }))
+        generateTimeSlots(busyTimes, duration)
     }
 
     // Handle search input change
@@ -300,17 +344,21 @@ export default function ASchedule() {
                 room: "",
                 date: "",
                 time: "",
+                times: [],
             })
             fetchFilterData(value)
         }
     }
 
-    // Handle time selection
+    // Handle time selection — bir nechta vaqtni tanlash/bekor qilish mumkin
     const handleTimeSelect = (time) => {
         setTimeError("")
-        setNewAppointment({
-            ...newAppointment,
-            time,
+        setNewAppointment((prev) => {
+            const currentTimes = prev.times || []
+            const times = currentTimes.includes(time)
+                ? currentTimes.filter((item) => item !== time)
+                : [...currentTimes, time].sort()
+            return { ...prev, times, time: times[0] || "" }
         })
     }
 
@@ -464,6 +512,25 @@ export default function ASchedule() {
             room: "",
             date: "",
             time: "",
+            times: [],
+            status: "expected",
+            comment: "",
+        })
+    }
+
+    // Kalendar katakchasi bosilganda — o'sha kun va vaqt bilan qabul qo'shish oynasini ochish
+    const openAddSidebarAt = (dateString, time) => {
+        setShowSidebar(true)
+        setStep(1)
+        setTimeError("")
+        setNewAppointment({
+            branch: selectedBranch === "all" ? "" : selectedBranch,
+            customer: "",
+            doctor: "",
+            room: "",
+            date: dateString,
+            time: time || "",
+            times: time ? [time] : [],
             status: "expected",
             comment: "",
         })
@@ -587,25 +654,33 @@ export default function ASchedule() {
         setStep(step - 1)
     }
 
-    // Add new appointment
+    // Add new appointment — tanlangan har bir vaqt uchun alohida qabul yaratiladi
     const addAppointment = async (e) => {
         e.preventDefault()
 
         try {
-            const formattedDate = `${newAppointment.date}T${newAppointment.time}:00Z`
+            const selectedTimes =
+                newAppointment.times && newAppointment.times.length > 0
+                    ? [...newAppointment.times].sort()
+                    : [newAppointment.time]
 
-            const appointmentData = {
-                branch: Number.parseInt(newAppointment.branch),
-                customer: Number.parseInt(newAppointment.customer),
-                doctor: Number.parseInt(newAppointment.doctor),
-                room: Number.parseInt(newAppointment.room),
-                full_date: formattedDate,
-                status: newAppointment.status,
-                comment: newAppointment.comment,
-                organs: {},
+            for (const time of selectedTimes) {
+                const formattedDate = `${newAppointment.date}T${time}:00Z`
+
+                const appointmentData = {
+                    branch: Number.parseInt(newAppointment.branch),
+                    customer: Number.parseInt(newAppointment.customer),
+                    doctor: Number.parseInt(newAppointment.doctor),
+                    room: Number.parseInt(newAppointment.room),
+                    full_date: formattedDate,
+                    status: newAppointment.status,
+                    comment: newAppointment.comment,
+                    organs: {},
+                }
+
+                await apiAppointments.createAppointment(appointmentData)
             }
 
-            await apiAppointments.createAppointment(appointmentData)
             fetchAppointments()
             closeAddSidebar()
         } catch (err) {
@@ -690,12 +765,10 @@ export default function ASchedule() {
         }
     }
 
-    // Handle status change
+    // Handle status change — alert'siz, jadval darhol yangilanadi
     const handleStatusChange = async (id, status) => {
         try {
             await apiAppointments.updateAppointmentStatus(id, status)
-            const statusText = status === "accepted" ? t("accepted") : t("cancelled")
-            alert(`${t("appointment_status_updated_to")} ${statusText}`)
             fetchAppointments()
         } catch (err) {
             console.error("Qabul holatini yangilashda xatolik:", err)
@@ -766,6 +839,56 @@ export default function ASchedule() {
     // Set view to today
     const goToToday = () => {
         setStartDate(new Date())
+    }
+
+    // Oldingi / keyingi haftaga o'tish
+    const goToPrevWeek = () => {
+        const date = new Date(startDate)
+        date.setDate(date.getDate() - 7)
+        setStartDate(date)
+    }
+
+    const goToNextWeek = () => {
+        const date = new Date(startDate)
+        date.setDate(date.getDate() + 7)
+        setStartDate(date)
+    }
+
+    // Qabulning kun boshidan boshlab necha daqiqada boshlanishini aniqlash
+    const getAppointmentMinutes = (appointment) => {
+        if (appointment.date && typeof appointment.date === "string" && appointment.date.includes("T")) {
+            const date = new Date(appointment.date)
+            if (!isNaN(date)) return date.getHours() * 60 + date.getMinutes()
+        }
+        if (appointment.time) {
+            const [h, m] = String(appointment.time).split(":")
+            const hours = parseInt(h, 10)
+            const minutes = parseInt(m, 10)
+            if (!isNaN(hours)) return hours * 60 + (isNaN(minutes) ? 0 : minutes)
+        }
+        return null
+    }
+
+    // Bir kundagi qabullarni yonma-yon ustunchalarga (lane) taqsimlash —
+    // bir xil vaqtdagi qabullar ustma-ust tushmasligi uchun
+    const layoutDayAppointments = (dayAppointments) => {
+        const items = dayAppointments
+            .map((appointment) => ({ appointment, start: getAppointmentMinutes(appointment) }))
+            .filter((item) => item.start !== null)
+            .sort((a, b) => a.start - b.start)
+
+        const laneEnds = []
+        items.forEach((item) => {
+            let lane = laneEnds.findIndex((end) => end <= item.start)
+            if (lane === -1) {
+                lane = laneEnds.length
+                laneEnds.push(0)
+            }
+            laneEnds[lane] = item.start + CAL_APPT_MINUTES
+            item.lane = lane
+        })
+
+        return { items, lanes: Math.max(laneEnds.length, 1) }
     }
 
     // Get branch name by ID
@@ -1103,7 +1226,28 @@ export default function ASchedule() {
                         </h3>
 
                         <div className="appointments-form-group">
-                            <label>{t("time")}</label>
+                            {/* Davomiylik tanlash: 30 daqiqa yoki 1 soat */}
+                            <div className="duration-toggle">
+                                <button
+                                    type="button"
+                                    className={slotDuration === 30 ? "active" : ""}
+                                    onClick={() => handleDurationChange(30)}
+                                >
+                                    <FaClock /> 30 daqiqa
+                                </button>
+                                <button
+                                    type="button"
+                                    className={slotDuration === 60 ? "active" : ""}
+                                    onClick={() => handleDurationChange(60)}
+                                >
+                                    <FaClock /> 1 soat
+                                </button>
+                            </div>
+
+                            <p className="time-multi-hint">
+                                Kamida 1 ta vaqt tanlang — bir nechta vaqt tanlash ham mumkin (uzoq davolash uchun).
+                            </p>
+
                             {timeError && (
                                 <div className="time-error">
                                     <FaExclamationCircle /> {timeError}
@@ -1114,7 +1258,7 @@ export default function ASchedule() {
                                     <button
                                         key={index}
                                         type="button"
-                                        className={`time-slot ${slot.isBooked ? "booked" : ""} ${newAppointment.time === slot.time ? "selected" : ""}`}
+                                        className={`time-slot ${slot.isBooked ? "booked" : ""} ${(newAppointment.times || []).includes(slot.time) ? "selected" : ""}`}
                                         onClick={() => !slot.isBooked && handleTimeSelect(slot.time)}
                                         disabled={slot.isBooked}
                                     >
@@ -1126,6 +1270,26 @@ export default function ASchedule() {
                                     <div className="no-times-message">{t("please_select_date_and_room_first")}</div>
                                 )}
                             </div>
+
+                            {/* Tanlangan vaqtlar xulosasi */}
+                            {(newAppointment.times || []).length > 0 && (
+                                <div className="selected-times-summary">
+                                    <span className="selected-times-label">
+                                        Tanlandi ({newAppointment.times.length} ta):
+                                    </span>
+                                    {newAppointment.times.map((time) => (
+                                        <button
+                                            key={time}
+                                            type="button"
+                                            className="selected-time-chip"
+                                            onClick={() => handleTimeSelect(time)}
+                                            title="Olib tashlash"
+                                        >
+                                            {time} <FaTimes />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div className="appointments-form-actions">
@@ -1136,7 +1300,7 @@ export default function ASchedule() {
                                 type="button"
                                 className="appointments-btn appointments-btn-primary"
                                 onClick={nextStep}
-                                disabled={!newAppointment.time}
+                                disabled={(newAppointment.times || []).length === 0}
                             >
                                 {t("next")}
                             </button>
@@ -1318,18 +1482,20 @@ export default function ASchedule() {
                                             <td>{formatDateForDisplay(appointment.date)}</td>
                                             <td>{appointment.time}</td>
                                             <td>
-                                                <div className={`appointments-status-badge ${appointment.status}`}>
-                                                    {getStatusTranslation(appointment.status)}
-                                                </div>
-                                                {appointment.late_minutes >= 5 && (
-                                                    <div
-                                                        className="appointments-status-badge cancelled"
-                                                        title={`${t("patient_late")}: ${appointment.late_minutes} ${t("minutes_short")}`}
-                                                        style={{ marginTop: 4 }}
-                                                    >
-                                                        ⏰ {t("patient_late")} {appointment.late_minutes} {t("minutes_short")}
+                                                {/* Bir nechta badge bo'lsa — yonma-yon, bir qatorda tiziladi */}
+                                                <div className="appointments-status-row">
+                                                    <div className={`appointments-status-badge ${appointment.status}`}>
+                                                        {getStatusTranslation(appointment.status)}
                                                     </div>
-                                                )}
+                                                    {appointment.late_minutes >= 5 && (
+                                                        <div
+                                                            className="appointments-status-badge cancelled"
+                                                            title={`${t("patient_late")}: ${appointment.late_minutes} ${t("minutes_short")}`}
+                                                        >
+                                                            ⏰ {t("patient_late")} {appointment.late_minutes} {t("minutes_short")}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
                                             {selectedBranch === "all" && (
                                                 <td>
@@ -1340,24 +1506,17 @@ export default function ASchedule() {
                                                 </td>
                                             )}
                                             <td onClick={(e) => e.stopPropagation()}>
-                                                {!appointment.arrived_at &&
-                                                    (appointment.status === "expected" || appointment.status === "accepted") && (
-                                                        <button
-                                                            className="appointments-action-toggle"
-                                                            title={t("patient_arrived") || "Bemor keldi"}
-                                                            style={{ color: "#16a34a", marginRight: 6 }}
-                                                            onClick={async () => {
-                                                                try {
-                                                                    await apiAppointments.markPatientArrived(appointment.id)
-                                                                    fetchAppointments()
-                                                                } catch (err) {
-                                                                    alert(t("error_occurred"))
-                                                                }
-                                                            }}
-                                                        >
-                                                            ✓
-                                                        </button>
-                                                    )}
+                                                {/* Kutilmoqda bo'lsa — ✓ bosilganda "Qabul qilindi" statusiga o'tadi */}
+                                                {appointment.status === "expected" && (
+                                                    <button
+                                                        className="appointments-action-toggle"
+                                                        title={t("accept")}
+                                                        style={{ color: "#16a34a", marginRight: 6 }}
+                                                        onClick={() => handleStatusChange(appointment.id, "accepted")}
+                                                    >
+                                                        <FaCheck />
+                                                    </button>
+                                                )}
                                                 <button className="appointments-action-toggle" onClick={() => openActionModal(appointment)}>
                                                     <FaEllipsisV />
                                                 </button>
@@ -1378,63 +1537,126 @@ export default function ASchedule() {
                     />
                 </div>
             ) : (
-                <div className="appointments-calendar-view">
-                    <div className="appointments-calendar-header">
-                        <div className="appointments-calendar-days">
-                            {getWeekDates().map((date, index) => (
-                                <div
-                                    key={index}
-                                    className={`appointments-calendar-day ${date.toDateString() === new Date().toDateString() ? "today" : ""
-                                        }`}
-                                >
-                                    <div className="appointments-day-name">{date.toLocaleDateString("uz-UZ", { weekday: "short" })}</div>
-                                    <div className="appointments-day-date">{date.getDate()}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="appointments-calendar-body">
-                        {getWeekDates().map((date, index) => {
-                            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-                                date.getDate(),
-                            ).padStart(2, "0")}`
-                            const dayAppointments = appointments.filter(
-                                (appointment) => appointment.date && appointment.date.startsWith(dateString),
-                            )
+                <div className="appointments-calendar-view apt-cal">
+                    {(() => {
+                        const weekDates = getWeekDates()
+                        const hours = Array.from({ length: CAL_END_HOUR - CAL_START_HOUR }, (_, i) => CAL_START_HOUR + i)
+                        const nowMinutes = nowTime.getHours() * 60 + nowTime.getMinutes()
+                        const todayIndex = weekDates.findIndex((d) => d.toDateString() === nowTime.toDateString())
+                        const showNowLine =
+                            todayIndex !== -1 && nowMinutes >= CAL_START_HOUR * 60 && nowMinutes <= CAL_END_HOUR * 60
+                        const nowTop = ((nowMinutes - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT
 
-                            return (
-                                <div
-                                    key={index}
-                                    className={`appointments-calendar-column ${date.toDateString() === new Date().toDateString() ? "today" : ""
-                                        }`}
-                                >
-                                    {dayAppointments.length > 0 ? (
-                                        dayAppointments.map((appointment) => (
-                                            <div
-                                                key={appointment.id}
-                                                className={`appointments-calendar-item ${appointment.status}`}
-                                                onClick={() => openViewSidebar(appointment)}
-                                            >
-                                                <div className="appointments-calendar-time">{formatTimeForDisplay(appointment.date)}</div>
-                                                <div className="appointments-calendar-patient">{appointment.customer_name}</div>
-                                                <div className="appointments-calendar-doctor">{appointment.doctor_name}</div>
-                                                <div className="appointments-calendar-room">{appointment.room_name}</div>
-                                                <div className="appointments-calendar-status">
-                                                    <span className={`appointments-status-badge ${appointment.status}`}>
-                                                        {getStatusTranslation(appointment.status)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="appointments-no-appointments">
-                                            <p>{t("no_appointments")}</p>
-                                        </div>
-                                    )}
+                        return (
+                            <>
+                                {/* Hafta navigatsiyasi */}
+                                <div className="apt-cal-toolbar">
+                                    <button className="apt-cal-nav-btn" onClick={goToPrevWeek} title="Oldingi hafta">
+                                        <FaChevronLeft />
+                                    </button>
+                                    <div className="apt-cal-range">
+                                        <FaCalendarAlt />
+                                        <span>
+                                            {weekDates[0].toLocaleDateString("uz-UZ", { day: "numeric", month: "long" })}
+                                            {" — "}
+                                            {weekDates[6].toLocaleDateString("uz-UZ", { day: "numeric", month: "long", year: "numeric" })}
+                                        </span>
+                                    </div>
+                                    <button className="apt-cal-nav-btn" onClick={goToNextWeek} title="Keyingi hafta">
+                                        <FaChevronRight />
+                                    </button>
                                 </div>
-                            )
-                        })}
-                    </div>
+
+                                <div className="apt-cal-scroll">
+                                    {/* Kunlar qatori — tepada */}
+                                    <div className="apt-cal-header">
+                                        <div className="apt-cal-corner">
+                                            <FaClock />
+                                        </div>
+                                        {weekDates.map((date, index) => (
+                                            <div key={index} className={`apt-cal-day ${index === todayIndex ? "today" : ""}`}>
+                                                <span className="apt-cal-day-name">
+                                                    {date.toLocaleDateString("uz-UZ", { weekday: "short" })}
+                                                </span>
+                                                <span className="apt-cal-day-num">{date.getDate()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Soatlar (chapda) + haftalik to'r */}
+                                    <div className="apt-cal-body" style={{ height: `${hours.length * CAL_HOUR_HEIGHT}px` }}>
+                                        <div className="apt-cal-times">
+                                            {hours.map((hour) => (
+                                                <div key={hour} className="apt-cal-time" style={{ height: `${CAL_HOUR_HEIGHT}px` }}>
+                                                    {String(hour).padStart(2, "0")}:00
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {weekDates.map((date, index) => {
+                                            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+                                                date.getDate(),
+                                            ).padStart(2, "0")}`
+                                            const dayAppointments = appointments.filter(
+                                                (appointment) => appointment.date && appointment.date.startsWith(dateString),
+                                            )
+                                            const { items, lanes } = layoutDayAppointments(dayAppointments)
+
+                                            return (
+                                                <div key={index} className={`apt-cal-col ${index === todayIndex ? "today" : ""}`}>
+                                                    {hours.map((hour) => (
+                                                        <div
+                                                            key={hour}
+                                                            className="apt-cal-cell"
+                                                            style={{ height: `${CAL_HOUR_HEIGHT}px` }}
+                                                            onClick={() =>
+                                                                openAddSidebarAt(dateString, `${String(hour).padStart(2, "0")}:00`)
+                                                            }
+                                                            title={`${dateString} · ${String(hour).padStart(2, "0")}:00 — qabul qo'shish`}
+                                                        ></div>
+                                                    ))}
+                                                    {items.map(({ appointment, start, lane }) => {
+                                                        const top = ((start - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT
+                                                        const height = (CAL_APPT_MINUTES / 60) * CAL_HOUR_HEIGHT
+                                                        return (
+                                                            <div
+                                                                key={appointment.id}
+                                                                className={`apt-cal-event ${appointment.status}`}
+                                                                style={{
+                                                                    top: `${top + 1}px`,
+                                                                    height: `${height - 2}px`,
+                                                                    left: `calc(${(lane * 100) / lanes}% + 3px)`,
+                                                                    width: `calc(${100 / lanes}% - 6px)`,
+                                                                }}
+                                                                onClick={() => openViewSidebar(appointment)}
+                                                                title={`${formatTimeForDisplay(appointment.date)} · ${appointment.customer_name} · ${appointment.doctor_name} · ${appointment.room_name}`}
+                                                            >
+                                                                <span className="apt-cal-event-time">
+                                                                    {formatTimeForDisplay(appointment.date)}
+                                                                </span>
+                                                                <span className="apt-cal-event-patient">{appointment.customer_name}</span>
+                                                                <span className="apt-cal-event-doctor">{appointment.doctor_name}</span>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )
+                                        })}
+
+                                        {/* Joriy vaqt — harakatlanuvchi qizil chiziq */}
+                                        {showNowLine && (
+                                            <div className="apt-cal-now" style={{ top: `${nowTop}px` }}>
+                                                <span className="apt-cal-now-label">
+                                                    {nowTime.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+                                                </span>
+                                                <span className="apt-cal-now-dot"></span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )
+                    })()}
                 </div>
             )}
 
@@ -1975,29 +2197,35 @@ export default function ASchedule() {
                                     <FaClock /> {t("change_time")}
                                 </button>
 
-                                {selectedAppointmentForAction.status === "expected" && (
-                                    <>
-                                        <button
-                                            className="action-btn accept-btn"
-                                            onClick={() => {
-                                                closeActionModal()
-                                                handleStatusChange(selectedAppointmentForAction.id, "accepted")
-                                            }}
-                                        >
-                                            <FaCheck /> {t("accept")}
-                                        </button>
-
-                                        <button
-                                            className="action-btn cancel-btn"
-                                            onClick={() => {
-                                                closeActionModal()
-                                                handleStatusChange(selectedAppointmentForAction.id, "cancelled")
-                                            }}
-                                        >
-                                            <FaTimes /> {t("cancel")}
-                                        </button>
-                                    </>
-                                )}
+                                {/* Joriy holatni ko'rsatish — o'zgartirish faqat ruxsat etilgan statuslarga.
+                                    "Jarayonda" va "Tugallandi" ni shifokor o'z oqimida belgilaydi. */}
+                                <div className="action-status-section">
+                                    <span className="action-status-title">{t("status")}:</span>
+                                    <div className="action-status-current">
+                                        <span className={`action-status-option ${selectedAppointmentForAction.status} current`}>
+                                            <FaCheck /> {getStatusTranslation(selectedAppointmentForAction.status)}
+                                        </span>
+                                    </div>
+                                    {["expected", "accepted", "cancelled"].includes(selectedAppointmentForAction.status) && (
+                                        <div className="action-status-list">
+                                            {["expected", "accepted", "cancelled"]
+                                                .filter((statusOption) => statusOption !== selectedAppointmentForAction.status)
+                                                .map((statusOption) => (
+                                                    <button
+                                                        key={statusOption}
+                                                        type="button"
+                                                        className={`action-status-option ${statusOption}`}
+                                                        onClick={() => {
+                                                            closeActionModal()
+                                                            handleStatusChange(selectedAppointmentForAction.id, statusOption)
+                                                        }}
+                                                    >
+                                                        {getStatusTranslation(statusOption)}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
 
                                 <button
                                     className="action-btn delete-btn"

@@ -1,28 +1,53 @@
+// Direktor sahifalari bilan bir xil ko'k palitra
+$ap-primary: #2563eb;
+$ap-primary-dark: #1e40af;
+$ap-accent: #3b82f6;
+$ap-dark: #1e293b;
+$ap-text: #334155;
+$ap-muted: #64748b;
+$ap-border: #e2e8f0;
+
 .admin-patients {
     padding: 20px;
-    background: #f8f9fa;
+    background: #f1f5f9;
     min-height: 100vh;
 
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 30px;
+        margin-bottom: 24px;
         background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px 24px;
+        border-radius: 14px;
+        border: 1px solid $ap-border;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.05);
 
         h1 {
-            color: #2c3e50;
-            font-size: 28px;
-            font-weight: 600;
+            color: $ap-dark;
+            font-size: 24px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 12px;
+            margin: 0;
+            position: relative;
+            padding-bottom: 10px;
+            letter-spacing: -0.02em;
 
             svg {
-                color: #3498db;
+                color: $ap-primary;
+            }
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 50px;
+                height: 4px;
+                background: linear-gradient(to right, $ap-primary, $ap-accent);
+                border-radius: 2px;
             }
         }
 
@@ -35,8 +60,9 @@
     .filters-bar {
         background: white;
         padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        border: 1px solid $ap-border;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
         margin-bottom: 20px;
 
         .search-filter {
@@ -54,21 +80,21 @@
                     left: 12px;
                     top: 50%;
                     transform: translateY(-50%);
-                    color: #7f8c8d;
+                    color: #64748b;
                 }
 
                 input {
                     width: 100%;
                     padding: 12px 12px 12px 40px;
-                    border: 2px solid #e9ecef;
+                    border: 1.5px solid #e2e8f0;
                     border-radius: 8px;
                     font-size: 14px;
                     transition: all 0.3s ease;
 
                     &:focus {
                         outline: none;
-                        border-color: #3498db;
-                        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+                        border-color: #2563eb;
+                        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
                     }
                 }
             }
@@ -78,7 +104,7 @@
                 background: #ecf0f1;
                 border: none;
                 border-radius: 8px;
-                color: #2c3e50;
+                color: #1e293b;
                 font-weight: 500;
                 cursor: pointer;
                 transition: all 0.3s ease;
@@ -88,7 +114,7 @@
 
                 &:hover,
                 &.active {
-                    background: #3498db;
+                    background: #2563eb;
                     color: white;
                 }
             }
@@ -112,13 +138,13 @@
 
                     label {
                         font-weight: 500;
-                        color: #2c3e50;
+                        color: #1e293b;
                         font-size: 14px;
                     }
 
                     select {
                         padding: 10px;
-                        border: 2px solid #e9ecef;
+                        border: 1.5px solid #e2e8f0;
                         border-radius: 6px;
                         font-size: 14px;
                         min-width: 120px;
@@ -126,7 +152,7 @@
 
                         &:focus {
                             outline: none;
-                            border-color: #3498db;
+                            border-color: #2563eb;
                         }
                     }
                 }
@@ -141,8 +167,9 @@
 
     .patients-table-container {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        border: 1px solid $ap-border;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
         overflow: hidden;
 
         .patients-table {
@@ -150,14 +177,17 @@
             border-collapse: collapse;
 
             thead {
-                background: #f8f9fa;
+                background: #f8fafc;
 
                 th {
-                    padding: 15px 12px;
+                    padding: 14px 12px;
                     text-align: left;
                     font-weight: 600;
-                    color: #2c3e50;
-                    border-bottom: 2px solid #e9ecef;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: $ap-muted;
+                    border-bottom: 1px solid $ap-border;
                     cursor: pointer;
                     transition: background-color 0.3s ease;
                     position: relative;
@@ -170,14 +200,14 @@
                         content: "↑";
                         position: absolute;
                         right: 8px;
-                        color: #3498db;
+                        color: #2563eb;
                     }
 
                     &.sort-desc::after {
                         content: "↓";
                         position: absolute;
                         right: 8px;
-                        color: #3498db;
+                        color: #2563eb;
                     }
                 }
             }
@@ -202,23 +232,24 @@
                     td {
                         padding: 15px 12px;
                         border-bottom: 1px solid #e9ecef;
-                        color: #2c3e50;
+                        color: #1e293b;
 
                         .status-badge {
-                            padding: 4px 12px;
-                            border-radius: 20px;
-                            font-size: 12px;
-                            font-weight: 500;
+                            padding: 5px 12px;
+                            border-radius: 999px;
+                            font-size: 11px;
+                            font-weight: 700;
                             text-transform: uppercase;
+                            letter-spacing: 0.03em;
 
                             &.faol {
-                                background: #d4edda;
-                                color: #155724;
+                                background: rgba(16, 185, 129, 0.12);
+                                color: #047857;
                             }
 
                             &.nofaol {
-                                background: #f8d7da;
-                                color: #721c24;
+                                background: rgba(239, 68, 68, 0.1);
+                                color: #b91c1c;
                             }
                         }
 
@@ -272,7 +303,7 @@
                         &.no-data {
                             text-align: center;
                             padding: 40px;
-                            color: #7f8c8d;
+                            color: #64748b;
                             font-style: italic;
                         }
                     }
@@ -294,11 +325,11 @@
         text-decoration: none;
 
         &.btn-primary {
-            background: #3498db;
+            background: #2563eb;
             color: white;
 
             &:hover {
-                background: #2980b9;
+                background: #1e40af;
                 transform: translateY(-1px);
             }
         }
@@ -308,17 +339,17 @@
             color: white;
 
             &:hover {
-                background: #7f8c8d;
+                background: #64748b;
             }
         }
 
         &.btn-outline {
             background: transparent;
-            color: #3498db;
-            border: 2px solid #3498db;
+            color: #2563eb;
+            border: 2px solid #2563eb;
 
             &:hover {
-                background: #3498db;
+                background: #2563eb;
                 color: white;
             }
         }
@@ -334,7 +365,7 @@
                 margin-bottom: 30px;
 
                 h4 {
-                    color: #2c3e50;
+                    color: #1e293b;
                     margin-bottom: 15px;
                     font-size: 18px;
                     font-weight: 600;
@@ -350,10 +381,10 @@
                         padding: 20px;
                         border-radius: 10px;
                         text-align: center;
-                        border-left: 4px solid #3498db;
+                        border-left: 4px solid #2563eb;
 
                         &.total-service {
-                            border-left-color: #3498db;
+                            border-left-color: #2563eb;
                         }
 
                         &.total-paid {
@@ -371,7 +402,7 @@
 
                         .card-label {
                             font-size: 14px;
-                            color: #7f8c8d;
+                            color: #64748b;
                             margin-bottom: 8px;
                             font-weight: 500;
                         }
@@ -379,7 +410,7 @@
                         .card-value {
                             font-size: 20px;
                             font-weight: 700;
-                            color: #2c3e50;
+                            color: #1e293b;
 
                             &.debt-amount {
                                 color: #e74c3c;
@@ -391,7 +422,7 @@
 
             .debt-stats-section {
                 h4 {
-                    color: #2c3e50;
+                    color: #1e293b;
                     margin-bottom: 15px;
                     font-size: 18px;
                     font-weight: 600;
@@ -413,7 +444,7 @@
                                 padding: 12px;
                                 text-align: left;
                                 font-weight: 600;
-                                color: #2c3e50;
+                                color: #1e293b;
                                 border-bottom: 2px solid #e9ecef;
                             }
                         }
@@ -427,7 +458,7 @@
                                 td {
                                     padding: 12px;
                                     border-bottom: 1px solid #e9ecef;
-                                    color: #2c3e50;
+                                    color: #1e293b;
 
                                     &.debt-amount {
                                         color: #e74c3c;
@@ -490,7 +521,7 @@
 
                 h3 {
                     margin: 0;
-                    color: #2c3e50;
+                    color: #1e293b;
                     font-size: 20px;
                     font-weight: 600;
                     display: flex;
@@ -503,7 +534,7 @@
                     border: none;
                     font-size: 24px;
                     cursor: pointer;
-                    color: #7f8c8d;
+                    color: #64748b;
                     padding: 0;
                     width: 30px;
                     height: 30px;
@@ -515,7 +546,7 @@
 
                     &:hover {
                         background: #f8f9fa;
-                        color: #2c3e50;
+                        color: #1e293b;
                     }
                 }
             }
@@ -535,7 +566,7 @@
                             display: block;
                             margin-bottom: 5px;
                             font-weight: 500;
-                            color: #2c3e50;
+                            color: #1e293b;
                         }
 
                         input,
@@ -543,14 +574,14 @@
                         textarea {
                             width: 100%;
                             padding: 10px;
-                            border: 2px solid #e9ecef;
+                            border: 1.5px solid #e2e8f0;
                             border-radius: 6px;
                             font-size: 14px;
                             transition: border-color 0.3s ease;
 
                             &:focus {
                                 outline: none;
-                                border-color: #3498db;
+                                border-color: #2563eb;
                             }
                         }
 
@@ -569,7 +600,7 @@
                         width: 40px;
                         height: 40px;
                         border: 4px solid #f3f3f3;
-                        border-top: 4px solid #3498db;
+                        border-top: 4px solid #2563eb;
                         border-radius: 50%;
                         animation: spin 1s linear infinite;
                         margin: 0 auto 15px;
@@ -623,7 +654,7 @@
             width: 50px;
             height: 50px;
             border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border-top: 5px solid #2563eb;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
@@ -640,7 +671,7 @@
         }
 
         p {
-            color: #7f8c8d;
+            color: #64748b;
             font-size: 16px;
         }
     }
@@ -662,12 +693,12 @@
         }
 
         h2 {
-            color: #2c3e50;
+            color: #1e293b;
             margin-bottom: 10px;
         }
 
         p {
-            color: #7f8c8d;
+            color: #64748b;
             text-align: center;
             margin-bottom: 20px;
         }

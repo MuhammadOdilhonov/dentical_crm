@@ -13,7 +13,6 @@ import {
     FaTrash,
     FaFilter,
     FaUserMd,
-    FaUserNurse,
     FaExclamationTriangle,
     FaCheckCircle,
     FaTools,
@@ -950,7 +949,6 @@ export default function Cabinets() {
                                         <th>{t("status")}</th>
                                         <th>{t("branch")}</th>
                                         <th>{t("doctor")}</th>
-                                        <th>{t("nurse")}</th>
                                         <th>{t("equipment")}</th>
                                         <th>{t("actions")}</th>
                                     </tr>
@@ -990,20 +988,6 @@ export default function Cabinets() {
                                                     </div>
                                                 ) : (
                                                     <span className="cab-no-staff">{t("no_doctor_assigned")}</span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                {cabinet.user_nurse && cabinet.user_nurse.length > 0 ? (
-                                                    <div className="cab-staff">
-                                                        {cabinet.user_nurse.map((nurse) => (
-                                                            <div key={nurse.id} className="cab-staff-item">
-                                                                <FaUserNurse className="cab-staff-icon" />
-                                                                {`${nurse.first_name} ${nurse.last_name}`}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="cab-no-staff">{t("no_nurse_assigned")}</span>
                                                 )}
                                             </td>
                                             <td>
@@ -1167,39 +1151,6 @@ export default function Cabinets() {
                             </div>
 
                             <div className="cab-form-group">
-                                <label htmlFor="userNurses">{t("nurses")}</label>
-                                <select id="userNurses" name="userNurses" value="" onChange={handleNurseSelection}>
-                                    <option value="">{t("select_nurse")}</option>
-                                    {filterStaffByBranch(nurses, newCabinet.branch).map((nurse) => (
-                                        <option key={nurse.id} value={nurse.id}>
-                                            {nurse.first_name} {nurse.last_name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {showNurseWarning && (
-                                    <div className="cab-warning">
-                                        <FaInfoCircle /> {t("nurse_already_assigned_warning")}
-                                    </div>
-                                )}
-
-                                {newCabinet.userNurses.length > 0 && (
-                                    <div className="cab-selected-items">
-                                        <h4>{t("selected_nurses")}</h4>
-                                        <ul>
-                                            {newCabinet.userNurses.map((nurseId) => (
-                                                <li key={nurseId}>
-                                                    {getNurseName(nurseId)}
-                                                    <button type="button" className="cab-remove-item" onClick={() => removeNurse(nurseId)}>
-                                                        <FaTimes />
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="cab-form-group">
                                 <label htmlFor="description">{t("equipment")}</label>
                                 <textarea
                                     id="description"
@@ -1343,39 +1294,6 @@ export default function Cabinets() {
                                 {showDoctorWarning && (
                                     <div className="cab-warning">
                                         <FaInfoCircle /> {t("doctor_already_assigned_warning")}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="cab-form-group">
-                                <label htmlFor="edit-userNurses">{t("nurses")}</label>
-                                <select id="edit-userNurses" name="userNurses" value="" onChange={handleEditNurseSelection}>
-                                    <option value="">{t("select_nurse")}</option>
-                                    {filterStaffByBranch(nurses, currentCabinet.branch).map((nurse) => (
-                                        <option key={nurse.id} value={nurse.id}>
-                                            {nurse.first_name} {nurse.last_name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {showNurseWarning && (
-                                    <div className="cab-warning">
-                                        <FaInfoCircle /> {t("nurse_already_assigned_warning")}
-                                    </div>
-                                )}
-
-                                {currentCabinet.selectedNurses && currentCabinet.selectedNurses.length > 0 && (
-                                    <div className="cab-selected-items">
-                                        <h4>{t("selected_nurses")}</h4>
-                                        <ul>
-                                            {currentCabinet.selectedNurses.map((nurse) => (
-                                                <li key={nurse.id}>
-                                                    {`${nurse.first_name} ${nurse.last_name}`}
-                                                    <button type="button" className="cab-remove-item" onClick={() => removeEditNurse(nurse.id)}>
-                                                        <FaTimes />
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
                                     </div>
                                 )}
                             </div>

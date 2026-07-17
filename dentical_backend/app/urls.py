@@ -34,6 +34,7 @@ router.register(r'dental-services', DentalServiceViewSet, basename='dental-servi
 router.register(r'dental-service-categories', DentalServiceCategoryViewSet, basename='dental-service-category')
 router.register(r'customer-debts', CustomerDebtViewSet, basename='customer-debt')
 router.register(r'medicine-categories', MedicineCategoryViewSet, basename='medicine-category')
+router.register(r'medicine-firms', MedicineFirmViewSet, basename='medicine-firm')
 router.register(r'medicines', MedicineViewSet, basename='medicine')
 router.register(r'medicine-purchases', MedicinePurchaseViewSet, basename='medicine-purchase')
 router.register(r'medicine-sales', MedicineSaleViewSet, basename='medicine-sale')

@@ -1,29 +1,28 @@
 "use client"
 
-import { useState } from "react"
-import { FaTimes, FaEdit, FaPlus, FaSpinner, FaCheck, FaTrash, FaCalendarAlt } from "react-icons/fa"
+import { useState, useEffect, useCallback } from "react"
+import { FaTimes, FaSpinner, FaCheck, FaCalendarAlt, FaRegClock, FaMagic } from "react-icons/fa"
 import { useLanguage } from "../../../contexts/LanguageContext"
 import apiSchedules from "../../../api/apiSchedules"
 
-const StaffScheduleModal = ({ isOpen, onClose, userId, userName, initialSchedules = [] }) => {
+// Haftalik ish jadvali modali — barcha kunlar bitta ro'yxatda,
+// o'zgarishlar "Saqlash" bosilganda birdaniga yuboriladi.
+const StaffScheduleModal = ({ isOpen, onClose, userId, userName, onSaved }) => {
     const { t } = useLanguage()
-    const [schedules, setSchedules] = useState(initialSchedules)
-    const [isLoading, setIsLoading] = useState(false)
-    const [editMode, setEditMode] = useState(null)
-    const [formData, setFormData] = useState({
-        day: "",
-        start_time: "09:00",
-        end_time: "18:00",
-        is_working: true,
-    })
-    const [error, setError] = useState(null)
 
-    // All days of the week
     const allDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
-    // Get day name in local language
+    const defaultDay = () => ({ id: null, start_time: "09:00", end_time: "18:00", is_working: false })
+
+    const [days, setDays] = useState(() =>
+        allDays.reduce((acc, d) => ({ ...acc, [d]: defaultDay() }), {}),
+    )
+    const [isLoading, setIsLoading] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+    const [error, setError] = useState(null)
+
     const getDayName = (day) => {
-        const days = {
+        const names = {
             monday: t("monday"),
             tuesday: t("tuesday"),
             wednesday: t("wednesday"),
@@ -32,269 +31,194 @@ const StaffScheduleModal = ({ isOpen, onClose, userId, userName, initialSchedule
             saturday: t("saturday"),
             sunday: t("sunday"),
         }
-        return days[day] || day
+        return names[day] || day
     }
 
-    // Toggle schedule working status
-    const handleToggleScheduleStatus = async (scheduleId, currentStatus) => {
+    // Mavjud jadvalni yuklash
+    const loadSchedules = useCallback(async () => {
+        if (!userId) return
+        setIsLoading(true)
+        setError(null)
         try {
-            setIsLoading(true)
-            await apiSchedules.updateScheduleStatus(scheduleId, !currentStatus)
-
-            // Update local state
-            setSchedules((prevSchedules) =>
-                prevSchedules.map((schedule) =>
-                    schedule.id === scheduleId ? { ...schedule, is_working: !currentStatus } : schedule,
-                ),
-            )
-            setError(null)
-        } catch (error) {
-            console.error("Error updating schedule status:", error)
-            setError(t("error_updating_schedule"))
+            const data = await apiSchedules.fetchUserSchedules(userId)
+            const list = Array.isArray(data) ? data : data?.results || []
+            setDays(() => {
+                const next = allDays.reduce((acc, d) => ({ ...acc, [d]: defaultDay() }), {})
+                list.forEach((s) => {
+                    if (next[s.day]) {
+                        next[s.day] = {
+                            id: s.id,
+                            start_time: s.start_time ? s.start_time.substring(0, 5) : "09:00",
+                            end_time: s.end_time ? s.end_time.substring(0, 5) : "18:00",
+                            is_working: !!s.is_working,
+                        }
+                    }
+                })
+                return next
+            })
+        } catch (err) {
+            console.error("Error loading schedules:", err)
+            setError(t("error_occurred"))
         } finally {
             setIsLoading(false)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId, t])
+
+    useEffect(() => {
+        if (isOpen) loadSchedules()
+    }, [isOpen, loadSchedules])
+
+    const updateDay = (day, patch) => {
+        setDays((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }))
     }
 
-    // Start editing a schedule
-    const handleEditSchedule = (schedule) => {
-        setEditMode(schedule.id || schedule.day)
-        setFormData({
-            day: schedule.day,
-            start_time: schedule.start_time ? schedule.start_time.substring(0, 5) : "09:00",
-            end_time: schedule.end_time ? schedule.end_time.substring(0, 5) : "18:00",
-            is_working: schedule.is_working !== undefined ? schedule.is_working : true,
+    const toggleDay = (day) => {
+        updateDay(day, { is_working: !days[day].is_working })
+    }
+
+    // Birinchi ish kunining vaqtini barcha ish kunlariga qo'llash
+    const applyToAllWorkingDays = () => {
+        const firstWorking = allDays.find((d) => days[d].is_working)
+        if (!firstWorking) return
+        const { start_time, end_time } = days[firstWorking]
+        setDays((prev) => {
+            const next = { ...prev }
+            allDays.forEach((d) => {
+                if (next[d].is_working) next[d] = { ...next[d], start_time, end_time }
+            })
+            return next
         })
+    }
+
+    // Hammasini bitta bosishda saqlash
+    const handleSaveAll = async () => {
+        setIsSaving(true)
         setError(null)
-    }
-
-    // Cancel editing
-    const handleCancelEdit = () => {
-        setEditMode(null)
-        setError(null)
-    }
-
-    // Handle form input changes
-    const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target
-        setFormData({
-            ...formData,
-            [name]: type === "checkbox" ? checked : value,
-        })
-    }
-
-    // Submit schedule form
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-
         try {
-            setIsLoading(true)
-            const scheduleData = {
-                ...formData,
-                user: userId,
+            for (const day of allDays) {
+                const d = days[day]
+                const payload = {
+                    user: userId,
+                    day,
+                    start_time: d.start_time,
+                    end_time: d.end_time,
+                    is_working: d.is_working,
+                }
+                if (d.id) {
+                    await apiSchedules.updateSchedule(d.id, payload)
+                } else if (d.is_working) {
+                    await apiSchedules.createSchedule(payload)
+                }
             }
-
-            let updatedSchedule
-            const existingSchedule = schedules.find((s) => s.id === editMode || (s.day === formData.day && !editMode))
-
-            if (existingSchedule?.id) {
-                // Update existing schedule
-                updatedSchedule = await apiSchedules.updateSchedule(existingSchedule.id, scheduleData)
-
-                // Update local state
-                setSchedules((prevSchedules) =>
-                    prevSchedules.map((schedule) => (schedule.id === existingSchedule.id ? updatedSchedule : schedule)),
-                )
-            } else {
-                // Create new schedule
-                updatedSchedule = await apiSchedules.createSchedule(scheduleData)
-
-                // Add to local state
-                setSchedules((prevSchedules) => [...prevSchedules, updatedSchedule])
-            }
-
-            setEditMode(null)
-            setError(null)
-        } catch (error) {
-            console.error("Error submitting schedule form:", error)
+            if (onSaved) onSaved()
+            onClose()
+        } catch (err) {
+            console.error("Error saving schedules:", err)
             setError(t("error_updating_schedule"))
         } finally {
-            setIsLoading(false)
-        }
-    }
-
-    // Delete schedule
-    const handleDeleteSchedule = async (scheduleId) => {
-        if (!scheduleId) return
-
-        try {
-            setIsLoading(true)
-            await apiSchedules.deleteSchedule(scheduleId)
-
-            // Remove from local state
-            setSchedules((prevSchedules) => prevSchedules.filter((schedule) => schedule.id !== scheduleId))
-            setError(null)
-        } catch (error) {
-            console.error("Error deleting schedule:", error)
-            setError(t("error_deleting_schedule"))
-        } finally {
-            setIsLoading(false)
+            setIsSaving(false)
         }
     }
 
     if (!isOpen) return null
 
+    const workingCount = allDays.filter((d) => days[d].is_working).length
+
     return (
-        <div className="xodim-modal-overlay">
-            <div className="xodim-modal">
-                <div className="xodim-modal-header">
-                    <h2>
-                        <FaCalendarAlt style={{ marginRight: "8px" }} />
-                        {t("working_schedule")}: {userName}
-                    </h2>
-                    <button className="xodim-close-button" onClick={onClose}>
+        <div className="xsched-overlay">
+            <div className="xsched-modal">
+                <div className="xsched-header">
+                    <div className="xsched-header-info">
+                        <div className="xsched-header-icon">
+                            <FaCalendarAlt />
+                        </div>
+                        <div>
+                            <h2>{t("weekly_schedule")}</h2>
+                            <p>{userName}</p>
+                        </div>
+                    </div>
+                    <button className="xsched-close" onClick={onClose} aria-label={t("close")}>
                         <FaTimes />
                     </button>
                 </div>
-                <div className="xodim-modal-content">
-                    {error && (
-                        <div className="xodim-error" style={{ marginBottom: "20px" }}>
-                            {error}
+
+                <div className="xsched-body">
+                    <p className="xsched-hint">
+                        <FaRegClock /> {t("set_staff_schedule_hint")}
+                    </p>
+
+                    {error && <div className="xsched-error">{error}</div>}
+
+                    {isLoading ? (
+                        <div className="xsched-loading">
+                            <FaSpinner className="xsched-spinner" /> {t("loading")}...
                         </div>
-                    )}
-
-                    {isLoading && (
-                        <div className="xodim-loading" style={{ marginBottom: "20px" }}>
-                            <FaSpinner className="xodim-spinner" /> {t("loading")}
-                        </div>
-                    )}
-
-                    <div className="xodim-schedule-grid">
-                        {allDays.map((day) => {
-                            const daySchedule = schedules.find((s) => s.day === day)
-                            const isEditing = editMode === (daySchedule?.id || day)
-
-                            return (
-                                <div key={day} className={`xodim-schedule-card ${daySchedule?.is_working ? "working" : "not-working"}`}>
-                                    <div className="xodim-schedule-day-header">
-                                        <h4>{getDayName(day)}</h4>
-                                        {!isEditing && daySchedule && (
-                                            <label className="xodim-schedule-toggle">
+                    ) : (
+                        <div className="xsched-days">
+                            {allDays.map((day) => {
+                                const d = days[day]
+                                return (
+                                    <div key={day} className={`xsched-day-row ${d.is_working ? "working" : ""}`}>
+                                        <label className="xsched-toggle">
+                                            <input
+                                                type="checkbox"
+                                                checked={d.is_working}
+                                                onChange={() => toggleDay(day)}
+                                                disabled={isSaving}
+                                            />
+                                            <span className="xsched-slider"></span>
+                                        </label>
+                                        <span className="xsched-day-name">{getDayName(day)}</span>
+                                        {d.is_working ? (
+                                            <div className="xsched-times">
                                                 <input
-                                                    type="checkbox"
-                                                    checked={daySchedule.is_working || false}
-                                                    onChange={() => handleToggleScheduleStatus(daySchedule.id, daySchedule.is_working)}
-                                                    disabled={isLoading}
+                                                    type="time"
+                                                    value={d.start_time}
+                                                    onChange={(e) => updateDay(day, { start_time: e.target.value })}
+                                                    disabled={isSaving}
                                                 />
-                                                <span className="xodim-schedule-slider"></span>
-                                            </label>
-                                        )}
-                                    </div>
-
-                                    <div className="xodim-schedule-time">
-                                        {isEditing ? (
-                                            <form onSubmit={handleSubmit}>
-                                                <div className="xodim-form-group">
-                                                    <label>{t("start_time")}</label>
-                                                    <input
-                                                        type="time"
-                                                        name="start_time"
-                                                        value={formData.start_time}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="xodim-form-group">
-                                                    <label>{t("end_time")}</label>
-                                                    <input
-                                                        type="time"
-                                                        name="end_time"
-                                                        value={formData.end_time}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="xodim-form-group">
-                                                    <label className="xodim-checkbox-label">
-                                                        <input
-                                                            type="checkbox"
-                                                            name="is_working"
-                                                            checked={formData.is_working}
-                                                            onChange={handleInputChange}
-                                                        />
-                                                        {t("working_day")}
-                                                    </label>
-                                                </div>
-
-                                                <div className="xodim-form-actions">
-                                                    <button
-                                                        type="button"
-                                                        className="xodim-btn xodim-btn-secondary xodim-btn-sm"
-                                                        onClick={handleCancelEdit}
-                                                        disabled={isLoading}
-                                                    >
-                                                        {t("cancel")}
-                                                    </button>
-                                                    <button
-                                                        type="submit"
-                                                        className="xodim-btn xodim-btn-primary xodim-btn-sm"
-                                                        disabled={isLoading}
-                                                    >
-                                                        {isLoading ? <FaSpinner className="xodim-spinner" /> : <FaCheck />} {t("save")}
-                                                    </button>
-                                                </div>
-                                            </form>
+                                                <span className="xsched-times-sep">—</span>
+                                                <input
+                                                    type="time"
+                                                    value={d.end_time}
+                                                    onChange={(e) => updateDay(day, { end_time: e.target.value })}
+                                                    disabled={isSaving}
+                                                />
+                                            </div>
                                         ) : (
-                                            <>
-                                                {daySchedule ? (
-                                                    daySchedule.is_working ? (
-                                                        <>
-                                                            <p>
-                                                                {daySchedule.start_time?.substring(0, 5)} - {daySchedule.end_time?.substring(0, 5)}
-                                                            </p>
-                                                            <div className="xodim-form-actions">
-                                                                <button
-                                                                    className="xodim-btn xodim-btn-sm xodim-btn-outline"
-                                                                    onClick={() => handleEditSchedule(daySchedule)}
-                                                                    disabled={isLoading}
-                                                                >
-                                                                    <FaEdit /> {t("edit")}
-                                                                </button>
-                                                                <button
-                                                                    className="xodim-btn xodim-btn-sm xodim-btn-danger"
-                                                                    onClick={() => handleDeleteSchedule(daySchedule.id)}
-                                                                    disabled={isLoading}
-                                                                >
-                                                                    <FaTrash /> {t("delete")}
-                                                                </button>
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <p className="xodim-schedule-not-working">{t("not_working")}</p>
-                                                    )
-                                                ) : (
-                                                    <>
-                                                        <p className="xodim-schedule-not-set">{t("not_set")}</p>
-                                                        <button
-                                                            className="xodim-btn xodim-btn-sm xodim-btn-outline"
-                                                            onClick={() =>
-                                                                handleEditSchedule({ day, start_time: "09:00", end_time: "18:00", is_working: true })
-                                                            }
-                                                            disabled={isLoading}
-                                                        >
-                                                            <FaPlus /> {t("add")}
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </>
+                                            <span className="xsched-day-off">{t("day_off")}</span>
                                         )}
                                     </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+
+                    {workingCount > 1 && (
+                        <button
+                            type="button"
+                            className="xsched-apply-all"
+                            onClick={applyToAllWorkingDays}
+                            disabled={isSaving || isLoading}
+                        >
+                            <FaMagic /> {t("apply_to_all_days")}
+                        </button>
+                    )}
+                </div>
+
+                <div className="xsched-footer">
+                    <button type="button" className="xsched-btn xsched-btn-secondary" onClick={onClose} disabled={isSaving}>
+                        {t("cancel")}
+                    </button>
+                    <button
+                        type="button"
+                        className="xsched-btn xsched-btn-primary"
+                        onClick={handleSaveAll}
+                        disabled={isSaving || isLoading}
+                    >
+                        {isSaving ? <FaSpinner className="xsched-spinner" /> : <FaCheck />} {t("save")}
+                    </button>
                 </div>
             </div>
         </div>

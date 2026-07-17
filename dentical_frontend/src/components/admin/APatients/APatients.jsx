@@ -170,6 +170,16 @@ export default function APatients() {
         fetchPatients()
     }, [selectedBranch, setFilterBranch])
 
+    // Qidiruv — yozish to'xtagach avtomatik yuklanadi (debounce)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setCurrentPage(0)
+            fetchPatients()
+        }, 450)
+        return () => clearTimeout(timer)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm])
+
     // Handle search input
     const handleSearch = (e) => {
         setSearchTerm(e.target.value)
@@ -212,6 +222,43 @@ export default function APatients() {
         setCurrentPage(0) // Reset to first page when applying filters
         fetchPatients()
     }
+
+    // Filtrlarni tozalash
+    const resetFilters = () => {
+        setFilterGender("all")
+        setFilterAge("all")
+        setFilterStatus("all")
+        setFilterBranch(selectedBranch)
+        setSearchTerm("")
+        setCurrentPage(0)
+    }
+
+    // Jins / yosh / status filtrlari va saralash (joriy sahifadagi ro'yxatga qo'llanadi)
+    const matchesAgeRange = (age, range) => {
+        if (range === "all") return true
+        if (range === "51+") return age >= 51
+        const [min, max] = range.split("-").map(Number)
+        return age >= min && age <= max
+    }
+
+    const displayedPatients = patients
+        .filter((p) => {
+            const genderOk = filterGender === "all" || p.gender === filterGender
+            const ageOk = matchesAgeRange(Number(p.age) || 0, filterAge)
+            const statusOk = filterStatus === "all" || p.status === filterStatus
+            return genderOk && ageOk && statusOk
+        })
+        .sort((a, b) => {
+            let result = 0
+            if (sortBy === "age") {
+                result = (Number(a.age) || 0) - (Number(b.age) || 0)
+            } else if (sortBy === "lastVisit") {
+                result = new Date(a.lastVisit || 0) - new Date(b.lastVisit || 0)
+            } else {
+                result = (a.name || "").localeCompare(b.name || "")
+            }
+            return sortOrder === "asc" ? result : -result
+        })
 
     // Open add patient modal
     const openAddModal = () => {
@@ -610,6 +657,9 @@ export default function APatients() {
                             <button className="btn btn-primary apply-filters-btn" onClick={applyFilters}>
                                 {t("apply_filters")}
                             </button>
+                            <button className="btn btn-secondary apply-filters-btn" onClick={resetFilters}>
+                                {t("reset")}
+                            </button>
                         </div>
                     </div>
                 )}
@@ -638,8 +688,8 @@ export default function APatients() {
                         </tr>
                     </thead>
                     <tbody>
-                        {patients.length > 0 ? (
-                            patients.map((patient) => (
+                        {displayedPatients.length > 0 ? (
+                            displayedPatients.map((patient) => (
                                 <tr key={patient.id} onClick={() => handleViewPatientDetails(patient.id)}>
                                     <td>{patient.name}</td>
                                     <td>{patient.age}</td>

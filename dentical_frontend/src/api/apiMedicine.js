@@ -41,6 +41,47 @@ export const deleteMedicineCategory = async (id) => {
     }
 }
 
+// Medicine Firms API — dori yetkazib beruvchi firmalar
+export const fetchMedicineFirms = async () => {
+    try {
+        const response = await client.get("/medicine-firms/")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching medicine firms:", error)
+        throw error
+    }
+}
+
+export const createMedicineFirm = async (firmData) => {
+    try {
+        const response = await client.post("/medicine-firms/", firmData)
+        return response.data
+    } catch (error) {
+        console.error("Error creating medicine firm:", error)
+        throw error
+    }
+}
+
+export const updateMedicineFirm = async (id, firmData) => {
+    try {
+        const response = await client.put(`/medicine-firms/${id}/`, firmData)
+        return response.data
+    } catch (error) {
+        console.error("Error updating medicine firm:", error)
+        throw error
+    }
+}
+
+export const deleteMedicineFirm = async (id) => {
+    try {
+        const response = await client.delete(`/medicine-firms/${id}/`)
+        return response.data
+    } catch (error) {
+        console.error("Error deleting medicine firm:", error)
+        throw error
+    }
+}
+
 // Medicines API
 export const fetchMedicines = async (params = {}) => {
     try {

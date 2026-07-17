@@ -31,6 +31,7 @@ import {
     FaTooth,
     FaSpinner,
     FaCheckCircle,
+    FaIndustry,
 } from "react-icons/fa"
 import {
     Chart as ChartJS,
@@ -63,6 +64,10 @@ import {
     createMedicineCategory,
     updateMedicineCategory,
     deleteMedicineCategory,
+    fetchMedicineFirms,
+    createMedicineFirm,
+    updateMedicineFirm,
+    deleteMedicineFirm,
     sellMedicine,
     createMedicinePurchase,
     createMedicineAdjustment,
@@ -94,6 +99,7 @@ const EMPTY_MEDICINE_FORM = {
     category: "",
     branch: "",
     manufacturer: "",
+    supplier_firm: "",
     dosage_strength: "",
     dosage_unit: "",
     unit_price: "",
@@ -168,6 +174,9 @@ const MedicineManagement = () => {
     const [adjustForm, setAdjustForm] = useState({})
     const [categoryForm, setCategoryForm] = useState({ name: "", description: "" })
     const [editingCategory, setEditingCategory] = useState(null)
+    const [firms, setFirms] = useState([])
+    const [firmForm, setFirmForm] = useState({ name: "", description: "" })
+    const [editingFirm, setEditingFirm] = useState(null)
     const [customerSearch, setCustomerSearch] = useState("")
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {} })
 
@@ -247,6 +256,15 @@ const MedicineManagement = () => {
         }
     }, [])
 
+    const loadFirms = useCallback(async () => {
+        try {
+            const data = await fetchMedicineFirms()
+            setFirms(Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [])
+        } catch (err) {
+            console.error("Firmalarni yuklashda xatolik:", err)
+        }
+    }, [])
+
     const loadStatistics = useCallback(async () => {
         try {
             const [stats, salesData, stockData, expiryData, lowStockData] = await Promise.all([
@@ -317,7 +335,7 @@ const MedicineManagement = () => {
                 const branchesData = await branchesApi.fetchBranches()
                 setBranches(Array.isArray(branchesData) ? branchesData : [])
                 // Admin uchun statistika (ombor tahlili) yuklanmaydi — u faqat ko'radi va sotadi
-                const initTasks = [loadMedicines(1), loadCategories()]
+                const initTasks = [loadMedicines(1), loadCategories(), loadFirms()]
                 if (!isAdmin) initTasks.push(loadStatistics())
                 await Promise.all(initTasks)
             } catch (err) {
@@ -438,6 +456,8 @@ const MedicineManagement = () => {
         setSelectedMedicine(null)
         setEditingCategory(null)
         setCategoryForm({ name: "", description: "" })
+        setEditingFirm(null)
+        setFirmForm({ name: "", description: "" })
     }
 
     // ===== CRUD amallar =====
@@ -559,6 +579,45 @@ const MedicineManagement = () => {
         } finally {
             setSaving(false)
         }
+    }
+
+    const handleFirmSubmit = async (e) => {
+        e.preventDefault()
+        setSaving(true)
+        try {
+            if (editingFirm) {
+                await updateMedicineFirm(editingFirm.id, firmForm)
+            } else {
+                await createMedicineFirm(firmForm)
+            }
+            await loadFirms()
+            setEditingFirm(null)
+            setFirmForm({ name: "", description: "" })
+        } catch (err) {
+            console.error("Firmani saqlashda xatolik:", err)
+            setError(t("loading_error"))
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleDeleteFirm = (firm) => {
+        setConfirmModal({
+            isOpen: true,
+            title: t("delete_firm"),
+            message: `"${firm.name}" — ${t("confirm_delete_firm")}`,
+            onConfirm: async () => {
+                try {
+                    await deleteMedicineFirm(firm.id)
+                    await loadFirms()
+                } catch (err) {
+                    console.error("Firmani o'chirishda xatolik:", err)
+                    setError(t("loading_error"))
+                } finally {
+                    setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+                }
+            },
+        })
     }
 
     const handleDeleteCategory = (category) => {
@@ -900,6 +959,9 @@ const MedicineManagement = () => {
                             <button className="med-btn med-btn-outline" onClick={() => setModalType("categories")}>
                                 <FaTags /> {t("categories")}
                             </button>
+                            <button className="med-btn med-btn-outline" onClick={() => setModalType("firms")}>
+                                <FaIndustry /> {t("firms")}
+                            </button>
                             <button className="med-btn med-btn-primary" onClick={() => openMedicineModal()}>
                                 <FaPlus /> {t("add_medicine")}
                             </button>
@@ -941,6 +1003,7 @@ const MedicineManagement = () => {
                             <tr>
                                 <th>{t("medicine_name")}</th>
                                 <th>{t("category")}</th>
+                                <th>{t("supplier_firm")}</th>
                                 <th>{t("manufacturer")}</th>
                                 <th>{t("stock")}</th>
                                 <th>{t("selling_price")}</th>
@@ -964,6 +1027,15 @@ const MedicineManagement = () => {
                                         </div>
                                     </td>
                                     <td>{medicine.category_name || "-"}</td>
+                                    <td>
+                                        {medicine.supplier_firm ? (
+                                            <span className="med-firm-chip">
+                                                <FaTruck /> {medicine.supplier_firm}
+                                            </span>
+                                        ) : (
+                                            "-"
+                                        )}
+                                    </td>
                                     <td>{medicine.manufacturer || "-"}</td>
                                     <td>
                                         <span className={`med-qty ${medicine.is_low_stock ? "low" : ""}`}>
@@ -1241,6 +1313,39 @@ const MedicineManagement = () => {
 
                     <div className="med-form-row">
                         <div className="med-form-group">
+                            <label>
+                                <FaTruck className="med-label-icon" /> {t("supplier_firm")}
+                            </label>
+                            <select
+                                value={medicineForm.supplier_firm || ""}
+                                onChange={(e) => setMedicineForm({ ...medicineForm, supplier_firm: e.target.value })}
+                            >
+                                <option value="">{t("select_firm")}</option>
+                                {firms.map((firm) => (
+                                    <option key={firm.id} value={firm.name}>
+                                        {firm.name}
+                                    </option>
+                                ))}
+                                {/* Eski yozuvda ro'yxatda bo'lmagan firma bo'lsa, uni ham ko'rsatamiz */}
+                                {medicineForm.supplier_firm &&
+                                    !firms.some((firm) => firm.name === medicineForm.supplier_firm) && (
+                                        <option value={medicineForm.supplier_firm}>{medicineForm.supplier_firm}</option>
+                                    )}
+                            </select>
+                            {firms.length === 0 && (
+                                <p className="med-field-hint">
+                                    {t("no_firms_hint")}{" "}
+                                    <button
+                                        type="button"
+                                        className="med-link-btn"
+                                        onClick={() => setModalType("firms")}
+                                    >
+                                        <FaPlus /> {t("add_firm")}
+                                    </button>
+                                </p>
+                            )}
+                        </div>
+                        <div className="med-form-group">
                             <label>{t("manufacturer")}</label>
                             <input
                                 type="text"
@@ -1248,14 +1353,15 @@ const MedicineManagement = () => {
                                 onChange={(e) => setMedicineForm({ ...medicineForm, manufacturer: e.target.value })}
                             />
                         </div>
-                        <div className="med-form-group">
-                            <label>{t("barcode")}</label>
-                            <input
-                                type="text"
-                                value={medicineForm.barcode || ""}
-                                onChange={(e) => setMedicineForm({ ...medicineForm, barcode: e.target.value })}
-                            />
-                        </div>
+                    </div>
+
+                    <div className="med-form-group">
+                        <label>{t("barcode")}</label>
+                        <input
+                            type="text"
+                            value={medicineForm.barcode || ""}
+                            onChange={(e) => setMedicineForm({ ...medicineForm, barcode: e.target.value })}
+                        />
                     </div>
 
                     <div className="med-form-row">
@@ -1778,6 +1884,97 @@ const MedicineManagement = () => {
         </div>
     )
 
+    // Firmalar boshqaruvi modali — kategoriyalar bilan bir xil uslubda
+    const renderFirmsModal = () => (
+        <div className="med-modal-overlay" onClick={closeModal}>
+            <div className="med-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="med-modal-header">
+                    <h2>
+                        <FaIndustry /> {t("firm_management")}
+                    </h2>
+                    <button className="med-modal-close" onClick={closeModal}>
+                        <FaTimes />
+                    </button>
+                </div>
+                <div className="med-modal-body">
+                    <form onSubmit={handleFirmSubmit} className="med-category-form">
+                        <div className="med-form-row">
+                            <div className="med-form-group">
+                                <label>{t("firm_name")} *</label>
+                                <input
+                                    type="text"
+                                    value={firmForm.name}
+                                    onChange={(e) => setFirmForm({ ...firmForm, name: e.target.value })}
+                                    placeholder={t("supplier_firm_placeholder")}
+                                    required
+                                />
+                            </div>
+                            <div className="med-form-group">
+                                <label>{t("description")}</label>
+                                <input
+                                    type="text"
+                                    value={firmForm.description || ""}
+                                    onChange={(e) => setFirmForm({ ...firmForm, description: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="med-category-form-actions">
+                            {editingFirm && (
+                                <button
+                                    type="button"
+                                    className="med-btn med-btn-secondary"
+                                    onClick={() => {
+                                        setEditingFirm(null)
+                                        setFirmForm({ name: "", description: "" })
+                                    }}
+                                >
+                                    {t("cancel")}
+                                </button>
+                            )}
+                            <button type="submit" className="med-btn med-btn-primary" disabled={saving || !firmForm.name}>
+                                <FaSave /> {editingFirm ? t("save") : t("add_firm")}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div className="med-category-list">
+                        {firms.map((firm) => (
+                            <div key={firm.id} className="med-category-item">
+                                <div className="med-category-info">
+                                    <strong>
+                                        <FaTruck style={{ marginRight: 6, color: "#0ea5e9" }} />
+                                        {firm.name}
+                                    </strong>
+                                    {firm.description && <span>{firm.description}</span>}
+                                </div>
+                                <div className="med-category-actions">
+                                    <button
+                                        className="med-action-btn edit"
+                                        onClick={() => {
+                                            setEditingFirm(firm)
+                                            setFirmForm({ name: firm.name, description: firm.description || "" })
+                                        }}
+                                        title={t("edit")}
+                                    >
+                                        <FaEdit />
+                                    </button>
+                                    <button
+                                        className="med-action-btn delete"
+                                        onClick={() => handleDeleteFirm(firm)}
+                                        title={t("delete")}
+                                    >
+                                        <FaTrash />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {firms.length === 0 && <p className="med-field-hint">{t("no_data")}</p>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+
     if (loading) {
         return (
             <div className="med-loading">
@@ -1849,6 +2046,7 @@ const MedicineManagement = () => {
             {modalType === "sell" && renderSellModal()}
             {modalType === "adjust" && renderAdjustModal()}
             {modalType === "categories" && renderCategoriesModal()}
+            {modalType === "firms" && renderFirmsModal()}
 
             <ConfirmModal
                 isOpen={confirmModal.isOpen}

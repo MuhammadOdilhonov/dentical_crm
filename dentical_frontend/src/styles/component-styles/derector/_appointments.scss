@@ -2741,3 +2741,120 @@ $apt-cal-gutter: 68px; // chapdagi soatlar ustuni kengligi
         }
     }
 }
+
+/* ============ Action modal: holatni ko'rish/o'zgartirish bo'limi ============ */
+.action-status-section {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 6px;
+    padding-top: 14px;
+    border-top: 1px dashed #e2e8f0;
+
+    .action-status-title {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .action-status-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .action-status-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1.5px solid #e2e8f0;
+        background: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: 38px;
+
+        svg {
+            font-size: 11px;
+        }
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        }
+
+        &.expected {
+            &:hover:not(:disabled), &.current {
+                border-color: #f59e0b;
+                background: rgba(245, 158, 11, 0.12);
+                color: #b45309;
+            }
+        }
+
+        &.accepted {
+            &:hover:not(:disabled), &.current {
+                border-color: #0ea5e9;
+                background: rgba(14, 165, 233, 0.12);
+                color: #0369a1;
+            }
+        }
+
+        &.progress {
+            &:hover:not(:disabled), &.current {
+                border-color: #8b5cf6;
+                background: rgba(139, 92, 246, 0.12);
+                color: #6d28d9;
+            }
+        }
+
+        &.finished {
+            &:hover:not(:disabled), &.current {
+                border-color: #10b981;
+                background: rgba(16, 185, 129, 0.12);
+                color: #047857;
+            }
+        }
+
+        &.cancelled {
+            &:hover:not(:disabled), &.current {
+                border-color: #ef4444;
+                background: rgba(239, 68, 68, 0.1);
+                color: #b91c1c;
+            }
+        }
+
+        &.current {
+            cursor: default;
+        }
+    }
+}
+
+/* Status katagida bir nechta badge — bir qatorda, kerak bo'lsa keyingi qatorga o'tadi */
+.appointments-status-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    .appointments-status-badge {
+        margin: 0;
+        white-space: nowrap;
+    }
+}
+
+/* Joriy holat ko'rsatkichi + o'zgartirish tugmalari orasi */
+.action-status-section .action-status-current {
+    margin-bottom: 10px;
+
+    .action-status-option.current {
+        cursor: default;
+        pointer-events: none;
+    }
+}

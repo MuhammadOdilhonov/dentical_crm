@@ -85,6 +85,22 @@ class MedicineCategoryViewSet(viewsets.ModelViewSet):
         serializer.save(clinic=self.request.user.clinic)
 
 
+class MedicineFirmViewSet(viewsets.ModelViewSet):
+    """
+    Dori yetkazib beruvchi firmalar bilan ishlash
+    """
+    serializer_class = MedicineFirmSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return MedicineFirm.objects.filter(clinic=user.clinic)
+
+    def perform_create(self, serializer):
+        """Firma yaratilganda foydalanuvchining klinikasini avtomatik qo'shish"""
+        serializer.save(clinic=self.request.user.clinic)
+
+
 class MedicineViewSet(viewsets.ModelViewSet):
     """
     Dorilar bilan ishlash

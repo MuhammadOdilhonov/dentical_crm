@@ -562,6 +562,15 @@ $transition: all 0.3s ease;
                 background-color: rgba($secondary-color, 0.25);
             }
         }
+
+        &.xodim-schedule {
+            background-color: rgba($success-color, 0.15);
+            color: $success-color;
+
+            &:hover {
+                background-color: rgba($success-color, 0.25);
+            }
+        }
     }
 
     // Loading and Error States
@@ -1350,6 +1359,325 @@ $transition: all 0.3s ease;
             .xodim-btn {
                 width: 100%;
             }
+        }
+    }
+}
+/* ============ Haftalik ish jadvali modali (StaffScheduleModal) ============ */
+.xsched-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1200;
+    padding: 16px;
+    animation: fadeIn 0.2s ease;
+}
+
+.xsched-modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+    width: 100%;
+    max-width: 560px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeIn 0.25s ease;
+}
+
+.xsched-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: #fff;
+
+    .xsched-header-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+
+        .xsched-header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        p {
+            margin: 2px 0 0;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+    }
+
+    .xsched-close {
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: #fff;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    }
+}
+
+.xsched-body {
+    padding: 18px 22px;
+    overflow-y: auto;
+    flex: 1;
+
+    .xsched-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 14px;
+        font-size: 13px;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 10px 14px;
+        border-radius: 10px;
+    }
+
+    .xsched-error {
+        margin-bottom: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        font-size: 13px;
+    }
+
+    .xsched-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 30px 0;
+        color: #64748b;
+    }
+}
+
+.xsched-days {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xsched-day-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+
+    &.working {
+        border-color: rgba(37, 99, 235, 0.35);
+        background: rgba(37, 99, 235, 0.04);
+    }
+
+    .xsched-day-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #1e293b;
+        width: 92px;
+        flex-shrink: 0;
+    }
+
+    .xsched-day-off {
+        margin-left: auto;
+        font-size: 13px;
+        color: #94a3b8;
+        font-style: italic;
+    }
+
+    .xsched-times {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        input[type="time"] {
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #334155;
+            background: #fff;
+            min-height: 38px;
+
+            &:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            }
+        }
+
+        .xsched-times-sep {
+            color: #94a3b8;
+        }
+    }
+}
+
+.xsched-toggle {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+
+        &:checked + .xsched-slider {
+            background-color: #10b981;
+
+            &:before {
+                transform: translateX(18px);
+            }
+        }
+
+        &:disabled + .xsched-slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    .xsched-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background-color: #cbd5e1;
+        transition: 0.25s;
+        border-radius: 24px;
+
+        &:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: 0.25s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+    }
+}
+
+.xsched-apply-all {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px dashed #2563eb;
+    background: transparent;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: rgba(37, 99, 235, 0.08);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.xsched-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.xsched-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 44px;
+
+    &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+
+    &.xsched-btn-primary {
+        background: #2563eb;
+        color: #fff;
+
+        &:hover:not(:disabled) {
+            background: #1e40af;
+        }
+    }
+
+    &.xsched-btn-secondary {
+        background: #fff;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+
+        &:hover:not(:disabled) {
+            background: #f1f5f9;
+        }
+    }
+}
+
+.xsched-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@media (max-width: 576px) {
+    .xsched-day-row {
+        flex-wrap: wrap;
+
+        .xsched-times {
+            margin-left: 56px;
+            width: 100%;
         }
     }
 }

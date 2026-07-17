@@ -1017,3 +1017,29 @@
         transform: rotate(360deg);
     }
 }
+
+/* Yetkazib beruvchi firma chipi (Ombor jadvali) */
+.med-firm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(14, 165, 233, 0.1);
+    color: #0369a1;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    svg {
+        font-size: 11px;
+        flex-shrink: 0;
+    }
+}
+
+.med-label-icon {
+    margin-right: 4px;
+    color: #0ea5e9;
+    font-size: 12px;
+    vertical-align: -1px;
+}

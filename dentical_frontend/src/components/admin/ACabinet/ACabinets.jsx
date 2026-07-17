@@ -16,7 +16,6 @@ import {
     FaExclamationTriangle,
     FaCheckCircle,
     FaTimes,
-    FaUserNurse,
     FaTools,
     FaBuilding,
     FaChartBar,
@@ -84,7 +83,7 @@ export default function ACabinets() {
     const [showAddModal, setShowAddModal] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
     const [showDetailsModal, setShowDetailsModal] = useState(false)
-    const [showStatsModal, setShowStatsModal] = useState(true)
+    const [showStatsModal, setShowStatsModal] = useState(false)
     const [showFilters, setShowFilters] = useState(false)
     const [filterType, setFilterType] = useState("all")
     const [filterFloor, setFilterFloor] = useState("all")
@@ -733,14 +732,11 @@ export default function ACabinets() {
                     <FaDoorOpen /> {t("cabinets_management")}
                 </h1>
                 <div className="header-actions">
-                    <button className="btn btn-outline" onClick={() => setShowStatsModal(!showStatsModal)}>
-                        {showStatsModal ? (
-                            <FaTimes />
-                        ) : (
-                            <>
-                                <FaChartBar /> {t("show_stats")}
-                            </>
-                        )}
+                    <button
+                        className={`btn btn-outline ${showStatsModal ? "active" : ""}`}
+                        onClick={() => setShowStatsModal(!showStatsModal)}
+                    >
+                        <FaChartBar /> {showStatsModal ? t("hide_stats") : t("show_stats")}
                     </button>
                     <button className="btn btn-primary" onClick={openAddModal}>
                         <FaPlus /> {t("add_cabinet")}
@@ -931,7 +927,6 @@ export default function ACabinets() {
                                         <th>{t("status")}</th>
                                         <th>{t("branch")}</th>
                                         <th>{t("doctor")}</th>
-                                        <th>{t("nurse")}</th>
                                         <th>{t("equipment")}</th>
                                         <th>{t("actions")}</th>
                                     </tr>
@@ -971,20 +966,6 @@ export default function ACabinets() {
                                                     </div>
                                                 ) : (
                                                     <span className="no-staff">{t("no_doctor_assigned")}</span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                {cabinet.user_nurse && cabinet.user_nurse.length > 0 ? (
-                                                    <div className="cabinet-staff">
-                                                        {cabinet.user_nurse.map((nurse) => (
-                                                            <div key={nurse.id} className="staff-item">
-                                                                <FaUserNurse className="staff-icon" />
-                                                                {`${nurse.first_name} ${nurse.last_name}`}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="no-staff">{t("no_nurse_assigned")}</span>
                                                 )}
                                             </td>
                                             <td>
@@ -1132,40 +1113,6 @@ export default function ACabinets() {
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="userNurses">{t("nurses")}</label>
-                                <select id="userNurses" name="userNurses" value="" onChange={handleNurseSelection}>
-                                    <option value="">{t("select_nurse")}</option>
-                                    {filterStaffByBranch(nurses, formData.branch).map((nurse) => (
-                                        <option key={nurse.id} value={nurse.id}>
-                                            {nurse.first_name} {nurse.last_name}
-                                            {nurse.has_cabinet ? ` (${t("already_assigned")})` : ""}
-                                        </option>
-                                    ))}
-                                </select>
-                                {showNurseWarning && (
-                                    <div className="warning">
-                                        <FaInfoCircle /> {t("nurse_already_assigned_warning")}
-                                    </div>
-                                )}
-
-                                {formData.userNurses.length > 0 && (
-                                    <div className="selected-items">
-                                        <h4>{t("selected_nurses")}</h4>
-                                        <ul>
-                                            {formData.userNurses.map((nurseId) => (
-                                                <li key={nurseId}>
-                                                    {getNurseName(nurseId)}
-                                                    <button type="button" className="remove-item" onClick={() => removeNurse(nurseId)}>
-                                                        <FaTimes />
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="form-group">
                                 <label htmlFor="description">{t("equipment")}</label>
                                 <textarea
                                     id="description"
@@ -1294,42 +1241,6 @@ export default function ACabinets() {
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="edit-userNurses">{t("nurses")}</label>
-                                <select id="edit-userNurses" name="userNurses" value="" onChange={handleNurseSelection}>
-                                    <option value="">{t("select_nurse")}</option>
-                                    {filterStaffByBranch(nurses, formData.branch).map((nurse) => (
-                                        <option key={nurse.id} value={nurse.id}>
-                                            {nurse.first_name} {nurse.last_name}
-                                            {nurse.has_cabinet && !formData.userNurses.includes(nurse.id)
-                                                ? ` (${t("already_assigned")})`
-                                                : ""}
-                                        </option>
-                                    ))}
-                                </select>
-                                {showNurseWarning && (
-                                    <div className="warning">
-                                        <FaInfoCircle /> {t("nurse_already_assigned_warning")}
-                                    </div>
-                                )}
-
-                                {formData.userNurses.length > 0 && (
-                                    <div className="selected-items">
-                                        <h4>{t("selected_nurses")}</h4>
-                                        <ul>
-                                            {formData.userNurses.map((nurseId) => (
-                                                <li key={nurseId}>
-                                                    {getNurseName(nurseId)}
-                                                    <button type="button" className="remove-item" onClick={() => removeNurse(nurseId)}>
-                                                        <FaTimes />
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="form-group">
                                 <label htmlFor="edit-description">{t("equipment")}</label>
                                 <textarea
                                     id="edit-description"
@@ -1401,14 +1312,6 @@ export default function ACabinets() {
                                                 .map((doctor) => `${doctor.first_name} ${doctor.last_name}`)
                                                 .join(", ")
                                             : t("no_doctor_assigned")}
-                                    </div>
-                                </div>
-                                <div className="detail-row">
-                                    <div className="detail-label">{t("nurses")}:</div>
-                                    <div className="detail-value">
-                                        {currentCabinet.user_nurse && currentCabinet.user_nurse.length > 0
-                                            ? currentCabinet.user_nurse.map((nurse) => `${nurse.first_name} ${nurse.last_name}`).join(", ")
-                                            : t("no_nurse_assigned")}
                                     </div>
                                 </div>
                                 <div className="detail-row">

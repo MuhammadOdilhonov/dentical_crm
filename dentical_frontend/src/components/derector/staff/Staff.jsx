@@ -31,6 +31,7 @@ import Pagination from "../../pagination/Pagination"
 import ConfirmModal from "../../modal/ConfirmModal"
 import SuccessModal from "../../modal/SuccessModal"
 import StaffDetailsModal from "./StaffDetailsModal" // Assuming this will also be updated or KPI won't be shown there
+import StaffScheduleModal from "./StaffScheduleModal"
 import getApiErrorMessage from "../../../utils/apiError"
 
 export default function Staff() {
@@ -146,6 +147,18 @@ export default function Staff() {
         isOpen: false,
         user: null,
     })
+
+    // Haftalik ish jadvali modali
+    const [scheduleModal, setScheduleModal] = useState({
+        isOpen: false,
+        userId: null,
+        userName: "",
+    })
+
+    const openScheduleModal = (userId, userName) => {
+        setScheduleModal({ isOpen: true, userId, userName })
+    }
+    const closeScheduleModal = () => setScheduleModal({ isOpen: false, userId: null, userName: "" })
 
     // Fetch branches from API
     useEffect(() => {
@@ -409,10 +422,19 @@ export default function Staff() {
         try {
             setIsLoadingStaff(true)
             const dataToSubmit = prepareStaffData(newStaff)
-            await apiUsers.createUser(dataToSubmit)
+            const createdUser = await apiUsers.createUser(dataToSubmit)
             setRefreshTrigger((prev) => prev + 1)
             closeAddSidebar()
-            showSuccessModal(t("success"), t("staff_added_successfully"))
+            // Yangi xodim yaratilishi bilan haftalik ish jadvali modali ochiladi
+            if (createdUser?.id) {
+                openScheduleModal(
+                    createdUser.id,
+                    formatFullName(createdUser.first_name, createdUser.last_name) ||
+                    formatFullName(dataToSubmit.first_name, dataToSubmit.last_name),
+                )
+            } else {
+                showSuccessModal(t("success"), t("staff_added_successfully"))
+            }
         } catch (error) {
             console.error("Error adding staff member:", error.response?.data || error.message)
             showErrorModal(t("error"), getApiErrorMessage(error, t("error_adding_staff")))
@@ -803,6 +825,15 @@ export default function Staff() {
                                             <td>
                                                 <div className="xodim-action-buttons">
                                                     <button
+                                                        className="xodim-btn-icon xodim-schedule"
+                                                        onClick={() =>
+                                                            openScheduleModal(person.id, formatFullName(person.first_name, person.last_name))
+                                                        }
+                                                        title={t("weekly_schedule")}
+                                                    >
+                                                        <FaCalendarAlt />
+                                                    </button>
+                                                    <button
                                                         className="xodim-btn-icon xodim-edit"
                                                         onClick={() => openEditSidebar(person.id)}
                                                         title={t("edit")}
@@ -1133,6 +1164,16 @@ export default function Staff() {
                         </div>
                     </div>
                 </>
+            )}
+
+            {scheduleModal.isOpen && (
+                <StaffScheduleModal
+                    isOpen={scheduleModal.isOpen}
+                    onClose={closeScheduleModal}
+                    userId={scheduleModal.userId}
+                    userName={scheduleModal.userName}
+                    onSaved={() => showSuccessModal(t("success"), t("schedule_saved_successfully"))}
+                />
             )}
 
             {userDetailsModal.isOpen && (

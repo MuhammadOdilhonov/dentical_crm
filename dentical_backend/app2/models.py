@@ -48,6 +48,23 @@ class MedicineCategory(BaseModel):
         verbose_name = "Dori kategoriyasi"
         verbose_name_plural = "Dori kategoriyalari"
 
+
+class MedicineFirm(BaseModel):
+    """
+    Dori yetkazib beruvchi firmalar (klinika o'zi ro'yxatini yuritadi)
+    """
+    name = models.CharField(max_length=255, verbose_name="Firma nomi")
+    description = models.TextField(blank=True, null=True, verbose_name="Tavsif")
+    clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name='medicine_firms')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Dori firmasi"
+        verbose_name_plural = "Dori firmalari"
+
+
 class Medicine(BaseModel):
     """
     Dorilar ro'yxati - yangilangan versiya
@@ -73,7 +90,8 @@ class Medicine(BaseModel):
     generic_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Generik nomi")
     category = models.ForeignKey(MedicineCategory, on_delete=models.CASCADE, related_name='medicines', verbose_name="Kategoriya", null=True, blank=True)
     manufacturer = models.CharField(max_length=255, blank=True, null=True, verbose_name="Ishlab chiqaruvchi")
-    
+    supplier_firm = models.CharField(max_length=255, blank=True, null=True, verbose_name="Yetkazib beruvchi firma")
+
     # Doza va o'lchov birliklari
     dosage_strength = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Doza kuchi", null=True, blank=True)
     dosage_unit = models.CharField(max_length=20, choices=UNIT_CHOICES, verbose_name="Doza o'lchov birligi", null=True, blank=True)

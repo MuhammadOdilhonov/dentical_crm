@@ -37,6 +37,7 @@ import {
     fetchDailyMeetings,
     fetchWeeklyMeetings,
     updateAppointmentStatus,
+    markPatientArrived,
 } from "../../../api/apiAppointments"
 
 export default function DocSchedule() {
@@ -73,6 +74,18 @@ export default function DocSchedule() {
     const [viewMode, setViewMode] = useState("table") // table, day, week
     const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStartDate(new Date()))
     const [isUpdating, setIsUpdating] = useState(false)
+    const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+    // Bemor keldi — kelish vaqtini belgilash (kechikkan bo'lsa backend late_minutes hisoblaydi)
+    const handlePatientArrived = async (appointmentId) => {
+        try {
+            await markPatientArrived(appointmentId)
+            setRefreshTrigger((prev) => prev + 1)
+        } catch (err) {
+            console.error("Kelishni belgilashda xatolik:", err)
+            alert(t("error_occurred"))
+        }
+    }
 
     // Reference to track if window was opened
     const resultWindowRef = useRef(null)
@@ -215,6 +228,8 @@ export default function DocSchedule() {
                         diagnosis: appointment.comment || "",
                         paymentAmount: appointment.payment_amount,
                         customerGender: appointment.customer_gender,
+                        arrivedAt: appointment.arrived_at || null,
+                        lateMinutes: appointment.late_minutes || 0,
                         createdAt: new Date().toISOString(), // Using current date as fallback
                     }))
 
@@ -243,6 +258,8 @@ export default function DocSchedule() {
                         diagnosis: appointment.comment || "",
                         paymentAmount: appointment.payment_amount,
                         customerGender: appointment.customer_gender,
+                        arrivedAt: appointment.arrived_at || null,
+                        lateMinutes: appointment.late_minutes || 0,
                         createdAt: new Date().toISOString(), // Using current date as fallback
                     }))
 
@@ -270,6 +287,8 @@ export default function DocSchedule() {
                         diagnosis: appointment.comment || "",
                         paymentAmount: appointment.payment_amount,
                         customerGender: appointment.customer_gender,
+                        arrivedAt: appointment.arrived_at || null,
+                        lateMinutes: appointment.late_minutes || 0,
                         createdAt: new Date().toISOString(), // Using current date as fallback
                     }))
 
@@ -285,7 +304,7 @@ export default function DocSchedule() {
         }
 
         fetchData()
-    }, [viewMode, currentPage, itemsPerPage, selectedDate, currentWeekStart, searchTerm, filterStatus, user?.id])
+    }, [viewMode, currentPage, itemsPerPage, selectedDate, currentWeekStart, searchTerm, filterStatus, user?.id, refreshTrigger])
 
     // Helper function to get the start date of the week
     function getWeekStartDate(date) {
@@ -775,9 +794,31 @@ export default function DocSchedule() {
                                         </td>
                                         <td>
                                             <div className="status-badge-container">{getStatusIcon(appointment.status)}</div>
+                                            {/* Kelish holati: kechikkan bo'lsa qizil, o'z vaqtida kelgan bo'lsa yashil */}
+                                            {appointment.arrivedAt && appointment.lateMinutes >= 5 && (
+                                                <div className="doc-arrival-badge late" title={t("patient_late")}>
+                                                    <FaRegClock /> {t("patient_late")} {appointment.lateMinutes} {t("minutes_short")}
+                                                </div>
+                                            )}
+                                            {appointment.arrivedAt && appointment.lateMinutes < 5 && (
+                                                <div className="doc-arrival-badge on-time" title={t("patient_arrived")}>
+                                                    <FaCheckCircle /> {t("patient_arrived")}
+                                                </div>
+                                            )}
                                         </td>
                                         <td>
                                             <div className="action-buttons">
+                                                {/* Bemor keldi — shifokor bosadi; kechikkan bo'lsa "kechikdi" chiqadi */}
+                                                {!appointment.arrivedAt &&
+                                                    (appointment.status === "waiting" || appointment.status === "confirmed") && (
+                                                        <button
+                                                            className="btn btn-action btn-arrived"
+                                                            onClick={() => handlePatientArrived(appointment.id)}
+                                                            title={t("patient_arrived")}
+                                                        >
+                                                            <FaRegUser className="action-icon action-arrived" />
+                                                        </button>
+                                                    )}
                                                 {canChangeStatus(appointment.status) && (
                                                     <button
                                                         className="btn btn-action"
