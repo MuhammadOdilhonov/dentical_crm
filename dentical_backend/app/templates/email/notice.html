@@ -1,0 +1,6 @@
+{% extends "email/base_email.html" %}
+{% block title %}{{ notice_title }} — Dentical CRM{% endblock %}
+{% block content %}
+<h1 style="margin:0 0 6px 0;font-size:22px;color:#16233b;">{{ notice_title }}</h1>
+<p style="margin:0 0 18px 0;font-size:15px;line-height:1.7;color:#4a5b74;white-space:pre-line;">{{ notice_message }}</p>
+{% endblock %}

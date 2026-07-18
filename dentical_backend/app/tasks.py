@@ -398,10 +398,18 @@ def check_and_expire_clinic_subscriptions():
     for sub in soon_expire_subs:
         clinic = sub.clinic
         if clinic.email:
-            send_mail(
+            from .email_utils import build_email_context, send_html_email
+            send_html_email(
                 subject="Tarif muddati tugashiga 1 hafta qoldi",
-                message=f"Hurmatli {clinic.name}, tarif muddati {sub.end_date} kuni tugaydi.",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[clinic.email],
-                fail_silently=True,
+                recipient=clinic.email,
+                template='email/notice.html',
+                context=build_email_context(
+                    clinic=clinic,
+                    notice_title="📦 Tarif muddati tugayapti",
+                    notice_message=(
+                        f"Hurmatli {clinic.name},\n"
+                        f"tarif rejangiz muddati {sub.end_date} kuni tugaydi.\n\n"
+                        f"Xizmat uzilmasligi uchun tarifni o'z vaqtida yangilang."
+                    ),
+                ),
             )

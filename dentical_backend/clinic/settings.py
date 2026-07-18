@@ -414,4 +414,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'starclaudsuport@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'yhvqsewlnwwqvsco')  # Gmail app password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-FRONTEND_URL = 'https://clinic-crm-alpha.vercel.app'
+# Email va havolalar uchun sayt manzillari
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://dentical.uz')
+# Klinika logotipi (media) uchun backend'ning tashqi manzili
+BACKEND_URL = os.getenv('BACKEND_URL', 'https://med-crm-service.uz')

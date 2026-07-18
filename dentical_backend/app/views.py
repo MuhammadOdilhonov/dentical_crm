@@ -97,21 +97,23 @@ class ClinicViewSet(viewsets.ModelViewSet):
             status='faol',
             password_changed=False
         )
-        subject = "Klinika uchun direktor yaratildi"
-        message = (
-            f"Hurmatli foydalanuvchi,\n\n"
-            f"Sizning klinikangiz muvaffaqiyatli yaratildi.\n"
-            f"Klinika nomi: {clinic.name}\n"
-            f"Username: {email}\n"
-            f"Parol: {random_password}\n\n"
-            f"Sistemaga kirgach , parolni o'zgartirishingiz mumkin"
+        from .email_utils import build_email_context, send_html_email
+
+        context = build_email_context(
+            clinic=clinic,
+            full_name=director.get_full_name() or 'Direktor',
+            role='Direktor',
+            username=email,
+            password=random_password,
+            intro_text=f"Sizning \"{clinic.name}\" klinikangiz Dentical CRM tizimida muvaffaqiyatli ro'yxatdan o'tkazildi.",
         )
         try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[email],
+            send_html_email(
+                subject=f"Dentical CRM — \"{clinic.name}\" uchun kirish ma'lumotlari",
+                recipient=email,
+                template='email/credentials.html',
+                context=context,
+                fail_silently=False,
             )
         except Exception as e:
             return Response({"error": f"Klinika yaratildi, lekin email yuborishda xatolik: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -176,24 +178,24 @@ class UserViewSet(viewsets.ModelViewSet):
             **user_data  # Pass the remaining fields
         )
 
-        # Send the password to the user's email
-        subject = "Dentical CRM — kirish ma'lumotlaringiz"
-        message = (
-            f"Hurmatli {user.get_full_name()},\n\n"
-            f"Sizning hisobingiz muvaffaqiyatli yaratildi.\n\n"
-            f"Login: {email}\nParol: {random_password}\n\n"
-            f"Tizimga birinchi kirganingizda parolni o'zgartirishingiz so'raladi."
+        # Xodimga chiroyli HTML email (login/parol + dentical.uz/login tugmasi)
+        from .email_utils import build_email_context, send_html_email
+
+        context = build_email_context(
+            clinic=clinic,
+            full_name=user.get_full_name(),
+            role=user.get_role_display() if hasattr(user, 'get_role_display') else '',
+            username=email,
+            password=random_password,
+            intro_text=f"Siz \"{clinic.name}\" klinikasi jamoasiga qo'shildingiz! Hisobingiz Dentical CRM tizimida yaratildi.",
         )
         # Email yuborilmasa ham xodim yaratilishi buzilmasligi kerak
-        try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[email],
-            )
-        except Exception as e:
-            logger.error(f"Xodimga email yuborilmadi ({email}): {e}")
+        send_html_email(
+            subject=f"Dentical CRM — {clinic.name} — kirish ma'lumotlaringiz",
+            recipient=email,
+            template='email/credentials.html',
+            context=context,
+        )
 
 
     def list(self, request, *args, **kwargs):

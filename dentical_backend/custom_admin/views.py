@@ -499,13 +499,20 @@ class InactiveClinicViewSet(viewsets.ModelViewSet):
         # Klinikaga email yuborish
         clinic = obj.clinic
         if clinic.email:
-            from django.core.mail import send_mail
-            send_mail(
+            from app.email_utils import build_email_context, send_html_email
+            send_html_email(
                 subject="Klinikangiz faol emasligi haqida ogohlantirish",
-                message=f"Hurmatli {clinic.name}, sizning klinikangizga {days} kun qo‘shildi.\n\nIzoh: {comment}",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[clinic.email],
-                fail_silently=True,
+                recipient=clinic.email,
+                template='email/notice.html',
+                context=build_email_context(
+                    clinic=clinic,
+                    notice_title="⏳ Muddat uzaytirildi",
+                    notice_message=(
+                        f"Hurmatli {clinic.name},\n"
+                        f"sizning klinikangizga {days} kun qo'shildi.\n\n"
+                        f"Izoh: {comment}"
+                    ),
+                ),
             )
 
         return Response({'status': 'days added', 'inactive_days': obj.inactive_days, 'comment': obj.comment})
@@ -515,12 +522,22 @@ class InactiveClinicViewSet(viewsets.ModelViewSet):
         obj = self.get_object()
         clinic = obj.clinic
         if clinic.email:
-            send_mail(
+            from app.email_utils import build_email_context, send_html_email
+            send_html_email(
                 subject="Klinika faol emasligi haqida ogohlantirish",
-                message=f"Hurmatli {clinic.name}, sizning klinikangiz foydalanuvchilari {obj.inactive_days} kundan beri faol emas.",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[clinic.email],
-                fail_silently=True,
+                recipient=clinic.email,
+                template='email/notice.html',
+                context=build_email_context(
+                    clinic=clinic,
+                    notice_title="⚠️ Klinikangiz faol emas",
+                    notice_message=(
+                        f"Hurmatli {clinic.name},\n"
+                        f"sizning klinikangiz foydalanuvchilari {obj.inactive_days} "
+                        f"kundan beri tizimga kirishmayapti.\n\n"
+                        f"Tizimdan foydalanishni davom ettirish uchun quyidagi tugma "
+                        f"orqali kiring."
+                    ),
+                ),
             )
             obj.notified = True
             obj.save(update_fields=['notified'])
@@ -565,12 +582,16 @@ class ClinicNotifyView(APIView):
 
         # Klinikaga email yuborish
         if clinic.email:
-            send_mail(
+            from app.email_utils import build_email_context, send_html_email
+            send_html_email(
                 subject=title,
-                message=message,
-                from_email="noreply@yourdomain.uz",
-                recipient_list=[clinic.email],
-                fail_silently=True,
+                recipient=clinic.email,
+                template='email/notice.html',
+                context=build_email_context(
+                    clinic=clinic,
+                    notice_title=title,
+                    notice_message=message,
+                ),
             )
 
         return Response({'status': 'notification sent'})
@@ -715,36 +736,27 @@ class SuperAdminClinicCreateView(APIView):
         except Exception as e:
             return Response({"error": f"Klinika yaratishda xatolik: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Login ma'lumotlarini emailga yuborish
+        # Login ma'lumotlarini chiroyli HTML emailda yuborish
+        from app.email_utils import build_email_context, send_html_email
+
         email_sent = False
         email_error = None
-        context = {
-            'clinic_name': clinic.name,
-            'full_name': f"{director_first_name} {director_last_name}".strip(),
-            'username': email,
-            'password': password,
-            'plan_name': subscription.plan.name if subscription else None,
-            'end_date': subscription.end_date if subscription else None,
-            'login_url': settings.FRONTEND_URL,
-        }
-        plain_message = (
-            f"Assalomu alaykum, {context['full_name']}!\n\n"
-            f"Sizning \"{clinic.name}\" klinikangiz Dentical CRM tizimida muvaffaqiyatli ro'yxatdan o'tkazildi.\n\n"
-            f"Kirish ma'lumotlari:\n"
-            f"Login: {email}\n"
-            f"Parol: {password}\n\n"
-            f"Tizimga kirish: {settings.FRONTEND_URL}\n\n"
-            f"Xavfsizlik uchun tizimga kirgach parolni o'zgartirishingizni tavsiya qilamiz.\n\n"
-            f"Hurmat bilan,\nDentical CRM jamoasi"
+        context = build_email_context(
+            clinic=clinic,
+            full_name=f"{director_first_name} {director_last_name}".strip() or 'Direktor',
+            role='Direktor',
+            username=email,
+            password=password,
+            plan_name=subscription.plan.name if subscription else None,
+            end_date=subscription.end_date if subscription else None,
+            intro_text=f"Sizning \"{clinic.name}\" klinikangiz Dentical CRM tizimida muvaffaqiyatli ro'yxatdan o'tkazildi.",
         )
         try:
-            html_message = render_to_string('email/clinic_created.html', context)
-            send_mail(
+            send_html_email(
                 subject=f"Dentical CRM — \"{clinic.name}\" klinikasi yaratildi",
-                message=plain_message,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[email],
-                html_message=html_message,
+                recipient=email,
+                template='email/credentials.html',
+                context=context,
                 fail_silently=False,
             )
             email_sent = True

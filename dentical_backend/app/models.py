@@ -51,45 +51,23 @@ class CustomUserManager(UserManager):
             specialization='director'
         )
         
-        # Send email directly from here
-        context = {
-            'username': user_email,
-            'full_name': user.get_full_name(),
-            'clinic': clinic_name,
-            'role': user.get_role_display(),
-            'password': password  # Use plain text password
-        }
-        
-        # HTML formatdagi xabar
-        html_message = render_to_string('email/welcome.html', context)
-        
-        # Oddiy text formatdagi xabar
-        plain_message = f"""
-        Assalomu alaykum, {user.get_full_name()}!
-        
-        Siz muvaffaqiyatli ro'yxatdan o'tdingiz.
-        
-        Klinika: {clinic_name}
-        Lavozim: {user.get_role_display()}
-        Login: {user_email}
-        Parol: {password}
-        
-        Hurmat bilan,
-        {clinic_name} ma'muriyati
-        """
-        
-        # Xabar yuborish
-        try:
-            send_mail(
-                subject=f"Xush kelibsiz - {clinic_name}",
-                message=plain_message,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[user_email],
-                html_message=html_message  # Ensure html_message is included
-            )
-            print(f"Email sent to {user_email}")
-        except Exception as e:
-            print(f"Failed to send email: {e}")
+        # Chiroyli HTML email (logolar + GIF + login tugmasi)
+        from .email_utils import build_email_context, send_html_email
+
+        context = build_email_context(
+            clinic=clinic,
+            full_name=user.get_full_name(),
+            role=user.get_role_display(),
+            username=user_email,
+            password=password,
+            intro_text=f"Siz \"{clinic_name}\" klinikasi bilan Dentical CRM tizimida muvaffaqiyatli ro'yxatdan o'tdingiz.",
+        )
+        send_html_email(
+            subject=f"Xush kelibsiz — {clinic_name} | Dentical CRM",
+            recipient=user_email,
+            template='email/credentials.html',
+            context=context,
+        )
 
         return clinic, user
 

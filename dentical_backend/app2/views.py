@@ -407,13 +407,24 @@ class PasswordResetRequestView(APIView):
             user = User.objects.get(email=email)
             user.generate_reset_code()  # Tasdiqlash kodini yaratish
 
-            # Email yuborish
-            subject = "Parolni tiklash uchun tasdiqlash kodi"
-            message = f"Parolni tiklash uchun tasdiqlash kodi: {user.reset_password_code}\n\nKod 10 daqiqa davomida amal qiladi."
-            try:
-                send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
-            except Exception as e:
-                logging.error(f"Error sending email: {e}")
+            # Chiroyli HTML email (logolar + kod + login tugmasi)
+            from app.email_utils import build_email_context, send_html_email
+
+            context = build_email_context(
+                clinic=getattr(user, 'clinic', None),
+                full_name=user.get_full_name(),
+                code=user.reset_password_code,
+            )
+            send_html_email(
+                subject="Dentical CRM — parolni tiklash kodi",
+                recipient=email,
+                template='email/reset_code.html',
+                context=context,
+                plain_message=(
+                    f"Parolni tiklash uchun tasdiqlash kodi: {user.reset_password_code}\n\n"
+                    f"Kod 10 daqiqa davomida amal qiladi."
+                ),
+            )
 
             return Response({"detail": "Tasdiqlash kodi emailga yuborildi."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
