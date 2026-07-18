@@ -417,4 +417,4 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Email va havolalar uchun sayt manzillari
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://dentical.uz')
 # Klinika logotipi (media) uchun backend'ning tashqi manzili
-BACKEND_URL = os.getenv('BACKEND_URL', 'https://med-crm-service.uz')
+BACKEND_URL = os.getenv('BACKEND_URL', 'https://backend.dentical.uz')

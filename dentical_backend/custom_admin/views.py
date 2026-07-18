@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from .serializers import *
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import BasePermission, IsAdminUser
 from app.serializers import LoginSerializer
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
@@ -17,6 +17,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from app.pagination import *
 from decimal import Decimal
+
+
+class IsStaffOrSuperuser(BasePermission):
+    """Superadmin panel: is_staff YOKI is_superuser bo'lsa ruxsat.
+
+    SuperuserLoginView faqat is_superuser ni tekshiradi — is_staff=False
+    superuser'lar IsAdminUser bilan 403 olardi. Bu shuni tuzatadi.
+    """
+
+    def has_permission(self, request, view):
+        u = request.user
+        return bool(u and u.is_authenticated and (u.is_staff or u.is_superuser))
+
 
 class ClinicSubscriptionViewSet(viewsets.ModelViewSet):
     queryset = ClinicSubscription.objects.all()
@@ -46,11 +59,11 @@ class ClinicSubscriptionViewSet(viewsets.ModelViewSet):
 class SubscriptionPlanViewSet(viewsets.ModelViewSet):
     queryset = SubscriptionPlan.objects.all()
     serializer_class = SubscriptionPlanSerializer
-    permission_classes = [IsAdminUser]  # Faqat superuserlar uchun ruxsat
+    permission_classes = [IsStaffOrSuperuser]  # Faqat superuserlar uchun ruxsat
 
 
 class ClinicDetailView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, clinic_id, *args, **kwargs):
             try:
@@ -110,7 +123,7 @@ class ClinicDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class BranchListView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, clinic_id, *args, **kwargs):
         branches = Branch.objects.filter(clinic_id=clinic_id)
@@ -142,7 +155,7 @@ class BranchListView(APIView):
 
 
 class SubscriptionDetailView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, clinic_id, *args, **kwargs):
         try:
@@ -160,7 +173,7 @@ class SubscriptionDetailView(APIView):
 
 
 class FinancialDetailView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, clinic_id, *args, **kwargs):
         try:
@@ -221,7 +234,7 @@ class FinancialDetailView(APIView):
 
 
 class BranchStatisticsView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, clinic_id, *args, **kwargs):
         branches = Branch.objects.filter(clinic_id=clinic_id)
@@ -323,7 +336,7 @@ class SuperuserLoginView(APIView):
 
 
 class ClinicListView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, *args, **kwargs):
         clinics = Clinic.objects.all()
@@ -371,7 +384,7 @@ class ClinicListView(APIView):
 class ClinicSubscriptionHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ClinicSubscription.objects.all().order_by('-start_date')
     serializer_class = ClinicSubscriptionSerializer
-    permission_classes = [IsAdminUser]  # Faqat superuserlar uchun ruxsat
+    permission_classes = [IsStaffOrSuperuser]  # Faqat superuserlar uchun ruxsat
 
 
 class ClinicSubscriptionHistoryInIDView(APIView):
@@ -483,7 +496,7 @@ class ClinicTariffStatsView(APIView):
 
 class InactiveClinicViewSet(viewsets.ModelViewSet):
     queryset = InactiveClinic.objects.select_related('clinic').all()
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
     serializer_class = InactiveClinicSerializer  # Yangi serializer yozing
 
     @action(detail=True, methods=['post'])
@@ -547,7 +560,7 @@ class InactiveClinicViewSet(viewsets.ModelViewSet):
 
 
 class ClinicNotifyView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def post(self, request, clinic_id):
         title = request.data.get('title')
@@ -622,7 +635,7 @@ class TargetViewSet(viewsets.ModelViewSet):
 
 
 class TargetStatsView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request):
         return Response({
@@ -643,7 +656,7 @@ class SuperAdminClinicCreateView(APIView):
     ko'rsatilgan email (gmail) manziliga yuboriladi.
     Ixtiyoriy: plan_id berilsa, klinikaga tarif ham biriktiriladi.
     """
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def post(self, request, *args, **kwargs):
         from django.db import transaction
@@ -780,7 +793,7 @@ class SuperAdminClinicCreateView(APIView):
 
 class SuperAdminDashboardView(APIView):
     """SuperAdmin bosh sahifasi uchun umumiy analitika."""
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, *args, **kwargs):
         from django.db.models import Sum, Count
