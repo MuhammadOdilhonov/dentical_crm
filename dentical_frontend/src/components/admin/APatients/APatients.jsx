@@ -294,9 +294,34 @@ export default function APatients() {
         setShowEditModal(true)
     }
 
+    // Telefonni +998 (91) 999 99 99 ko'rinishiga avtomatik formatlash
+    const formatPhoneInput = (value) => {
+        let d = (value || "").replace(/\D/g, "")
+        if (d.startsWith("998")) d = d.slice(3)
+        d = d.slice(0, 9)
+        let res = "+998"
+        if (d.length > 0) res += " (" + d.slice(0, 2)
+        if (d.length >= 2) res += ")"
+        if (d.length > 2) res += " " + d.slice(2, 5)
+        if (d.length > 5) res += " " + d.slice(5, 7)
+        if (d.length > 7) res += " " + d.slice(7, 9)
+        return res
+    }
+
+    const handleNewPhoneFocus = (e) => {
+        if (!e.target.value) setNewPatient((prev) => ({ ...prev, phone_number: "+998 (" }))
+    }
+    const handleEditPhoneFocus = (e) => {
+        if (!e.target.value) setSelectedPatient((prev) => ({ ...prev, phone_number: "+998 (" }))
+    }
+
     // Handle new patient form input changes
     const handleNewPatientChange = (e) => {
         const { name, value } = e.target
+        if (name === "phone_number") {
+            setNewPatient({ ...newPatient, phone_number: formatPhoneInput(value) })
+            return
+        }
         setNewPatient({
             ...newPatient,
             [name]: name === "age" || name === "branch" ? (value === "" ? "" : Number.parseInt(value)) : value,
@@ -306,6 +331,10 @@ export default function APatients() {
     // Handle selected patient form input changes
     const handleSelectedPatientChange = (e) => {
         const { name, value } = e.target
+        if (name === "phone_number") {
+            setSelectedPatient({ ...selectedPatient, phone_number: formatPhoneInput(value) })
+            return
+        }
         setSelectedPatient({
             ...selectedPatient,
             [name]: name === "age" || name === "branch" ? Number.parseInt(value) : value,
@@ -819,6 +848,9 @@ export default function APatients() {
                                             name="phone_number"
                                             value={newPatient.phone_number}
                                             onChange={handleNewPatientChange}
+                                            onFocus={handleNewPhoneFocus}
+                                            placeholder="+998 (91) 999 99 99"
+                                            maxLength={19}
                                             required
                                         />
                                     </div>
@@ -950,6 +982,9 @@ export default function APatients() {
                                             name="phone_number"
                                             value={selectedPatient.phone_number}
                                             onChange={handleSelectedPatientChange}
+                                            onFocus={handleEditPhoneFocus}
+                                            placeholder="+998 (91) 999 99 99"
+                                            maxLength={19}
                                             required
                                         />
                                     </div>

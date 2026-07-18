@@ -175,6 +175,28 @@ export default function Patients() {
     setCurrentPage(0) // Reset to first page when searching
   }
 
+  // Telefonni +998 (91) 999 99 99 ko'rinishiga avtomatik formatlash (xodimlar formasidagidek)
+  const formatPhoneInput = (value) => {
+    let d = (value || "").replace(/\D/g, "")
+    if (d.startsWith("998")) d = d.slice(3)
+    d = d.slice(0, 9)
+    let res = "+998"
+    if (d.length > 0) res += " (" + d.slice(0, 2)
+    if (d.length >= 2) res += ")"
+    if (d.length > 2) res += " " + d.slice(2, 5)
+    if (d.length > 5) res += " " + d.slice(5, 7)
+    if (d.length > 7) res += " " + d.slice(7, 9)
+    return res
+  }
+
+  // Input bo'sh bo'lsa fokusda +998 ( bilan boshlab beramiz
+  const handleNewPhoneFocus = (e) => {
+    if (!e.target.value) setNewPatient((prev) => ({ ...prev, phone_number: "+998 (" }))
+  }
+  const handleEditPhoneFocus = (e) => {
+    if (!e.target.value) setCurrentPatient((prev) => ({ ...prev, phone_number: "+998 (" }))
+  }
+
   // Handle new patient input change
   const handleNewPatientChange = (e) => {
     const { name, value } = e.target
@@ -193,6 +215,8 @@ export default function Patients() {
       }
 
       console.log("Branch selected:", branchValue) // Для отладки
+    } else if (name === "phone_number") {
+      setNewPatient({ ...newPatient, phone_number: formatPhoneInput(value) })
     } else {
       setNewPatient({
         ...newPatient,
@@ -217,6 +241,8 @@ export default function Patients() {
       if (branchValue > 0) {
         setEditBranchError(false)
       }
+    } else if (name === "phone_number") {
+      setCurrentPatient({ ...currentPatient, phone_number: formatPhoneInput(value) })
     } else {
       setCurrentPatient({
         ...currentPatient,
@@ -886,6 +912,9 @@ export default function Patients() {
                 name="phone_number"
                 value={newPatient.phone_number}
                 onChange={handleNewPatientChange}
+                onFocus={handleNewPhoneFocus}
+                placeholder="+998 (91) 999 99 99"
+                maxLength={19}
                 required
               />
             </div>
@@ -1004,6 +1033,9 @@ export default function Patients() {
                     name="phone_number"
                     value={currentPatient.phone_number}
                     onChange={handleEditPatientChange}
+                    onFocus={handleEditPhoneFocus}
+                    placeholder="+998 (91) 999 99 99"
+                    maxLength={19}
                     required
                   />
                 </div>
