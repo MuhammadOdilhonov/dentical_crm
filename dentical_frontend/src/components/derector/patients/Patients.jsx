@@ -27,6 +27,7 @@ import apiBranches from "../../../api/apiBranches"
 import Pagination from "../../pagination/Pagination"
 import ConfirmModal from "../../modal/ConfirmModal"
 import SuccessModal from "../../modal/SuccessModal"
+import { getApiErrorMessage } from "../../../utils/apiError"
 
 export default function Patients() {
   const { selectedBranch } = useAuth()
@@ -315,7 +316,6 @@ export default function Patients() {
 
       // Close the sidebar and reset form
       closeAddSidebar()
-      setLoading(false)
 
       // Show success modal
       setSuccessModalProps({
@@ -328,7 +328,17 @@ export default function Patients() {
       fetchPatients()
     } catch (err) {
       console.error("Error adding patient:", err)
-      setError(err.message || "An error occurred while adding the patient")
+      // Xatoni ko'rinadigan modalda ko'rsatamiz (avval jimgina yutilardi)
+      setConfirmModalProps({
+        title: t("error"),
+        message: getApiErrorMessage(err, t("error")),
+        confirmText: "OK",
+        cancelText: "",
+        type: "danger",
+        onConfirm: () => setShowConfirmModal(false),
+      })
+      setShowConfirmModal(true)
+    } finally {
       setLoading(false)
     }
   }
@@ -355,7 +365,6 @@ export default function Patients() {
 
       // Close the sidebar
       closeEditSidebar()
-      setLoading(false)
 
       // Show success modal
       setSuccessModalProps({
@@ -368,7 +377,16 @@ export default function Patients() {
       fetchPatients()
     } catch (err) {
       console.error("Error updating patient:", err)
-      setError(err.message || "An error occurred while updating the patient")
+      setConfirmModalProps({
+        title: t("error"),
+        message: getApiErrorMessage(err, t("error")),
+        confirmText: "OK",
+        cancelText: "",
+        type: "danger",
+        onConfirm: () => setShowConfirmModal(false),
+      })
+      setShowConfirmModal(true)
+    } finally {
       setLoading(false)
     }
   }

@@ -1,5 +1,6 @@
 from datetime import datetime  # Fix the import for datetime
 import logging
+import re
 from django.shortcuts import render, get_object_or_404
 
 logger = logging.getLogger(__name__)
@@ -155,6 +156,30 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.none()
         return User.objects.filter(clinic=user.clinic)
 
+    @staticmethod
+    def _normalize_phone(phone: str) -> str:
+        """Raqamni taqqoslash uchun oxirgi 9 ta raqamga keltiradi."""
+        return re.sub(r"\D", "", phone or "")[-9:]
+
+    def _validate_phone_unique(self, phone, clinic, role=None, exclude_id=None):
+        """Telefon takror ishlatilmasin. Istisno: klinika raqami — faqat direktorda."""
+        digits = self._normalize_phone(phone)
+        if not digits or len(digits) < 9:
+            return
+        qs = User.objects.filter(clinic=clinic).exclude(phone_number='')
+        if exclude_id:
+            qs = qs.exclude(id=exclude_id)
+        for u in qs.only('id', 'phone_number'):
+            if self._normalize_phone(u.phone_number) == digits:
+                raise serializers.ValidationError({
+                    "phone_number": "Bu telefon raqam allaqachon boshqa xodimda ishlatilgan."
+                })
+        if role != 'director' and clinic and \
+                self._normalize_phone(clinic.phone_number) == digits:
+            raise serializers.ValidationError({
+                "phone_number": "Bu raqam klinika raqami — uni faqat direktor ishlatishi mumkin."
+            })
+
     def perform_create(self, serializer):
         user_data = serializer.validated_data.copy()
         email = user_data.pop('email')  # Extract email from user_data
@@ -168,6 +193,11 @@ class UserViewSet(viewsets.ModelViewSet):
         if User.objects.filter(username=email).exists():
             raise serializers.ValidationError({"email": "A user with this email already exists."})
 
+        # Telefon raqam takror bo'lmasin
+        self._validate_phone_unique(
+            user_data.get('phone_number'), clinic, role=user_data.get('role')
+        )
+
         # Create the user with the random password
         user = User.objects.create_user(
             username=email,  # Set username to email
@@ -177,6 +207,8 @@ class UserViewSet(viewsets.ModelViewSet):
             password_changed=False,  # Birinchi kirishda parolni o'zgartirishi shart
             **user_data  # Pass the remaining fields
         )
+        # Frontend jadval modalini ochishi uchun javobda id bo'lishi kerak
+        serializer.instance = user
 
         # Xodimga chiroyli HTML email (login/parol + dentical.uz/login tugmasi)
         from .email_utils import build_email_context, send_html_email
@@ -197,6 +229,14 @@ class UserViewSet(viewsets.ModelViewSet):
             context=context,
         )
 
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        phone = serializer.validated_data.get('phone_number', instance.phone_number)
+        role = serializer.validated_data.get('role', instance.role)
+        self._validate_phone_unique(
+            phone, instance.clinic, role=role, exclude_id=instance.id
+        )
+        serializer.save()
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset().exclude(role='director'))

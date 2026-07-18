@@ -17,11 +17,13 @@ logger = logging.getLogger(__name__)
 def build_email_context(clinic=None, **extra) -> dict:
     """Har bir email uchun umumiy kontekst (logolar, GIF, havolalar)."""
     frontend = settings.FRONTEND_URL.rstrip('/')
+    # Rasmlar doim dentical.uz'dan — FRONTEND_URL xato bo'lsa ham buzilmaydi
+    assets = getattr(settings, 'EMAIL_ASSETS_URL', frontend).rstrip('/')
     ctx = {
         'frontend_url': frontend,
         'login_url': f'{frontend}/login',
-        'dentical_logo_url': f'{frontend}/images/dentical_logo.png',
-        'gif_url': f'{frontend}/images/contract-icon.gif',
+        'dentical_logo_url': f'{assets}/images/dentical_logo.png',
+        'gif_url': f'{assets}/images/contract-icon.gif',
         'clinic_logo_url': '',
         'clinic_name': '',
         'year': __import__('datetime').date.today().year,

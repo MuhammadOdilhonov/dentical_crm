@@ -206,20 +206,33 @@ def send_task_notification_to_creator(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Customer)
 def send_customer_notification(sender, instance, created, **kwargs):
     """
-    Bemor yaratilganda faqat o'sha bemor yaratilgan branchga bog'langan admin foydalanuvchilarga xabar yuborish.
+    Bemor yaratilganda adminlarga xabar yuborish.
+    DIQQAT: bemor filialsiz ham yaratilishi mumkin (branch=None) —
+    xabar chiqmasa ham bemor saqlanishi hech qachon buzilmasligi kerak.
     """
-    if created:
+    if not created:
+        return
+    try:
+        clinic = getattr(instance, 'clinic', None)
+        if clinic is None and instance.branch:
+            clinic = instance.branch.clinic
+        if clinic is None:
+            return
+
         message = f"Yangi bemor qo'shildi: {instance.full_name}\nTelefon: {instance.phone_number}"
 
         ClinicNotification.objects.create(
             title="Yangi bemor",
             message=message,
-            clinic=instance.branch.clinic,
+            clinic=clinic,
             branch=instance.branch,
             status='admin'
         )
-        # Branchga bog'langan admin foydalanuvchilarni olish
-        admins = User.objects.filter(role='admin', branch=instance.branch)
+        # Filial bo'lsa — o'sha filial adminlari, bo'lmasa klinika adminlari
+        if instance.branch:
+            admins = User.objects.filter(role='admin', branch=instance.branch)
+        else:
+            admins = User.objects.filter(role='admin', clinic=clinic)
         channel_layer = get_channel_layer()
         for admin in admins:
             async_to_sync(channel_layer.group_send)(
@@ -231,6 +244,9 @@ def send_customer_notification(sender, instance, created, **kwargs):
                     "timestamp": now().strftime("%Y-%m-%d %H:%M:%S"),
                 }
             )
+    except Exception:
+        # Xabar yuborishdagi xatolik bemor yaratilishini 500 qilmasin
+        pass
 
 
 @receiver(post_save, sender=Cabinet)

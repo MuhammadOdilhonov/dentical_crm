@@ -268,15 +268,40 @@ export default function Staff() {
         setCurrentPage(0)
     }
 
+    // Telefonni +998 (91) 999 99 99 ko'rinishiga avtomatik formatlash
+    const formatPhoneInput = (value) => {
+        let d = (value || "").replace(/\D/g, "")
+        if (d.startsWith("998")) d = d.slice(3)
+        d = d.slice(0, 9)
+        let res = "+998"
+        if (d.length > 0) res += " (" + d.slice(0, 2)
+        if (d.length >= 2) res += ")"
+        if (d.length > 2) res += " " + d.slice(2, 5)
+        if (d.length > 5) res += " " + d.slice(5, 7)
+        if (d.length > 7) res += " " + d.slice(7, 9)
+        return res
+    }
+
+    // Input bo'sh bo'lsa fokusda +998 ( bilan boshlab beramiz
+    const handlePhoneFocus = (e) => {
+        if (!e.target.value) {
+            const fake = { target: { name: "phone_number", value: "+998 (" } }
+            if (formMode === "add") handleNewStaffChange(fake)
+            else handleEditStaffChange(fake)
+        }
+    }
+
     const handleNewStaffChange = (e) => {
         const { name, value } = e.target
-        setNewStaff((prev) => ({ ...prev, [name]: value }))
+        const val = name === "phone_number" ? formatPhoneInput(value) : value
+        setNewStaff((prev) => ({ ...prev, [name]: val }))
         if (formErrors[name]) setFormErrors((prev) => ({ ...prev, [name]: null }))
     }
 
     const handleEditStaffChange = (e) => {
         const { name, value } = e.target
-        setCurrentStaffMember((prev) => ({ ...prev, [name]: value }))
+        const val = name === "phone_number" ? formatPhoneInput(value) : value
+        setCurrentStaffMember((prev) => ({ ...prev, [name]: val }))
         if (formErrors[name]) setFormErrors((prev) => ({ ...prev, [name]: null }))
     }
 
@@ -286,7 +311,11 @@ export default function Staff() {
         if (!data.email) errors.email = t("email_required")
         if (!data.first_name) errors.first_name = t("first_name_required")
         if (!data.last_name) errors.last_name = t("last_name_required")
-        if (!data.phone_number) errors.phone_number = t("phone_required")
+        if (!data.phone_number) {
+            errors.phone_number = t("phone_required")
+        } else if (data.phone_number.replace(/\D/g, "").replace(/^998/, "").length < 9) {
+            errors.phone_number = t("phone_incomplete")
+        }
         // Oylik faqat ish turi oylikni o'z ichiga olganda majburiy
         if ((workType === "salary" || workType === "salary_kpi") && !data.salary) {
             errors.salary = t("salary_required")
@@ -425,15 +454,14 @@ export default function Staff() {
             const createdUser = await apiUsers.createUser(dataToSubmit)
             setRefreshTrigger((prev) => prev + 1)
             closeAddSidebar()
-            // Yangi xodim yaratilishi bilan haftalik ish jadvali modali ochiladi
+            // Muvaffaqiyat xabari + darhol haftalik ish jadvali modali ochiladi
+            showSuccessModal(t("success"), t("staff_added_successfully"))
             if (createdUser?.id) {
                 openScheduleModal(
                     createdUser.id,
                     formatFullName(createdUser.first_name, createdUser.last_name) ||
                     formatFullName(dataToSubmit.first_name, dataToSubmit.last_name),
                 )
-            } else {
-                showSuccessModal(t("success"), t("staff_added_successfully"))
             }
         } catch (error) {
             console.error("Error adding staff member:", error.response?.data || error.message)
@@ -1048,6 +1076,9 @@ export default function Staff() {
                                         name="phone_number"
                                         value={formMode === "add" ? newStaff.phone_number : currentStaffMember?.phone_number || ""}
                                         onChange={formMode === "add" ? handleNewStaffChange : handleEditStaffChange}
+                                        onFocus={handlePhoneFocus}
+                                        placeholder="+998 (91) 999 99 99"
+                                        maxLength={19}
                                         required
                                         className={formErrors.phone_number ? "error" : ""}
                                     />

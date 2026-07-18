@@ -414,3 +414,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://dentical.uz')
 # Klinika logotipi (media) uchun backend'ning tashqi manzili
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://backend.dentical.uz')
+# Email ichidagi rasmlar (Dentical logo, GIF) DOIM shu yerdan olinadi —
+# FRONTEND_URL noto'g'ri bo'lsa ham rasmlar buzilmaydi
+EMAIL_ASSETS_URL = os.getenv('EMAIL_ASSETS_URL', 'https://dentical.uz')
