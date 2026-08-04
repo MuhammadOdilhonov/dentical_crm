@@ -1561,33 +1561,53 @@ export default function Appointments() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    appointments.map((appointment) => (
-                                        <tr key={appointment.id} onClick={() => openViewSidebar(appointment)} style={{ cursor: "pointer" }}>
-                                            <td>{appointment.customer_name}</td>
-                                            <td>{appointment.doctor_name}</td>
-                                            <td>{appointment.room_name}</td>
-                                            <td>{formatDateForDisplay(appointment.date)}</td>
-                                            <td>{appointment.time}</td>
-                                            <td>
-                                                <div className={`appointments-status-badge ${appointment.status}`}>
-                                                    {getStatusTranslation(appointment.status)}
-                                                </div>
-                                            </td>
-                                            {selectedBranch === "all" && (
-                                                <td>
-                                                    <div className="appointments-branch-badge">
-                                                        <FaBuilding className="appointments-branch-icon" />
-                                                        {getBranchName(appointment.branch)}
-                                                    </div>
-                                                </td>
-                                            )}
-                                            <td onClick={(e) => e.stopPropagation()}>
-                                                <button className="appointments-action-toggle" onClick={() => openActionModal(appointment)}>
-                                                    <FaEllipsisV />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    groupConsecutiveAppointments(appointments, getAppointmentMinutes, 60)
+                                        .sort((a, b) =>
+                                            a.head.date === b.head.date
+                                                ? a.firstMin - b.firstMin
+                                                : a.head.date < b.head.date
+                                                ? 1
+                                                : -1,
+                                        )
+                                        .map((g) => {
+                                            const appointment = g.head
+                                            const isRange = g.items.length > 1
+                                            const timeLabel = isRange
+                                                ? `${minutesToTimeStr(g.firstMin)} - ${minutesToTimeStr(g.lastMin)}`
+                                                : appointment.time
+                                            return (
+                                                <tr key={appointment.id} onClick={() => openViewSidebar(appointment)} style={{ cursor: "pointer" }}>
+                                                    <td>{appointment.customer_name}</td>
+                                                    <td>{appointment.doctor_name}</td>
+                                                    <td>{appointment.room_name}</td>
+                                                    <td>{formatDateForDisplay(appointment.date)}</td>
+                                                    <td>
+                                                        {timeLabel}
+                                                        {isRange && (
+                                                            <span className="appointments-time-count"> ({g.items.length} ta)</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <div className={`appointments-status-badge ${appointment.status}`}>
+                                                            {getStatusTranslation(appointment.status)}
+                                                        </div>
+                                                    </td>
+                                                    {selectedBranch === "all" && (
+                                                        <td>
+                                                            <div className="appointments-branch-badge">
+                                                                <FaBuilding className="appointments-branch-icon" />
+                                                                {getBranchName(appointment.branch)}
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    <td onClick={(e) => e.stopPropagation()}>
+                                                        <button className="appointments-action-toggle" onClick={() => openActionModal(appointment)}>
+                                                            <FaEllipsisV />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })
                                 )}
                             </tbody>
                         </table>

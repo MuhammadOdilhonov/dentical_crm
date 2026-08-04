@@ -1159,7 +1159,7 @@ class CustomerDebtStatsView(APIView):
         if not clinic:
             return Response({"detail": "Siz hech qaysi klinikaga biriktirilmagansiz."}, status=403)
 
-        customer = Customer.objects.filter(id=customer_id, branch__clinic=clinic).first()
+        customer = Customer.objects.filter(id=customer_id).filter(Q(clinic=clinic) | Q(branch__clinic=clinic)).first()
         if not customer:
             return Response({"detail": "Customer not found in your clinic."}, status=404)
 
@@ -1237,7 +1237,7 @@ class CustomerDebtSummaryView(APIView):
             return Response({"detail": "Siz hech qaysi klinikaga biriktirilmagansiz."}, status=403)
 
         # Customerni tekshirish
-        customer = Customer.objects.filter(id=customer_id, branch__clinic=clinic).first()
+        customer = Customer.objects.filter(id=customer_id).filter(Q(clinic=clinic) | Q(branch__clinic=clinic)).first()
         if not customer:
             return Response({"detail": "Customer not found in your clinic."}, status=404)
 
@@ -1299,7 +1299,7 @@ class CustomerFilterMeetingsView(APIView):
             return Response({"detail": "Siz hech qaysi klinikaga biriktirilmagansiz."}, status=403)
 
         # Mijozni tekshirish
-        customer = Customer.objects.filter(id=customer_id, branch__clinic=clinic).first()
+        customer = Customer.objects.filter(id=customer_id).filter(Q(clinic=clinic) | Q(branch__clinic=clinic)).first()
         if not customer:
             return Response({"detail": "Customer not found in your clinic."}, status=404)
 

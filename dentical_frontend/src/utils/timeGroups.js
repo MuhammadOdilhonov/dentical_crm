@@ -74,7 +74,9 @@ export const groupConsecutiveAppointments = (dayAppointments, getMinutes, stepMi
         .filter((x) => x.min !== null)
         .sort((x, y) => x.min - y.min)
 
-    const keyOf = (x) => `${x.customer_name || x.customer || ""}|${x.doctor_name || ""}|${x.room_name || ""}`
+    // sana + bemor + shifokor + xona — turli kunlardagi bir xil vaqtlar birlashib ketmasin
+    const dayOf = (x) => (x.date ? String(x.date).slice(0, 10) : "")
+    const keyOf = (x) => `${dayOf(x)}|${x.customer_name || x.customer || ""}|${x.doctor_name || ""}|${x.room_name || ""}`
     const lastGroupByKey = {}
     const groups = []
 
