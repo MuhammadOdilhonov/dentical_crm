@@ -1175,7 +1175,7 @@ class CustomerDebtStatsView(APIView):
 
             # Default qiymatlar
             amount_paid = 0
-            discount = 0
+            discount = 0  # jami chegirma (summa + foizdan kelib chiqqan summa)
             debt = total_service_amount
 
             if debts_qs.exists():
@@ -1191,7 +1191,10 @@ class CustomerDebtStatsView(APIView):
                 # foizli chegirma summaga aylantiriladi (100% dan oshmasin)
                 percent_discount_amount = total_service_amount * min(discount_percent, 100) / 100
 
-                meeting_debt = total_service_amount - amount_paid - discount_amount - percent_discount_amount
+                # jami chegirma = qo'lda kiritilgan summa + foizdan kelib chiqqan summa
+                discount = discount_amount + percent_discount_amount
+
+                meeting_debt = total_service_amount - amount_paid - discount
             else:
                 meeting_debt = total_service_amount
 
@@ -1256,9 +1259,25 @@ class CustomerDebtSummaryView(APIView):
             debts = CustomerDebt.objects.filter(meeting=meeting, customer=customer)
 
             if debts.exists():
-                total_amount_paid += sum([d.amount_paid for d in debts])
-                total_discount += sum([d.discount for d in debts])
-                total_debt += meeting_service_amount - sum([d.amount_paid for d in debts]) - sum([d.discount for d in debts])
+                agg = debts.aggregate(
+                    amount_paid_total=Sum('amount_paid'),
+                    discount_total=Sum('discount'),
+                    discount_percent_total=Sum('discount_procent'),
+                )
+                meeting_paid = agg['amount_paid_total'] or 0
+                meeting_discount_amount = agg['discount_total'] or 0
+                meeting_discount_percent = agg['discount_percent_total'] or 0
+
+                # foizli chegirma summaga aylantiriladi (100% dan oshmasin) — StatsView bilan bir xil
+                percent_discount_amount = meeting_service_amount * min(meeting_discount_percent, 100) / 100
+                meeting_total_discount = meeting_discount_amount + percent_discount_amount
+
+                meeting_debt = meeting_service_amount - meeting_paid - meeting_total_discount
+
+                total_amount_paid += meeting_paid
+                total_discount += meeting_total_discount
+                # manfiy qarz umumiy summani buzmasligi uchun 0 dan pastga tushmaydi
+                total_debt += max(meeting_debt, 0)
             else:
                 total_debt += meeting_service_amount
 

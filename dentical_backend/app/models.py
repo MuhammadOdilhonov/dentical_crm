@@ -304,7 +304,7 @@ class DentalService(models.Model):
     category = models.ForeignKey(DentalServiceCategory, on_delete=models.CASCADE, related_name='services')
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True, null=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     # teeth_count = models.PositiveIntegerField(default=1, help_text="Tuzatiladigan tishlar soni")
     teeth_number = models.PositiveIntegerField(default=1, help_text="Tuzatiladigan tishlar soni", null=True, blank=True)
 

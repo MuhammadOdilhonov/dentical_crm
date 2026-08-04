@@ -37,6 +37,7 @@ import { useLanguage } from "../../../contexts/LanguageContext"
 import Pagination from "../../pagination/Pagination"
 import apiAppointments from "../../../api/apiAppointments"
 import apiCustomerDebts from "../../../api/apiCustomerDebts"
+import { groupConsecutiveTimes, groupConsecutiveAppointments, minutesToTimeStr } from "../../../utils/timeGroups"
 
 // Haftalik kalendar sozlamalari: 24/7 (vaqt tanlash bilan bir xil) va bir soat balandligi (px)
 const CAL_START_HOUR = 0
@@ -910,6 +911,32 @@ export default function Appointments() {
         return { items, lanes: Math.max(laneEnds.length, 1) }
     }
 
+    // Bir xil bemorning ketma-ket qabullarini bitta kartochkaga birlashtirib,
+    // yonma-yon ustunchalarga (lane) taqsimlash
+    const layoutMergedAppointments = (dayAppointments) => {
+        const groups = groupConsecutiveAppointments(dayAppointments, getAppointmentMinutes, 60)
+            .map((g) => ({
+                ...g,
+                start: g.firstMin,
+                // kartochka birinchi qabuldan oxirgi qabul tugashigacha cho'ziladi
+                end: g.lastMin + CAL_APPT_MINUTES,
+            }))
+            .sort((a, b) => a.start - b.start)
+
+        const laneEnds = []
+        groups.forEach((g) => {
+            let lane = laneEnds.findIndex((end) => end <= g.start)
+            if (lane === -1) {
+                lane = laneEnds.length
+                laneEnds.push(0)
+            }
+            laneEnds[lane] = g.end
+            g.lane = lane
+        })
+
+        return { groups, lanes: Math.max(laneEnds.length, 1) }
+    }
+
     // Get branch name by ID
     const getBranchName = (branchId) => {
         const branch = filterData.branches.find((b) => b.id === branchId)
@@ -1337,15 +1364,15 @@ export default function Appointments() {
                                     <span className="selected-times-label">
                                         Tanlandi ({newAppointment.times.length} ta):
                                     </span>
-                                    {newAppointment.times.map((time) => (
+                                    {groupConsecutiveTimes(newAppointment.times, slotDuration).map((grp) => (
                                         <button
-                                            key={time}
+                                            key={grp.first}
                                             type="button"
-                                            className="selected-time-chip"
-                                            onClick={() => handleTimeSelect(time)}
+                                            className={`selected-time-chip ${grp.times.length > 1 ? "range" : ""}`}
+                                            onClick={() => grp.times.forEach((tm) => handleTimeSelect(tm))}
                                             title="Olib tashlash"
                                         >
-                                            {time} <FaTimes />
+                                            {grp.label} <FaTimes />
                                         </button>
                                     ))}
                                 </div>
@@ -1638,7 +1665,7 @@ export default function Appointments() {
                                             const dayAppointments = appointments.filter(
                                                 (appointment) => appointment.date && appointment.date.startsWith(dateString),
                                             )
-                                            const { items, lanes } = layoutDayAppointments(dayAppointments)
+                                            const { groups, lanes } = layoutMergedAppointments(dayAppointments)
 
                                             return (
                                                 <div key={index} className={`apt-cal-col ${index === todayIndex ? "today" : ""}`}>
@@ -1653,27 +1680,35 @@ export default function Appointments() {
                                                             title={`${dateString} · ${String(hour).padStart(2, "0")}:00 — qabul qo'shish`}
                                                         ></div>
                                                     ))}
-                                                    {items.map(({ appointment, start, lane }) => {
-                                                        const top = ((start - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT
-                                                        const height = (CAL_APPT_MINUTES / 60) * CAL_HOUR_HEIGHT
+                                                    {groups.map((g) => {
+                                                        const head = g.head
+                                                        const isRange = g.items.length > 1
+                                                        const top = ((g.start - CAL_START_HOUR * 60) / 60) * CAL_HOUR_HEIGHT
+                                                        const height = ((g.end - g.start) / 60) * CAL_HOUR_HEIGHT
+                                                        const timeLabel = isRange
+                                                            ? `${minutesToTimeStr(g.firstMin)} - ${minutesToTimeStr(g.lastMin)}`
+                                                            : formatTimeForDisplay(head.date)
                                                         return (
                                                             <div
-                                                                key={appointment.id}
-                                                                className={`apt-cal-event ${appointment.status}`}
+                                                                key={head.id}
+                                                                className={`apt-cal-event ${head.status}`}
                                                                 style={{
                                                                     top: `${top + 1}px`,
                                                                     height: `${height - 2}px`,
-                                                                    left: `calc(${(lane * 100) / lanes}% + 3px)`,
+                                                                    left: `calc(${(g.lane * 100) / lanes}% + 3px)`,
                                                                     width: `calc(${100 / lanes}% - 6px)`,
                                                                 }}
-                                                                onClick={() => openViewSidebar(appointment)}
-                                                                title={`${formatTimeForDisplay(appointment.date)} · ${appointment.customer_name} · ${appointment.doctor_name} · ${appointment.room_name}`}
+                                                                onClick={() => openViewSidebar(head)}
+                                                                title={`${timeLabel} · ${head.customer_name} · ${head.doctor_name} · ${head.room_name}`}
                                                             >
                                                                 <span className="apt-cal-event-time">
-                                                                    {formatTimeForDisplay(appointment.date)}
+                                                                    {timeLabel}
+                                                                    {isRange && (
+                                                                        <span className="apt-cal-event-count"> · {g.items.length} ta</span>
+                                                                    )}
                                                                 </span>
-                                                                <span className="apt-cal-event-patient">{appointment.customer_name}</span>
-                                                                <span className="apt-cal-event-doctor">{appointment.doctor_name}</span>
+                                                                <span className="apt-cal-event-patient">{head.customer_name}</span>
+                                                                <span className="apt-cal-event-doctor">{head.doctor_name}</span>
                                                             </div>
                                                         )
                                                     })}

@@ -519,9 +519,13 @@ def send_payment_notification_to_customer(sender, instance, created, **kwargs):
                     print(f"✅ To'lov xabari yuborildi: {customer.full_name} - {instance.amount_paid:,.0f} so'm")
                 else:
                     print(f"❌ To'lov xabari yuborishda xatolik: {response.status_code}")
-        
+
     except Exception as e:
-        print(f"❌ To'lov xabari yuborishda xatolik: {e}")
+        # Telegram/print xatosi HECH QACHON to'lovni saqlashni buzmasligi kerak
+        try:
+            print(f"To'lov xabari yuborishda xatolik: {e}")
+        except Exception:
+            pass
 
 # ClinicNotification signal'ini yangilash - bemor uchun ham xabar yuborish
 @receiver(post_save, sender=ClinicNotification)

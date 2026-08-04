@@ -1551,6 +1551,13 @@ $apt-cal-gutter: 68px; // chapdagi soatlar ustuni kengligi
         svg { font-size: 10px; opacity: 0.8; }
 
         &:hover { background: #dc2626; }
+
+        // Ketma-ket vaqtlar birlashgan diapazon (masalan 10:00 - 11:30)
+        &.range {
+            background: #0f766e;
+            padding-right: 12px;
+            letter-spacing: 0.2px;
+        }
     }
 }
 
@@ -1582,6 +1589,13 @@ $apt-cal-gutter: 68px; // chapdagi soatlar ustuni kengligi
         font-weight: 800;
         font-variant-numeric: tabular-nums;
         line-height: 1.2;
+
+        // Nechta qabul birlashganini ko'rsatuvchi kichik yozuv
+        .apt-cal-event-count {
+            font-weight: 700;
+            opacity: 0.7;
+            font-size: 9.5px;
+        }
     }
 
     .apt-cal-event-patient {
